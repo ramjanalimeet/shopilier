@@ -2422,6 +2422,23 @@ export const start = async () => {
       if (pg.locked) return;
       if (await confirm("Delete page?", `The “${pg.title}” page will be removed from your website.`)) { store.pages = store.pages.filter((x) => x !== pg); touchSite(); persist(); go(); }
     },
+    "save-subdomain": async () => {
+      const input = document.getElementById("s-sub"), msg = document.getElementById("s-sub-msg");
+      const name = input.value.trim().toLowerCase().replace(/\.shopilier\.com$/, "").replace(/\s+/g, "-");
+      if (name === store.settings.subdomain) { toast("That's already your address"); return; }
+      const say = (t, bad) => { msg.textContent = t; msg.classList.toggle("bad", !!bad); };
+      if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(name) || name.length < 3 || name.length > 40) { say("Use 3–40 English letters, numbers or hyphens (not at the start or end).", true); return; }
+      say("Checking…");
+      let ok = true, reason = "";
+      if (!isDemo) {
+        try { const r = await fetch("/api/subdomain?name=" + encodeURIComponent(name)); const d = await r.json(); ok = !!d.available; reason = d.reason || d.error || ""; }
+        catch (err) { say("Couldn't check that name. Check your connection and try again.", true); return; }
+      }
+      if (!ok) { say(reason || "That name isn't available.", true); return; }
+      store.settings.subdomain = name; persist(); refreshChrome();
+      const box = document.querySelector(".settings .s-content"); if (box) box.innerHTML = settingsTab.domain();
+      toast(`Your website's address is now ${name}.shopilier.com`);
+    },
     "connect-domain": () => {
       if (!plan().domain) { toast("Custom domains come with Starter and up — upgrade to connect yours"); return; }
       const v = document.getElementById("s-domain").value.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
@@ -2566,7 +2583,14 @@ export const start = async () => {
     domain: () => {
       const st = store.settings, freeDomain = hasFreeDomain();
       return `<h2>Domain</h2><p class="muted">Where customers find your website.</p>
-        <div class="s-card"><b>Free sub-domain</b><p class="muted" style="margin-top:4px">${esc(st.subdomain)}.shopilier.com</p></div>
+        <div class="s-card">
+          <b>Free sub-domain</b><p class="muted small" style="margin:4px 0 12px">Your website's free address. Change it any time; your old address stops working.</p>
+          <div class="sub-row">
+            <label class="sub-field"><input class="input" id="s-sub" value="${esc(st.subdomain)}" maxlength="40" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Sub-domain"><span>.shopilier.com</span></label>
+            <button type="button" class="btn btn-primary" data-action="save-subdomain">Save</button>
+          </div>
+          <p class="sub-msg muted small" id="s-sub-msg">${store.published ? `Live now at <a class="link" href="${esc(liveUrl())}" target="_blank" rel="noopener">${esc(location.host)}/s/${esc(st.subdomain)}</a>` : "Publish your website to open it at this address."}</p>
+        </div>
         ${freeDomain ? `<div class="callout green"><span class="ico">${icon("gift")}</span><div><b>Your yearly ${esc(plan().name)} plan includes a free custom domain.</b></div></div>` : ""}
         ${plan().domain ? "" : `<div class="callout blue"><span class="ico">${icon("globe")}</span><div><b>Your own domain (like www.yourbusiness.com) comes with Starter and up.</b> Until then your website lives at ${esc(st.subdomain)}.shopilier.com. <button type="button" class="link st-up" data-tab="billing">Upgrade to connect a domain</button>.</div></div>`}
         <div class="s-card"${plan().domain ? "" : ' style="opacity:.55;pointer-events:none" aria-disabled="true"'}>

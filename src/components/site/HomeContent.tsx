@@ -37,7 +37,7 @@ export default function HomeContent() {
           <div className="panel dash">
             <div className="dash-bar"><i /><i /><i /></div><a className="demo-pill" href="/demo">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 4.6v14.8a1.3 1.3 0 0 0 2 1.1l11.6-7.4a1.3 1.3 0 0 0 0-2.2L9 3.5a1.3 1.3 0 0 0-2 1.1z" /></svg>Try the live demo
-            </a><img className="dash-shot" src="/assets/dashboard.webp" srcSet="/assets/dashboard-1x.webp 1430w, /assets/dashboard.webp 2860w" sizes="(max-width: 760px) 100vw, 720px" width="1430" height="777" alt="The Shopilier dashboard: sales, orders, visitors, a sales chart and top products" fetchPriority="high" />
+            </a><img className="dash-shot" src="/assets/dashboard.webp" srcSet="/assets/dashboard-1x.webp 1440w, /assets/dashboard.webp 2880w" sizes="(max-width: 760px) 200vw, 900px" width="1440" height="782" alt="The Shopilier dashboard: sales, orders, visitors, a sales chart and top products" fetchPriority="high" />
           </div>
           {/* The same dashboard on a phone */}
           <div className="device-phone" aria-hidden="true">
@@ -46,7 +46,7 @@ export default function HomeContent() {
                 <b>9:41</b><span className="device-notch" />
                 <svg viewBox="0 0 46 12"><rect x="0" y="7" width="3" height="5" rx="1" /><rect x="5" y="5" width="3" height="7" rx="1" /><rect x="10" y="2.5" width="3" height="9.5" rx="1" /><rect x="15" y="0" width="3" height="12" rx="1" /><rect x="23.5" y=".75" width="19" height="10.5" rx="3" fill="none" stroke="currentColor" strokeWidth="1.2" opacity=".45" /><rect x="25.5" y="2.75" width="13" height="6.5" rx="1.6" /><rect x="43.6" y="4" width="1.6" height="4" rx=".8" opacity=".45" /></svg>
               </div>
-              <img src="/assets/dashboard-mobile.webp" width="780" height="1594" alt="" loading="lazy" decoding="async" />
+              <img src="/assets/dashboard-mobile.webp" width="1170" height="2391" alt="" loading="lazy" decoding="async" />
             </div>
           </div>
         </div>

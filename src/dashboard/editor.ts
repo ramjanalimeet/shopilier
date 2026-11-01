@@ -66,9 +66,16 @@ export const SiteEditor = (() => {
       ["note", "", "Your logo shows as a square with rounded corners, with your website name beside it."], ["toggle", "announcement.show", "Show announcement bar"], ["text", "announcement.text", "Announcement", { when: "announcement.show" }],
       ["toggle", "search", "Search"], ["toggle", "searchBar", "Show a search box (instead of an icon)", { when: "search" }], ["text", "searchText", "Search box text", { when: (c) => c.search && c.searchBar, placeholder: "Search products…" }],
       ["toggle", "account", "Account icon"], ["toggle", "cart", "Cart icon"],
-      ["toggle", "mbar.show", "Sticky bar at the bottom on phones"], ["text", "mbar.cta", "Its main button", { when: "mbar.show", placeholder: "Order now" }], ["url", "mbar.link", "Main button link", { when: (c) => c.mbar && c.mbar.show && c.mbar.cta }],
-      ["toggle", "mbar.chat", "WhatsApp (or Call) button in the bar", { when: "mbar.show" }],
-      ["note", "", "The bar shows Home, Shop, your main button, Cart and WhatsApp on phones, so shoppers can order with one thumb."], ["note", "", 'The menu, the banner\'s link and color, and more header buttons are in <a href="#/navigation">Navigation</a>. The website name and logo are also in <a href="#/preferences">Preferences</a>.']],
+      ["note", "", "The sticky bar at the bottom (Home, Shop, Order now, Cart…) has its own settings: pick <b>Sticky bar</b> in the list of sections, or tap the bar on your website."], ["note", "", 'The menu, the banner\'s link and color, and more header buttons are in <a href="#/navigation">Navigation</a>. The website name and logo are also in <a href="#/preferences">Preferences</a>.']],
+    mbar: [["toggle", "show", "Show the sticky bar"],
+      ["select", "where", "Show it on", { when: "show", options: [["phone", "Phones"], ["tablet", "Phones and tablets"], ["all", "Every screen (a floating bar on computers too)"]] }],
+      ["select", "shape", "Shape", { when: "show", options: [["flat", "Flat, on the bottom edge"], ["float", "Floating, with rounded corners"]] }],
+      ["note", "", "<b>Buttons</b>"],
+      ["toggle", "home", "Home"], ["toggle", "shop", "Shop"], ["toggle", "cart", "Cart (shows how many items)"], ["toggle", "chat", "WhatsApp (or Call when there's no WhatsApp)"], ["toggle", "account", "Account"],
+      ["text", "cta", "Main button text (empty: no main button)", { placeholder: "Order now" }], ["url", "link", "Main button link", { when: "cta" }],
+      ["note", "", "<b>Colours</b>"],
+      ["color", "bg", "Bar colour", { fallback: "#ffffff" }], ["color", "text", "Icon colour", { fallback: "#111111" }], ["color", "ctaBg", "Main button colour", { fallback: "#0e7a4b" }],
+      ["note", "", "WhatsApp and the phone number come from <a href=\"#/preferences\">Preferences</a>."]],
     footer: [["textarea", "text", "About text"], ["toggle", "showMenu", "Show pages"], ["toggle", "showContact", "Show contact details"], ["toggle", "showSocial", "Show social links"], ["text", "copyright", "Copyright line", { placeholder: "© 2026 Your store. All rights reserved." }],
       ["note", "", 'Social links come from <a href="#/preferences">Preferences</a>.']],
   };
@@ -119,6 +126,7 @@ export const SiteEditor = (() => {
     const sectionById = (id) => page().sections.find((s) => s.id === id);
     const target = () => {
       if (state.selected === "header") return { content: store.site.header, style: (store.site.header.style ||= {}), type: "header", label: "Header" };
+      if (state.selected === "mbar") return { content: (store.site.header.mbar ||= { show: true }), style: {}, type: "mbar", label: "Sticky bar" };
       if (state.selected === "footer") return { content: store.site.footer, style: (store.site.footer.style ||= {}), type: "footer", label: "Footer" };
       const s = state.selected && sectionById(state.selected);
       return s ? { content: s.content, style: s.style, type: s.type, label: (K.TYPES[s.type] || {}).label + " section", section: s } : null;
@@ -273,7 +281,7 @@ export const SiteEditor = (() => {
         const chip = e.target.closest("[data-ed]");
         if (chip) { sectionAction(chip.dataset.ed, state.selected); return; }
         // A link in the menu bar, its dropdowns, the footer or the phone bar opens that page here, ready to edit
-        const link = e.target.closest(".s-header a[href^='/'], .s-footer a[href^='/'], .s-mbar a[href^='/']");
+        const link = e.target.closest(".s-header a[href^='/'], .s-footer a[href^='/']");
         if (link) {
           const slug = link.getAttribute("href").slice(1), to = store.pages.find((p) => (p.slug || "") === slug);
           if (to && to.id !== state.pageId) { goPage(to.id); return; }
@@ -360,7 +368,7 @@ export const SiteEditor = (() => {
         ${s && s.type !== "checkout" ? `<span class="ed-row-tools"><button type="button" class="ed-sm" data-row="up" data-id="${s.id}" aria-label="Move up" title="Move up">${icon("up")}</button><button type="button" class="ed-sm" data-row="down" data-id="${s.id}" aria-label="Move down" title="Move down">${icon("down")}</button><button type="button" data-row="hide" data-id="${s.id}" aria-label="${s.hidden ? "Show" : "Hide"} section" title="${s.hidden ? "Show" : "Hide"}">${icon(s.hidden ? "eyeOff" : "eye")}</button></span>` : ""}
       </div>`;
       return `<div class="ed-sub">Sections on ${esc(p.title)}</div>
-        <div class="ed-outline">${row("header", "Header", "layout")}${p.sections.map((s) => row(s.id, (K.TYPES[s.type] || {}).label || s.type, (K.TYPES[s.type] || {}).icon || "layout", s)).join("")}${row("footer", "Footer", "layout")}</div>
+        <div class="ed-outline">${row("header", "Header", "layout")}${p.sections.map((s) => row(s.id, (K.TYPES[s.type] || {}).label || s.type, (K.TYPES[s.type] || {}).icon || "layout", s)).join("")}${row("footer", "Footer", "layout")}${row("mbar", "Sticky bar", "phone")}</div>
         <button type="button" class="btn ed-add ed-add-section ed-sm" data-add-section>${icon("plus")}Add a section</button>
         <p class="ed-note ed-lg">Drag sections in this list to change their order. To add a section, point at the line between two sections on your website and click the green <b>+</b>.</p>
         <p class="ed-note ed-sm">Tap a section to edit it, or tap it right on your website. Use the arrows to move it up or down.</p>`;
@@ -394,6 +402,7 @@ export const SiteEditor = (() => {
     };
     const contentTab = (t) => {
       if (!t) return outline();
+      if (t.type === "mbar") return (CONTENT.mbar || []).map((f) => field(f, t.content, "content")).join("") + (state.device === "desktop" && t.content.where !== "all" ? '<p class="ed-note">You\'re previewing a computer screen, where this bar is hidden. Switch to <b>Mobile</b> at the top to see it.</p>' : "");
       return `${(STYLE[t.type] || []).map((f) => field(f, t.style, "style")).join("")}${(CONTENT[t.type] || []).map((f) => field(f, t.content, "content")).join("")}${elements(t)}${styleGroup(t)}`;
     };
     const pagesPanel = () => `<div class="ed-panel-head"><b>Pages</b><button class="ed-icon-btn" data-close aria-label="Close">${icon("x")}</button></div>
@@ -410,7 +419,12 @@ export const SiteEditor = (() => {
         const t = target();
         panel.innerHTML = `<div class="ed-tabs"><span class="on">${icon("edit")}Content</span></div>
           <div class="ed-panel-head">${t ? `<button class="ed-icon-btn" data-deselect aria-label="Back to all sections" title="All sections">${icon("arrowLeft")}</button>` : ""}<b>${esc(t ? t.label : page().title + " page")}</b><button class="ed-icon-btn ed-only-sm" data-close aria-label="Close panel">${icon("x")}</button></div>
-          <div class="ed-panel-body">${contentTab(t)}</div>`;
+          ${t && t.section ? `<div class="ed-qa" role="toolbar" aria-label="Section actions">
+            <button type="button" data-qa="up">${icon("up")}<span>Up</span></button><button type="button" data-qa="down">${icon("down")}<span>Down</span></button>
+            ${t.section.type === "checkout" ? "" : `<button type="button" data-qa="duplicate">${icon("copy")}<span>Copy</span></button><button type="button" data-qa="hide">${icon(t.section.hidden ? "eye" : "eyeOff")}<span>${t.section.hidden ? "Show" : "Hide"}</span></button><button type="button" class="danger" data-qa="delete">${icon("trash")}<span>Delete</span></button>`}
+          </div>` : ""}
+          <div class="ed-panel-body">${contentTab(t)}</div>
+          <div class="ed-done"><button type="button" class="btn btn-primary" data-close>Done</button></div>`;
       }
       const b = panel.querySelector(".ed-panel-body");
       if (b) b.scrollTop = scrollTop;
@@ -420,6 +434,7 @@ export const SiteEditor = (() => {
 
     const select = (id, scroll = true) => {
       state.selected = id; state.mode = "sections"; state.panelOpen = true;
+      if (id === "mbar" && state.device === "desktop" && (store.site.header.mbar || {}).where !== "all") { state.device = "mobile"; paintTop(); }
       paintCanvas(); paintPanel();
       if (scroll) scrollToSelected();
     };
@@ -557,6 +572,12 @@ export const SiteEditor = (() => {
       if (!b) return;
       if (b.hasAttribute("data-close")) { if (state.mode !== "sections" && innerWidth >= 900) state.mode = "sections"; else state.panelOpen = false; paintPanel(); return; }
       if (b.hasAttribute("data-deselect")) { select(null, false); return; }
+      if (b.dataset.qa) {
+        const s = sectionById(state.selected);
+        if (!s) return;
+        if (b.dataset.qa === "hide") { s.hidden = !s.hidden; changed({ panel: true }); toast(s.hidden ? "Section hidden on your website" : "Section shown again"); return; }
+        sectionAction(b.dataset.qa, s.id); return;
+      }
       if (b.dataset.row === "up" || b.dataset.row === "down") { e.stopPropagation(); sectionAction(b.dataset.row, b.dataset.id); return; }
       if (b.hasAttribute("data-add-section")) { openLibrary(page().sections.length); return; }
       if (b.dataset.row === "hide") { e.stopPropagation(); const s = sectionById(b.dataset.id); if (s.type === "checkout") { toast("The checkout form can't be hidden — it's how customers order"); return; } s.hidden = !s.hidden; changed({ panel: true }); return; }

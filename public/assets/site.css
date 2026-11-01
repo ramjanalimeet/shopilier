@@ -600,20 +600,57 @@ figcaption span { font-size: 14px; opacity: .7; }
 .ed-insert button:hover { background: #0b6a41; }
 .editing .ed-chip { z-index: 8; }
 
-/* Phones: the sticky bottom bar (Home, Shop, the main button, Cart, WhatsApp/Call). Hidden on bigger screens. */
-.s-mbar { display: none; }
-@media (max-width: 760px) {
-  .site:has(.s-mbar) { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
-  .s-mbar { display: flex; align-items: center; justify-content: space-around; gap: 4px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line);
-    border-radius: 18px 18px 0 0; box-shadow: 0 -8px 24px -14px rgba(0, 0, 0, .25); }
-  .s-mbar > a { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 50px; color: var(--text); font-size: 11px; font-weight: 600; text-decoration: none; opacity: .85; }
-  .s-mbar > a .ic, .s-mbar > a svg { width: 22px; height: 22px; }
-  .s-mbar > a.mb-wa { color: #1f9d55; opacity: 1; }
-  .s-mbar > a.mb-cta { flex: 0 1 auto; flex-direction: row; justify-content: center; min-width: 0; height: 46px; padding: 0 20px; border-radius: var(--btn-radius, 999px);
-    background: var(--accent); color: var(--on-accent); font-size: 14.5px; font-weight: 700; white-space: nowrap; opacity: 1; box-shadow: 0 8px 18px -8px var(--accent); }
-  .s-mbar > a.mb-cart[data-count]::after { content: attr(data-count); position: absolute; top: -4px; left: calc(50% + 4px); min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px;
-    background: var(--accent); color: var(--on-accent); font-size: 10px; font-weight: 700; line-height: 17px; text-align: center; box-shadow: 0 0 0 2px var(--bg); }
-}
+/* The sticky bottom bar (Home, Shop, the main button, Cart, WhatsApp/Call, Account).
+   .mb-phone: phones only · .mb-tablet: phones and tablets · .mb-all: every screen (a floating pill on computers)
+   .mb-flat: on the bottom edge · .mb-float: rounded with a gap. Colours: --mb-bg, --mb-text, --mb-cta */
+.s-mbar { --mb-bg: var(--bg); --mb-text: var(--text); --mb-cta: var(--accent); --mb-on-cta: var(--on-accent);
+  display: none; align-items: center; justify-content: space-around; gap: 4px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: var(--mb-bg); color: var(--mb-text);
+  border-top: 1px solid var(--line); border-radius: 18px 18px 0 0; box-shadow: 0 -8px 24px -14px rgba(0, 0, 0, .25); }
+.s-mbar > a, .s-mbar > .mb-acc { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 48px; color: inherit; font-size: 11px; font-weight: 600; text-decoration: none; }
+.s-mbar .ic, .s-mbar svg { width: 22px; height: 22px; }
+.s-mbar > a.mb-wa { color: #1f9d55; }
+.s-mbar > a.mb-cta { flex: 0 1 auto; flex-direction: row; justify-content: center; min-width: 0; height: 46px; padding: 0 20px; border-radius: var(--btn-radius, 999px);
+  background: var(--mb-cta); color: var(--mb-on-cta); font-size: 14.5px; font-weight: 700; white-space: nowrap; box-shadow: 0 8px 18px -8px var(--mb-cta); }
+.s-mbar > a.mb-cart[data-count]::after { content: attr(data-count); position: absolute; top: -4px; left: calc(50% + 4px); min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px;
+  background: var(--mb-cta); color: var(--mb-on-cta); font-size: 10px; font-weight: 700; line-height: 17px; text-align: center; box-shadow: 0 0 0 2px var(--mb-bg); }
+.s-mbar.mb-float { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); padding-bottom: 8px; border: 1px solid var(--line); border-radius: 22px; }
+/* Where it shows */
+@media (max-width: 760px) { .s-mbar { display: flex; } .site:has(.s-mbar) { padding-bottom: calc(80px + env(safe-area-inset-bottom)); } }
+@media (min-width: 761px) and (max-width: 1024px) { .s-mbar.mb-tablet, .s-mbar.mb-all { display: flex; } .site:has(.mb-tablet), .site:has(.mb-all) { padding-bottom: 90px; } }
+@media (min-width: 761px) { .s-mbar.mb-tablet, .s-mbar.mb-all { left: 50%; right: auto; width: min(560px, calc(100% - 32px)); transform: translateX(-50%); bottom: 16px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 16px 40px -16px rgba(0, 0, 0, .35); } }
+@media (min-width: 1025px) { .s-mbar.mb-all { display: flex; } .site:has(.mb-all) { padding-bottom: 96px; } }
+.editing .s-mbar { cursor: pointer; }
+.editing .s-mbar.is-selected { outline: 2px solid #2563eb; outline-offset: -2px; }
+
 /* Editor: menu, footer and phone-bar links can be tapped to open that page for editing */
-.editing .s-header .menu a, .editing .s-header .dd a, .editing .s-footer a[href^="/"], .editing .s-mbar a[href^="/"] { pointer-events: auto; cursor: pointer; }
+.editing .s-header .menu a, .editing .s-header .dd a, .editing .s-footer a[href^="/"] { pointer-events: auto; cursor: pointer; }
+
+/* ---------- Phones and tablets: polish for every template (Fashion & Clothing first) ---------- */
+@media (max-width: 1024px) {
+  /* Categories: one swipeable row instead of a grid with a lonely last card */
+  .s-categories .grid { display: flex; gap: 12px; margin: 0; padding: 2px 0 6px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .s-categories .grid::-webkit-scrollbar { display: none; }
+  .s-categories .grid > * { flex: 0 0 clamp(150px, 28vw, 220px); scroll-snap-align: start; }
+  /* Footer: brand on top, then pages, contact and social side by side */
+  .foot-grid { grid-template-columns: repeat(3, 1fr); gap: 26px 20px; }
+  .foot-grid > div:first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .s-categories .grid > * { flex-basis: 42%; }
+  /* The hero's picture keeps a real shape on phones */
+  .hero-story .hero-img { aspect-ratio: 4 / 3; }
+  /* "Why us": two compact cards per row */
+  .s-perks .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .perk { flex-direction: column; align-items: flex-start; gap: 10px; padding: 16px 14px; border-radius: 14px; }
+  .perk .ic { width: 28px; height: 28px; }
+  .perk b { font-size: 15px; } .perk span { font-size: 13px; }
+  .foot-grid { grid-template-columns: 1fr 1fr; }
+  .foot-grid > div:nth-child(4) { grid-column: 1 / -1; }
+  /* Checkout: the discount field and its button on one line */
+  .co-coupon { display: flex; gap: 8px; }
+  .co-coupon .co-code { flex: 1; min-width: 0; }
+  .co-coupon .co-apply { flex: none; white-space: nowrap; padding: 0 16px; }
+  /* Fields 16px, so phones don't zoom in when you tap them */
+  .site input, .site textarea, .site select { font-size: 16px; }
+}
