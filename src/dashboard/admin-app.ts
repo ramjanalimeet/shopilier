@@ -415,6 +415,39 @@ export const start = async () => {
       else if (k === "logout") document.getElementById("logout").click();
     });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !moreSheet.hidden) setMore(false); });
+    // Phones: pull the page down from the top to refresh (the page scrolls inside .scroll, so the browser's own
+    // pull-to-refresh can't happen; this brings it back)
+    {
+      const sc = document.querySelector(".scroll"), ptr = document.createElement("div");
+      ptr.className = "ptr"; ptr.setAttribute("aria-hidden", "true"); ptr.innerHTML = icon("refresh");
+      document.body.appendChild(ptr);
+      let y0 = null, dy = 0, busy = false;
+      const paint = () => {
+        const d = Math.min(dy * .5, 90);
+        ptr.style.transform = `translateY(${d - 44}px) rotate(${dy * 1.6}deg)`;
+        ptr.style.opacity = String(Math.min(1, d / 40));
+        ptr.classList.toggle("ready", d >= 60);
+      };
+      sc.addEventListener("touchstart", (e) => {
+        if (busy || innerWidth > 760 || document.body.classList.contains("editor-open") || document.body.classList.contains("sheet-open") || sc.scrollTop > 0) return;
+        y0 = e.touches[0].clientY; dy = 0; ptr.style.top = sc.getBoundingClientRect().top + "px";
+      }, { passive: true });
+      sc.addEventListener("touchmove", (e) => {
+        if (y0 == null) return;
+        dy = e.touches[0].clientY - y0;
+        if (dy <= 0 || sc.scrollTop > 0) { dy = 0; ptr.style.opacity = "0"; return; }
+        ptr.style.transition = "none"; paint();
+      }, { passive: true });
+      sc.addEventListener("touchend", () => {
+        if (y0 == null) return;
+        y0 = null; ptr.style.transition = "transform .2s, opacity .2s";
+        if (Math.min(dy * .5, 90) >= 60) {
+          busy = true; ptr.classList.add("spin"); ptr.style.transform = "translateY(16px)";
+          setTimeout(() => location.reload(), 350);
+        } else { ptr.style.transform = ""; ptr.style.opacity = "0"; ptr.classList.remove("ready"); }
+        dy = 0;
+      });
+    }
     // Pull the sheet down to close it (from its top, or anywhere once its list is scrolled to the top)
     const morePanel = moreSheet.querySelector(".more-panel");
     let y0 = null, dy = 0;
