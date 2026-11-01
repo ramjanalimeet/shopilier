@@ -2,9 +2,9 @@
 // #view gets each page and the chat panel its conversations; the icons are rendered here so nothing moves when it starts.
 import Icon from "@/components/Icon";
 
-// Phones: the bottom tab bar (Add product, Orders, Home in the middle, Website, Account), everything else in the Account sheet
+// Phones: the bottom tab bar (Products, Orders, Home in the middle, Website, Account), everything else in the Account sheet
 const MORE: [string, string, string][] = [
-  ["products", "tag", "Products"], ["customers", "customers", "Customers"], ["shipping", "truck", "Shipping"], ["categories", "grid", "Categories"], ["discounts", "discount", "Discounts"],
+  ["customers", "customers", "Customers"], ["shipping", "truck", "Shipping"], ["categories", "grid", "Categories"], ["discounts", "discount", "Discounts"],
   ["analytics", "barchart", "Analytics"], ["marketing", "megaphone", "Marketing"], ["pages", "pages", "Pages"], ["preferences", "settings", "Preferences"],
 ];
 
@@ -107,7 +107,7 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
       </div>
       {/* Phones: bottom tab bar and the More sheet */}
       <nav className="tabbar" aria-label="Dashboard">
-        <button className="tab" type="button" data-tab-add><Icon name="products" /><span>Add Product</span></button>
+        <a className="tab" data-route="products" data-tab="products" href="#/products"><Icon name="products" /><span>Products</span></a>
         <a className="tab" data-route="orders" data-tab="orders" href="#/orders"><Icon name="orders" /><span>Orders</span><span className="tab-badge" data-badge /></a>
         <a className="tab tab-home" data-route="home" data-tab="home" href="#/home"><Icon name="home" /><span>Home</span></a>
         <a className="tab" data-route="themes" data-tab="themes" href="#/themes"><Icon name="monitor" /><span>Website</span></a>

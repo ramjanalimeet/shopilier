@@ -376,7 +376,7 @@ export const start = async () => {
   // ---------- Phones: bottom tabs and the More sheet ----------
   const moreBtn = document.getElementById("more-btn"), moreSheet = document.getElementById("more-sheet");
   const WEBSITE_ROUTES = ["themes", "website", "pages", "navigation", "preferences"];
-  const MORE_ROUTES = ["products", "customers", "shipping", "categories", "discounts", "analytics", "marketing", "pages", "navigation", "preferences"];
+  const MORE_ROUTES = ["customers", "shipping", "categories", "discounts", "analytics", "marketing", "pages", "navigation", "preferences"];
   const setMore = (open) => {
     if (!moreSheet) return;
     moreSheet.hidden = !open; moreBtn.setAttribute("aria-expanded", String(open));
@@ -2828,9 +2828,6 @@ export const start = async () => {
       t.querySelectorAll("tbody tr").forEach((tr) => [...tr.children].forEach((td, i) => { if (heads[i] && !td.hasAttribute("colspan")) td.dataset.label = heads[i]; }));
     });
   };
-
-  // Phones: "Add Product" in the bottom bar
-  document.querySelector("[data-tab-add]")?.addEventListener("click", () => actions["add-product"]());
 
   hydrateIcons();
   refreshChrome();
