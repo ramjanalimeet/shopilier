@@ -213,6 +213,7 @@ export const start = async () => {
     document.getElementById("me-avatar").innerHTML = avatar(account.name);
     document.getElementById("me-name").textContent = account.name.split(" ")[0];
     document.getElementById("me-store").textContent = siteUrl();
+    document.querySelectorAll("[data-visit-url]").forEach((el) => { el.textContent = store.published ? siteUrl() : "Not live yet · opens a preview"; });
     document.getElementById("menu-name").textContent = account.name;
     document.getElementById("me-email").textContent = account.email;
     document.getElementById("me-plan").textContent = plan().name + " · " + (account.billing === "yearly" ? "Yearly" : "Monthly");
@@ -415,6 +416,39 @@ export const start = async () => {
       else if (k === "logout") document.getElementById("logout").click();
     });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !moreSheet.hidden) setMore(false); });
+    // Phones: pull the page down from the top to refresh (the page scrolls inside .scroll, so the browser's own
+    // pull-to-refresh can't happen; this brings it back)
+    {
+      const sc = document.querySelector(".scroll"), ptr = document.createElement("div");
+      ptr.className = "ptr"; ptr.setAttribute("aria-hidden", "true"); ptr.innerHTML = icon("refresh");
+      document.body.appendChild(ptr);
+      let y0 = null, dy = 0, busy = false;
+      const paint = () => {
+        const d = Math.min(dy * .5, 90);
+        ptr.style.transform = `translateY(${d - 44}px) rotate(${dy * 1.6}deg)`;
+        ptr.style.opacity = String(Math.min(1, d / 40));
+        ptr.classList.toggle("ready", d >= 60);
+      };
+      sc.addEventListener("touchstart", (e) => {
+        if (busy || innerWidth > 760 || document.body.classList.contains("editor-open") || document.body.classList.contains("sheet-open") || sc.scrollTop > 0) return;
+        y0 = e.touches[0].clientY; dy = 0; ptr.style.top = sc.getBoundingClientRect().top + "px";
+      }, { passive: true });
+      sc.addEventListener("touchmove", (e) => {
+        if (y0 == null) return;
+        dy = e.touches[0].clientY - y0;
+        if (dy <= 0 || sc.scrollTop > 0) { dy = 0; ptr.style.opacity = "0"; return; }
+        ptr.style.transition = "none"; paint();
+      }, { passive: true });
+      sc.addEventListener("touchend", () => {
+        if (y0 == null) return;
+        y0 = null; ptr.style.transition = "transform .2s, opacity .2s";
+        if (Math.min(dy * .5, 90) >= 60) {
+          busy = true; ptr.classList.add("spin"); ptr.style.transform = "translateY(16px)";
+          setTimeout(() => location.reload(), 350);
+        } else { ptr.style.transform = ""; ptr.style.opacity = "0"; ptr.classList.remove("ready"); }
+        dy = 0;
+      });
+    }
     // Pull the sheet down to close it (from its top, or anywhere once its list is scrolled to the top)
     const morePanel = moreSheet.querySelector(".more-panel");
     let y0 = null, dy = 0;
@@ -564,6 +598,8 @@ export const start = async () => {
   };
   const PAY_COLOR = { "Cash on delivery": "gray", bKash: "pink", Nagad: "orange", Card: "blue" };
   const sales = (orders) => orders.filter((o) => o.status !== "Cancelled").reduce((s, o) => s + o.total, 0);
+  // Where the published website really opens (this server, /s/<sub-domain>)
+  const liveUrl = () => location.origin + "/s/" + encodeURIComponent(store.settings.subdomain || "");
   const siteUrl = () => store.settings.domain && store.settings.domainStatus === "connected" ? store.settings.domain : store.settings.subdomain + ".shopilier.com";
   const orderNo = (o) => "#" + o.number;
 
@@ -1851,9 +1887,9 @@ export const start = async () => {
 
   // An order placed on the website preview (opened from this dashboard). Prices, stock and the discount
   // are checked again here, so the website can't set them.
-  window.addEventListener("message", (e) => {
-    if (e.origin !== location.origin || !e.data || e.data.type !== "shopilier-order") return;
-    const o = e.data.order || {};
+  // webId: an order from the live website (kept on it, so the same order is never added twice)
+  const takeOrder = (o, webId = "") => {
+    if (webId && store.orders.some((x) => x.webId === webId)) return 0;
     // A size/color choice only counts if it matches the product's own options
     const variant = (p, v) => {
       if (!v || !(p.options || []).length) return "";
@@ -1864,7 +1900,7 @@ export const start = async () => {
       const p = store.products.find((x) => x.id === it.id && x.status !== "draft");
       return { p, qty: Math.max(1, Math.floor(Number(it.qty) || 1)), v: p ? variant(p, it.v) : "" };
     }).filter((it) => it.p);
-    if (!items.length) return;
+    if (!items.length) return 0;
     const answers = (Array.isArray(o.answers) ? o.answers : []).slice(0, 20).map((a) => ({ label: String(a.label || "").slice(0, 60), type: String(a.type || ""), value: String(a.value || "").slice(0, 300) }));
     const find = (type) => (answers.find((a) => a.type === type) || {}).value || "";
     const name = (answers.find((a) => a.type === "text") || {}).value || "Website customer", phone = find("tel");
@@ -1886,7 +1922,7 @@ export const start = async () => {
       id: uid("o"), number, customer: name.slice(0, 60), phone: phone.slice(0, 30),
       items: items.map((it) => ({ name: it.p.name + (it.v ? ` (${it.v})` : ""), qty: it.qty, price: it.p.price, ...(it.v ? { variant: it.v } : {}) })), total: sub - off + fee,
       payment: String(o.payment || "Cash on delivery").slice(0, 40), status: "Pending", date: new Date().toISOString(),
-      delivery: opt ? opt.label : "", deliveryFee: fee, discount: d ? { code: d.code, amount: off, free: d.type === "shipping" } : null, discountNote, answers, source: "website",
+      delivery: opt ? opt.label : "", deliveryFee: fee, discount: d ? { code: d.code, amount: off, free: d.type === "shipping" } : null, discountNote, answers, source: "website", ...(webId ? { webId } : {}),
     });
     items.forEach((it) => { if (it.p.stock != null) it.p.stock = Math.max(0, it.p.stock - it.qty); });
     // The customer: found by phone (or name), filled in with what they typed at checkout
@@ -1894,8 +1930,38 @@ export const start = async () => {
     const known = store.customers.find((c) => (phone && normPhone(c.phone) === normPhone(phone)) || (!phone && c.name.toLowerCase() === name.toLowerCase()));
     if (known) { known.address ||= address; known.city ||= city; known.email ||= find("email").slice(0, 80); }
     else store.customers.unshift({ id: uid("c"), name: name.slice(0, 60), phone: phone.slice(0, 30), city, address, email: find("email").slice(0, 80), joined: new Date().toISOString() });
+    return number;
+  };
+  window.addEventListener("message", (e) => {
+    if (e.origin !== location.origin || !e.data || e.data.type !== "shopilier-order") return;
+    const number = takeOrder(e.data.order || {});
+    if (!number) return;
     persist(); if (!location.hash.startsWith("#/website")) go(); toast(`🛒 New order #${number} from your website`);
   });
+  // Orders placed on the live website wait on the server until this dashboard adds them (on opening it,
+  // every 45 seconds, and when you come back to the tab); they're cleared there only after the store is saved
+  const isDemo = document.body.classList.contains("demo");
+  let syncing = false;
+  const syncWebOrders = async () => {
+    if (isDemo || syncing || document.hidden) return;
+    syncing = true;
+    try {
+      const r = await fetch("/api/store/web-orders");
+      if (!r.ok) return;
+      const { orders = [] } = await r.json();
+      if (!orders.length) return;
+      const added = orders.map((w) => takeOrder(w.order || {}, w.id)).filter(Boolean);
+      if (added.length && !(await saveNow())) return;
+      await fetch("/api/store/web-orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: orders.map((w) => w.id) }) });
+      if (added.length) {
+        refreshChrome(); if (!location.hash.startsWith("#/website")) go();
+        toast(added.length === 1 ? `🛒 New order #${added[0]} from your website` : `🛒 ${added.length} new orders from your website`);
+      }
+    } catch (err) { /* offline: try again later */ } finally { syncing = false; }
+  };
+  syncWebOrders();
+  setInterval(syncWebOrders, 45000);
+  document.addEventListener("visibilitychange", syncWebOrders);
 
   const pixelById = (id) => PIXELS.find((p) => p.id === id);
   // ---------- Chat with the Shopilier team ----------
@@ -2154,6 +2220,9 @@ export const start = async () => {
       persist(); if (location.hash !== "#/website") go(); toast("🚀 Website published");
     },
     "view-store": () => {
+      // The real website, at its live address, once it's published; before that (and in the demo) a preview
+      if (!isDemo && store.published && store.settings.subdomain) { window.open(liveUrl(), "_blank", "noopener"); return; }
+      if (!isDemo && !store.published) toast("Your website isn't live yet — this is a preview. Publish it to open it for customers.");
       const html = SiteKit.storeHTML(store.site, store.pages, { products: store.products, discounts: discountsForSite(), tracking: trackingCode(store.marketing) });
       window.open(URL.createObjectURL(new Blob([html], { type: "text/html" })), "_blank");
     },
@@ -2839,6 +2908,13 @@ export const start = async () => {
       t.querySelectorAll("tbody tr").forEach((tr) => [...tr.children].forEach((td, i) => { if (heads[i] && !td.hasAttribute("colspan")) td.dataset.label = heads[i]; }));
     });
   };
+
+  // "View website" (top bar, profile menu, Account sheet): the real website in a new tab
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("[data-visit]")) return;
+    toggleMenu(false); setMore(false);
+    actions["view-store"]();
+  });
 
   hydrateIcons();
   refreshChrome();

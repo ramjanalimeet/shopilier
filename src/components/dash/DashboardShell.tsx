@@ -76,6 +76,8 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
                 <div className="dd-menu dd-months" role="listbox" aria-label="Month" hidden />
               </div>
             </div>
+            {/* Opens the published website in a new tab (a preview before it's published) */}
+            <button className="top-visit" type="button" data-visit title="View your website" aria-label="View your website"><Icon name="globe" /><span>View website</span></button>
             <div className="bell-wrap">
               <button className="top-bell" type="button" id="bell" aria-label="Notifications" title="Notifications" aria-haspopup="true" aria-expanded="false" aria-controls="bell-menu"><Icon name="bell" /><span className="badge" id="bell-count" /></button>
               <div className="bell-menu" id="bell-menu" hidden />
@@ -88,7 +90,7 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
               </button>
               <div className="profile-menu" id="profile-menu" role="menu" hidden>
                 <div className="profile-menu-head"><b id="menu-name" /><span id="me-email" /><span className="tag green" id="me-plan" /></div>
-                <a role="menuitem" href="#/themes"><Icon name="external" />My website</a>
+                <button role="menuitem" type="button" data-visit><Icon name="external" />View my website</button>
                 <button role="menuitem" type="button" data-settings="general"><Icon name="settings" />Settings</button>
                 <button role="menuitem" type="button" data-settings="billing"><Icon name="billing" />Plan &amp; billing</button>
                 {demo ? (
@@ -118,6 +120,12 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
           <span className="more-grip" aria-hidden="true" />
           <button className="more-store" type="button" data-more="stores">
             <span className="top-store-ava" data-acct-ava /><span className="top-store-text"><b data-acct-name /><small data-acct-plan /></span><span className="more-switch">Switch<Icon name="chevronRight" /></span>
+          </button>
+          {/* Your website, live in a new tab */}
+          <button className="m-visit" type="button" data-visit>
+            <span className="m-visit-ico"><Icon name="globe" /></span>
+            <span className="m-visit-text"><b>View your website</b><small data-visit-url>Opens in a new tab</small></span>
+            <Icon name="external" />
           </button>
           <div className="more-grid">
             {MORE.map(([route, icon, label]) => (

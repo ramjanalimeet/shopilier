@@ -35,6 +35,8 @@ export const SiteKit = (() => {
   const themeOf = (site) => THEMES[(site && site.template) || ""] || {};
 
   const ICONS = {
+    home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>',
+    bag: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
     heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
     truck: '<path d="M3 6h11v9H3zM14 9h4l3 3v3h-7"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
     shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>',
@@ -90,10 +92,10 @@ export const SiteKit = (() => {
       "Your name": "আপনার নাম", "Email": "ইমেইল", "Message": "মেসেজ", "Send message": "মেসেজ পাঠান", "Email address": "ইমেইল ঠিকানা",
       "Subtotal": "সাবটোটাল", "Discount": "ডিসকাউন্ট", "Delivery": "ডেলিভারি চার্জ", "Total": "মোট", "Free delivery": "ফ্রি ডেলিভারি",
       "Items in the cart show here.": "কার্টের প্রোডাক্ট এখানে দেখা যাবে।", "Search": "খুঁজুন", "Search products…": "প্রোডাক্ট খুঁজুন…",
-      "Account": "অ্যাকাউন্ট", "Cart": "কার্ট", "Wishlist": "পছন্দের তালিকা", "Track order": "অর্ডার ট্র্যাক করুন", "Call us": "কল করুন", "Menu": "মেনু",
+      "Account": "অ্যাকাউন্ট", "Cart": "কার্ট", "Wishlist": "পছন্দের তালিকা", "Track order": "অর্ডার ট্র্যাক করুন", "Call us": "কল করুন", "Menu": "মেনু", "Home": "হোম", "Shop": "শপ", "Chat": "চ্যাট", "Call": "কল",
       "Previous": "আগেরটি", "Next": "পরেরটি", "Add an image": "ছবি যোগ করুন", "Featured": "বাছাই করা", "Categories": "ক্যাটাগরি",
       "{name} added to your cart": "{name} কার্টে যোগ হয়েছে", "Only {n} more left in stock": "স্টকে আর মাত্র {n}টি আছে", "No more left in stock": "স্টকে আর নেই",
-      "Your cart is empty.": "আপনার কার্ট খালি।", "Your cart is empty": "আপনার কার্ট খালি", "Continue shopping": "কেনাকাটা চালিয়ে যান", "Remove": "বাদ দিন",
+      "Your cart is empty.": "আপনার কার্ট খালি।", "Your cart is empty": "আপনার কার্ট খালি", "Couldn't place your order. Please check your connection and try again.": "অর্ডার করা যায়নি। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।", "Continue shopping": "কেনাকাটা চালিয়ে যান", "Remove": "বাদ দিন",
       "One less": "একটি কম", "One more": "একটি বেশি", "Close": "বন্ধ করুন", "Please choose a {opt}": "{opt} বাছাই করুন",
       "Code {code} applied": "কোড {code} যোগ হয়েছে", " (one use per customer)": " (প্রতি কাস্টমার একবার)",
       "Thank you!": "ধন্যবাদ!", "Your order is placed. We'll call you soon to confirm it.": "আপনার অর্ডারটি হয়েছে। নিশ্চিত করতে আমরা শিগগিরই ফোন করব।", "Back to the shop": "শপে ফিরে যান",
@@ -387,6 +389,8 @@ export const SiteKit = (() => {
     site.radius ||= "soft";
     site.header ||= { logo: "", announcement: { show: false, text: "Free delivery on orders over ৳2,000" }, search: true, account: true, cart: true, style: blankStyle() };
     site.footer ||= { text: site.about || "", showMenu: true, showContact: true, showSocial: true, copyright: "", style: blankStyle() };
+    // Phones: a sticky bar at the bottom (Home, Shop, the main button, Cart, WhatsApp or Call); on for every website
+    site.header.mbar ||= { show: true, cta: site.lang === "bn" ? "অর্ডার করুন" : "Order now", link: "/shop", chat: true };
     pages.forEach((p) => { if (!Array.isArray(p.sections)) p.sections = pageSections(p, ctx); });
     // Every store has a Checkout page: it can be edited or reset, but not deleted, and its link stays /checkout
     if (!pages.some((p) => p.system === "checkout")) {
@@ -739,6 +743,20 @@ export const SiteKit = (() => {
       </div>
     </header>`;
   };
+  // Phones: the sticky bottom bar (hidden on bigger screens by the stylesheet)
+  const renderMobileBar = (site, pages) => {
+    const b = (site.header || {}).mbar;
+    if (!b || !b.show) return "";
+    const T = (s) => tr(site, s), wa = waLink(site), tel = digits(site.phone);
+    const shop = pages.find((p) => p.slug === "shop") ? "/shop" : "/";
+    const item = (href, ico, label, extra = "") => `<a href="${esc(href)}"${extra}>${ico}<span>${esc(label)}</span></a>`;
+    const chat = b.chat && wa ? item(wa, socialIcon("whatsapp"), "WhatsApp", ' target="_blank" rel="noopener" class="mb-wa"') : b.chat && tel ? item("tel:" + tel, svg("phone"), T("Call")) : "";
+    return `<nav class="s-mbar" data-sid="header" aria-label="${esc(T("Menu"))}">
+      ${item("/", svg("home"), T("Home"))}${item(shop, svg("bag"), T("Shop"))}
+      ${b.cta ? `<a class="mb-cta" href="${esc(safeLink(b.link) || shop)}">${esc(b.cta)}</a>` : ""}
+      ${item("/checkout", svg("cart"), T("Cart"), ' class="mb-cart"')}${chat}
+    </nav>`;
+  };
   const renderFooter = (site, pages) => {
     const f = site.footer, socials = Object.entries(site.social || {}).filter(([k, v]) => v && SOCIAL_NAMES[k]);
     const T = (s) => tr(site, s);
@@ -779,6 +797,7 @@ export const SiteKit = (() => {
         return `<section class="s s-${esc(s.type)} pad-${esc(st.padding || "m")} align-${esc(st.align || "left")}${hide}${s.hidden ? " is-hidden" : ""}${sel(s.id)}" data-sid="${esc(s.id)}" style="${sectionStyle(st)}">${label(s)}${R(s.content || {}, st, { products: opts.products, ed, blocks: renderBlocks(s.blocks, ed), site, theme, hints: !!opts.hints, T, money: m })}</section>${insert(i + 1)}`;
       }).join("") || (ed ? '<section class="s pad-l align-center"><div class="wrap"><p class="empty">This page has no sections yet. Click + to add one.</p></div></section>' : "")}</main>
       ${opts.bare ? "" : renderFooter(site, pages).replace('class="s-footer', `class="s-footer${sel("footer")}`).replace(/(<footer[^>]*>)/, `$1${fixedLabel("footer", "Footer")}`)}
+      ${opts.bare ? "" : renderMobileBar(site, pages)}
     </div>`;
   };
 
@@ -909,6 +928,7 @@ export const SiteKit = (() => {
       var count = cart.reduce(function (a, it) { return a + it.qty; }, 0);
       // Themes that always show the count keep a "0" badge; the others show it once something is in the cart
       document.querySelectorAll('.tools a[href="/checkout"]').forEach(function (a) { if (count || a.closest(".theme-fashion")) a.setAttribute("data-count", num(count)); else a.removeAttribute("data-count"); });
+      document.querySelectorAll(".s-mbar .mb-cart").forEach(function (a) { if (count) a.setAttribute("data-count", num(count)); else a.removeAttribute("data-count"); });
       document.querySelectorAll(".checkout").forEach(function (root) {
         var box = root.querySelector("[data-items]"), sub = subtotal(), d = root.querySelector('input[name="delivery"]:checked');
         var fee = cart.length && d ? Number(d.getAttribute("data-fee")) || 0 : 0;
@@ -1024,12 +1044,23 @@ export const SiteKit = (() => {
       form.querySelectorAll("[data-q]").forEach(function (f) { if (f.value.trim()) answers.push({ label: f.getAttribute("data-q"), type: f.getAttribute("data-type"), value: f.value.trim() }); });
       var pick = function (n) { var r = form.querySelector('input[name="' + n + '"]:checked'); return r ? r.value : ""; };
       var fee = feeNow(), paid = Math.max(0, subtotal() + fee - (code ? discountFor(code, lines(), fee) : 0));
-      track("buy", paid, lines());
       var order = { items: cart.map(function (it) { return { id: it.id, qty: it.qty, v: it.v || "" }; }), answers: answers, delivery: pick("delivery"), payment: pick("pay"), code: code ? code.code : "" };
+      var done = function () {
+        track("buy", paid, lines());
+        cart = []; code = null; save();
+        root.innerHTML = '<div class="co-done"><span>\u2713</span><h1>' + esc(tr("Thank you!")) + '</h1><p class="lead">' + esc(tr("Your order is placed. We'll call you soon to confirm it.")) + '</p><a class="btn" href="/">' + esc(tr("Back to the shop")) + "</a></div>";
+        scrollTo(0, 0);
+      };
+      // The live website sends the order to the shop's dashboard; the preview hands it to the dashboard that opened it
+      if (D.orderUrl) {
+        var btn = form.querySelector('[type="submit"]'); if (btn) btn.disabled = true;
+        fetch(D.orderUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(order) })
+          .then(function (r) { if (!r.ok) throw new Error(); done(); })
+          .catch(function () { if (btn) btn.disabled = false; note(tr("Couldn't place your order. Please check your connection and try again.")); });
+        return;
+      }
       if (window.opener) { try { window.opener.postMessage({ type: "shopilier-order", order: order }, location.origin === "null" ? "*" : location.origin); } catch (err) {} }
-      cart = []; code = null; save();
-      root.innerHTML = '<div class="co-done"><span>\u2713</span><h1>' + esc(tr("Thank you!")) + '</h1><p class="lead">' + esc(tr("Your order is placed. We'll call you soon to confirm it.")) + '</p><a class="btn" href="/">' + esc(tr("Back to the shop")) + "</a></div>";
-      scrollTo(0, 0);
+      done();
     });
     draw();
   };
@@ -1042,7 +1073,7 @@ export const SiteKit = (() => {
     const nav = `<script>document.addEventListener("click",function(e){var m=e.target.closest(".burger");if(m){m.closest(".s-header").classList.toggle("m-open");return}document.querySelectorAll(".m-open").forEach(function(h){h.classList.remove("m-open")});var a=e.target.closest("a[href^='/']");if(!a)return;var slug=a.getAttribute("href").slice(1),pg=document.querySelector('[data-slug="'+slug+'"]');e.preventDefault();if(!pg)return;document.querySelectorAll("[data-slug]").forEach(function(d){d.hidden=d!==pg});scrollTo(0,0)});<\/script>`;
     // What the shop script needs: products that are for sale and the discount codes that work
     const shop = {
-      t: STRINGS[site.lang] || null, bn: site.lang === "bn",
+      t: STRINGS[site.lang] || null, bn: site.lang === "bn", orderUrl: opts.orderUrl || "",
       products: (opts.products || []).filter((p) => p.status !== "draft").map((p) => ({
         id: p.id, name: p.name, price: Number(p.price) || 0, compare: onSale(p) ? Number(p.compare) : 0, stock: p.stock == null ? null : Number(p.stock), color: color(p.color),
         image: safeImg(p.image) ? p.image : "", images: (p.images || []).filter((u) => safeImg(u)).slice(0, 8), description: String(p.description || "").slice(0, 2000),

@@ -249,13 +249,13 @@
 .profile-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
 
 /* ---------- Desktop scale ----------
-   Laptops and desktops show both dashboards at 75% (the same as 75% browser zoom).
-   Zoom shrinks vh units too, so full-height parts use 133.33vh (100 ÷ 0.75). */
+   Laptops and desktops show both dashboards at 80% (the same as 80% browser zoom).
+   Zoom shrinks vh units too, so full-height parts use 125vh (100 ÷ 0.8). */
 @media (min-width: 1024px) {
-  .store-admin { zoom: .75; }
-  .store-admin .app { height: 133.33vh; }
+  .store-admin { zoom: .8; }
+  .store-admin .app { height: 125vh; }
   .store-admin .page { max-width: 1680px; }
-  .store-admin .dialog.settings { height: min(720px, calc(133.33vh - 60px)); }
+  .store-admin .dialog.settings { height: min(720px, calc(125vh - 60px)); }
 }
 
 /* ---------- Messages inbox (both dashboards) ---------- */
@@ -303,7 +303,7 @@
 .thread-reply textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .thread-reply .btn { height: 44px; }
 .thread-note { padding: 0 14px 12px; background: #fff; font-size: 12px; color: var(--muted); }
-@media (min-width: 1024px) { .inbox { height: calc(133.33vh - 260px); } }
+@media (min-width: 1024px) { .inbox { height: calc(125vh - 260px); } }
 @media (max-width: 900px) {
   .inbox { grid-template-columns: 1fr; height: calc(100vh - 210px); }
   .inbox .inbox-thread { display: none; }
@@ -923,7 +923,7 @@ body.editor-open .chat-fab, body.editor-open .chat-panel { display: none; }
 .demo-bar .btn-cta:hover { background: #eef8e7; }
 .demo-bar .btn .i { width: 15px; height: 15px; }
 .store-admin.demo .app { height: calc(100vh - 46px); }
-@media (min-width: 1024px) { .store-admin.demo .app { height: calc(133.33vh - 46px); } }
+@media (min-width: 1024px) { .store-admin.demo .app { height: calc(125vh - 46px); } }
 @media (max-width: 700px) {
   .demo-bar { padding: 6px 12px; gap: 8px; font-size: 12.5px; }
   .demo-bar .demo-long { display: none; }
@@ -1540,4 +1540,129 @@ body.editor-open .chat-fab, body.editor-open .chat-panel { display: none; }
   .ed-row-tools button:disabled { opacity: .3; }
   .ed-grip { display: none !important; }
   .ed-add-section { width: 100%; justify-content: center; height: 46px; margin: 12px 0 4px; border: 1.5px dashed #b7dcc6; border-radius: 14px; background: #f3faf6; color: var(--accent); font-weight: 600; }
+}
+
+/* ======================================================================
+   Phones, v7: compact home cards (icon on the left, name over the number) and pull to refresh
+   ====================================================================== */
+.ptr { display: none; }
+@media (max-width: 760px) {
+  body.on-home:not(.master-admin) .stats .stat { position: relative; display: grid; grid-template-columns: 42px minmax(0, 1fr); grid-template-areas: "ico lb" "ico val"; column-gap: 11px; row-gap: 3px; align-items: center; align-content: center; min-height: 78px; padding: 14px 12px; border-radius: 18px; }
+  body.on-home:not(.master-admin) .stats .stat-ico { grid-area: ico; justify-self: start; align-self: center; width: 42px !important; height: 42px !important; margin: 0; border-radius: 14px; }
+  body.on-home:not(.master-admin) .stats .stat-ico .i { width: 20px; height: 20px; }
+  body.on-home:not(.master-admin) .stats .stat-label { grid-area: lb; align-self: end; font-size: 12.5px; font-weight: 500; line-height: 1.25; color: #667085; }
+  body.on-home:not(.master-admin) .stats .stat .stat-value { grid-area: val; align-self: start; margin: 0 !important; font-size: clamp(17px, 5.2vw, 21px); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; white-space: nowrap; }
+  body.on-home:not(.master-admin) .stats .stat-delta { position: absolute; top: 8px; right: 8px; margin: 0; }
+  body.on-home:not(.master-admin) .stats .stat-delta .delta { padding: 2px 6px; font-size: 10.5px; }
+
+  /* Pull to refresh: a round spinner that follows your finger down from the top bar */
+  .ptr { display: grid; place-items: center; position: fixed; left: 50%; top: 0; z-index: 85; width: 40px; height: 40px; margin-left: -20px; border-radius: 50%; background: #fff; color: var(--accent);
+    box-shadow: 0 6px 18px -6px rgba(16, 24, 40, .35); transform: translateY(-50px); opacity: 0; pointer-events: none; }
+  .ptr .i { width: 20px; height: 20px; }
+  .ptr.ready { background: var(--accent); color: #fff; }
+  .ptr.spin .i { animation: ptr-spin .7s linear infinite; }
+  @keyframes ptr-spin { to { transform: rotate(360deg); } }
+}
+@media (max-width: 760px) {
+  body:not(.master-admin) #view .card-head .link { color: var(--accent); font-weight: 600; }
+}
+
+/* Phones: home number cards fit amounts up to ৳10,00,000 (and beyond) in full.
+   Icon and name share the top row; the number gets the card's whole width underneath. */
+@media (max-width: 760px) {
+  body.on-home:not(.master-admin) .stats .stat { grid-template-columns: 34px minmax(0, 1fr); grid-template-areas: "ico lb" "val val"; column-gap: 9px; row-gap: 10px; align-items: center; min-height: 0; padding: 13px 12px 14px; }
+  body.on-home:not(.master-admin) .stats .stat-ico { width: 34px !important; height: 34px !important; border-radius: 11px; }
+  body.on-home:not(.master-admin) .stats .stat-ico .i { width: 17px; height: 17px; }
+  body.on-home:not(.master-admin) .stats .stat-label { align-self: center; font-size: 12.5px; }
+  body.on-home:not(.master-admin) .stats .stat .stat-value { font-size: clamp(17px, 5.4vw, 22px); white-space: nowrap; overflow: visible; }
+}
+/* Very small phones (320px): drop the plan badge so the bell and avatar stay on the logo's row */
+@media (max-width: 340px) {
+  .m-brand small { display: none; }
+  body.on-home .m-brand { font-size: 17px; }
+}
+
+/* Phones, v8: number cards in the familiar order. Name top-left, icon top-right, the number underneath lined up
+   with the name and using the card's full width; a change chip (↑/↓) goes under the number only when there is one. */
+@media (max-width: 760px) {
+  body.on-home:not(.master-admin) .stats .stat { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "lb ico" "val val" "dl dl"; column-gap: 8px; row-gap: 0; align-items: center; align-content: start; padding: 14px 14px 15px; }
+  body.on-home:not(.master-admin) .stats .stat-label { grid-area: lb; align-self: center; font-size: 13px; font-weight: 600; color: #475467; line-height: 1.25; }
+  body.on-home:not(.master-admin) .stats .stat-ico { grid-area: ico; justify-self: end; width: 32px !important; height: 32px !important; border-radius: 10px; }
+  body.on-home:not(.master-admin) .stats .stat-ico .i { width: 16px; height: 16px; }
+  body.on-home:not(.master-admin) .stats .stat .stat-value { grid-area: val; justify-self: start; margin: 12px 0 0 !important; font-size: clamp(18px, 5.6vw, 23px); line-height: 1.1; }
+  body.on-home:not(.master-admin) .stats .stat-delta { grid-area: dl; position: static; justify-self: start; margin-top: 6px; }
+  body.on-home:not(.master-admin) .stats .stat-delta:not(:has(.delta.up, .delta.down)) { display: none; }
+}
+@media (max-width: 760px) {
+  /* The top row has a fixed height (room for a two-line name), so numbers line up across cards side by side */
+  body.on-home:not(.master-admin) .stats .stat { grid-template-rows: 34px auto auto; }
+  body.on-home:not(.master-admin) .stats .stat-label { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12.5px; }
+  body.on-home:not(.master-admin) .stats .stat .stat-value { margin-top: 10px !important; }
+}
+
+/* Phones, v9: icon before the name on the top row; the number centred in the card */
+@media (max-width: 760px) {
+  body.on-home:not(.master-admin) .stats .stat { grid-template-columns: 30px minmax(0, 1fr); grid-template-areas: "ico lb" "val val" "dl dl"; column-gap: 8px; }
+  body.on-home:not(.master-admin) .stats .stat-ico { justify-self: start; width: 30px !important; height: 30px !important; border-radius: 9px; }
+  body.on-home:not(.master-admin) .stats .stat-ico .i { width: 15px; height: 15px; }
+  body.on-home:not(.master-admin) .stats .stat .stat-value { justify-self: center; text-align: center; margin-top: 12px !important; }
+  body.on-home:not(.master-admin) .stats .stat-delta { justify-self: center; }
+}
+
+/* "View website": a button in the top bar (globe only on phones), and a highlighted row in the Account sheet */
+.top-visit { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; background: #fff; color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.top-visit:hover { border-color: var(--accent); color: var(--accent); }
+.top-visit .i { width: 17px; height: 17px; color: var(--accent); }
+.more-visit { display: none !important; }
+@media (max-width: 760px) {
+  body:not(.master-admin) .top-visit { width: 40px; height: 40px; padding: 0; justify-content: center; border: 0; border-radius: 50%; background: #fff; box-shadow: var(--m-card); }
+  body:not(.master-admin) .top-visit span { display: none; }
+  body:not(.master-admin) .top-visit .i { width: 19px; height: 19px; }
+  body.on-home:not(.master-admin) .top-visit { width: 44px; height: 44px; }
+  .more-list > .more-visit { display: flex !important; margin-bottom: 6px; background: var(--accent-soft); color: var(--accent) !important; font-weight: 700; }
+  .more-list > .more-visit .i { color: var(--accent) !important; }
+  .more-list > .more-visit .i:last-child { width: 16px; height: 16px; margin-left: auto; }
+}
+@media (max-width: 380px) {
+  body.on-home:not(.master-admin) .top-visit { width: 40px; height: 40px; }
+}
+@media (max-width: 340px) {
+  body.on-home:not(.master-admin) .top-visit { display: none; }
+}
+/* Phones: "View your website" is a row on Home (and in the Account sheet), not a top-bar button */
+.m-visit { display: none; }
+@media (max-width: 760px) {
+  body:not(.master-admin) .top-visit { display: none !important; }
+  .m-visit { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 12px; padding: 14px 16px; border: 1px solid #d6efe0; border-radius: 18px; background: linear-gradient(120deg, #effaf3, #fff); box-shadow: var(--m-card); font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
+  .m-visit:active { transform: scale(.99); }
+  .m-visit-ico { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 12px; background: var(--accent); color: #fff; }
+  .m-visit-ico .i { width: 20px; height: 20px; }
+  .m-visit-text { display: grid; gap: 2px; flex: 1; min-width: 0; }
+  .m-visit-text b { font-size: 15px; }
+  .m-visit-text small { font-size: 12.5px; color: #667085; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-visit > .i { width: 18px; height: 18px; flex: none; color: var(--accent); }
+}
+/* Account sheet: "View your website" sits right under your store, as a green card */
+.more-panel > .m-visit { margin-top: 10px; }
+
+/* Website editor on phones: every page as a chip under the top bar */
+.ed-m-pages { display: none; }
+@media (max-width: 760px) {
+  .ed-m-pages { display: flex; gap: 8px; flex: none; padding: 8px 12px 10px; overflow-x: auto; background: #fff; border-bottom: 1px solid #eef0f3; scrollbar-width: none; position: relative; z-index: 1; }
+  .ed-m-pages::-webkit-scrollbar { display: none; }
+  .ed-m-pages button { flex: none; height: 34px; padding: 0 14px; border: 1px solid #e4e7ec; border-radius: 999px; background: #fff; color: #344054; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .ed-m-pages button.on { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .ed-m-pages .ed-m-addpage { display: inline-flex; align-items: center; gap: 4px; border-style: dashed; color: var(--accent); }
+  .ed-m-pages .ed-m-addpage .i { width: 14px; height: 14px; }
+  .ed-top { box-shadow: none; }
+}
+/* (editor.css loads after this file, so the phone editor rules need the extra body.editor-open to win) */
+@media (max-width: 760px) {
+  body.editor-open .ed-canvas { padding: 0 0 calc(72px + env(safe-area-inset-bottom)); background: #fff; }
+  body.editor-open .ed.panel-open .ed-canvas { padding-bottom: 0; }
+  body.editor-open .ed-top { height: 58px; padding: 0 10px; }
+  body.editor-open .ed-panel { height: 62vh; height: 62dvh; border-radius: 26px 26px 0 0; }
+  body.editor-open .ed-row { min-height: 52px; border-radius: 14px; }
+  body.editor-open .ed-row-tools { display: flex; gap: 2px; margin-left: auto; opacity: 1; }
+  body.editor-open .ed-row-tools button { width: 34px; height: 34px; border-radius: 10px; }
 }
