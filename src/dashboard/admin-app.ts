@@ -597,6 +597,8 @@ export const start = async () => {
   };
   const PAY_COLOR = { "Cash on delivery": "gray", bKash: "pink", Nagad: "orange", Card: "blue" };
   const sales = (orders) => orders.filter((o) => o.status !== "Cancelled").reduce((s, o) => s + o.total, 0);
+  // Where the published website really opens (this server, /s/<sub-domain>)
+  const liveUrl = () => location.origin + "/s/" + encodeURIComponent(store.settings.subdomain || "");
   const siteUrl = () => store.settings.domain && store.settings.domainStatus === "connected" ? store.settings.domain : store.settings.subdomain + ".shopilier.com";
   const orderNo = (o) => "#" + o.number;
 
@@ -875,6 +877,7 @@ export const start = async () => {
             ${stat('<span class="d-label">Online store sessions</span><span class="m-label">Store sessions</span>', visits.toLocaleString("en-IN"), "barchart", "c3", store.published || visits ? (visitsPrev ? delta(visits, visitsPrev) + vsText : '<span class="muted"><span class="d-label">Visitor counts cover the last 14 days</span><span class="m-label">Last 14 days</span></span>') : '<span class="muted">Counting starts when you publish</span>')}
             ${stat("Returning customers", ret.toFixed(1).replace(/\.0$/, "") + "%", "customers", "c4", delta(ret, retPrev, true) + vsText)}
           </div>
+          <button type="button" class="m-visit" data-visit><span class="m-visit-ico">${icon("globe")}</span><span class="m-visit-text"><b>${store.published ? "View your website" : "Preview your website"}</b><small>${esc(siteUrl())}</small></span>${icon("external")}</button>
           <div class="home-grid">
             <div class="home-main">
               <div class="card"><div class="card-head"><span class="card-title">Sales overview</span><a class="btn" href="#/analytics">View report</a></div>
@@ -1884,9 +1887,9 @@ export const start = async () => {
 
   // An order placed on the website preview (opened from this dashboard). Prices, stock and the discount
   // are checked again here, so the website can't set them.
-  window.addEventListener("message", (e) => {
-    if (e.origin !== location.origin || !e.data || e.data.type !== "shopilier-order") return;
-    const o = e.data.order || {};
+  // webId: an order from the live website (kept on it, so the same order is never added twice)
+  const takeOrder = (o, webId = "") => {
+    if (webId && store.orders.some((x) => x.webId === webId)) return 0;
     // A size/color choice only counts if it matches the product's own options
     const variant = (p, v) => {
       if (!v || !(p.options || []).length) return "";
@@ -1897,7 +1900,7 @@ export const start = async () => {
       const p = store.products.find((x) => x.id === it.id && x.status !== "draft");
       return { p, qty: Math.max(1, Math.floor(Number(it.qty) || 1)), v: p ? variant(p, it.v) : "" };
     }).filter((it) => it.p);
-    if (!items.length) return;
+    if (!items.length) return 0;
     const answers = (Array.isArray(o.answers) ? o.answers : []).slice(0, 20).map((a) => ({ label: String(a.label || "").slice(0, 60), type: String(a.type || ""), value: String(a.value || "").slice(0, 300) }));
     const find = (type) => (answers.find((a) => a.type === type) || {}).value || "";
     const name = (answers.find((a) => a.type === "text") || {}).value || "Website customer", phone = find("tel");
@@ -1919,7 +1922,7 @@ export const start = async () => {
       id: uid("o"), number, customer: name.slice(0, 60), phone: phone.slice(0, 30),
       items: items.map((it) => ({ name: it.p.name + (it.v ? ` (${it.v})` : ""), qty: it.qty, price: it.p.price, ...(it.v ? { variant: it.v } : {}) })), total: sub - off + fee,
       payment: String(o.payment || "Cash on delivery").slice(0, 40), status: "Pending", date: new Date().toISOString(),
-      delivery: opt ? opt.label : "", deliveryFee: fee, discount: d ? { code: d.code, amount: off, free: d.type === "shipping" } : null, discountNote, answers, source: "website",
+      delivery: opt ? opt.label : "", deliveryFee: fee, discount: d ? { code: d.code, amount: off, free: d.type === "shipping" } : null, discountNote, answers, source: "website", ...(webId ? { webId } : {}),
     });
     items.forEach((it) => { if (it.p.stock != null) it.p.stock = Math.max(0, it.p.stock - it.qty); });
     // The customer: found by phone (or name), filled in with what they typed at checkout
@@ -1927,8 +1930,38 @@ export const start = async () => {
     const known = store.customers.find((c) => (phone && normPhone(c.phone) === normPhone(phone)) || (!phone && c.name.toLowerCase() === name.toLowerCase()));
     if (known) { known.address ||= address; known.city ||= city; known.email ||= find("email").slice(0, 80); }
     else store.customers.unshift({ id: uid("c"), name: name.slice(0, 60), phone: phone.slice(0, 30), city, address, email: find("email").slice(0, 80), joined: new Date().toISOString() });
+    return number;
+  };
+  window.addEventListener("message", (e) => {
+    if (e.origin !== location.origin || !e.data || e.data.type !== "shopilier-order") return;
+    const number = takeOrder(e.data.order || {});
+    if (!number) return;
     persist(); if (!location.hash.startsWith("#/website")) go(); toast(`🛒 New order #${number} from your website`);
   });
+  // Orders placed on the live website wait on the server until this dashboard adds them (on opening it,
+  // every 45 seconds, and when you come back to the tab); they're cleared there only after the store is saved
+  const isDemo = document.body.classList.contains("demo");
+  let syncing = false;
+  const syncWebOrders = async () => {
+    if (isDemo || syncing || document.hidden) return;
+    syncing = true;
+    try {
+      const r = await fetch("/api/store/web-orders");
+      if (!r.ok) return;
+      const { orders = [] } = await r.json();
+      if (!orders.length) return;
+      const added = orders.map((w) => takeOrder(w.order || {}, w.id)).filter(Boolean);
+      if (added.length && !(await saveNow())) return;
+      await fetch("/api/store/web-orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: orders.map((w) => w.id) }) });
+      if (added.length) {
+        refreshChrome(); if (!location.hash.startsWith("#/website")) go();
+        toast(added.length === 1 ? `🛒 New order #${added[0]} from your website` : `🛒 ${added.length} new orders from your website`);
+      }
+    } catch (err) { /* offline: try again later */ } finally { syncing = false; }
+  };
+  syncWebOrders();
+  setInterval(syncWebOrders, 45000);
+  document.addEventListener("visibilitychange", syncWebOrders);
 
   const pixelById = (id) => PIXELS.find((p) => p.id === id);
   // ---------- Chat with the Shopilier team ----------
@@ -2187,6 +2220,9 @@ export const start = async () => {
       persist(); if (location.hash !== "#/website") go(); toast("🚀 Website published");
     },
     "view-store": () => {
+      // The real website, at its live address, once it's published; before that (and in the demo) a preview
+      if (!isDemo && store.published && store.settings.subdomain) { window.open(liveUrl(), "_blank", "noopener"); return; }
+      if (!isDemo && !store.published) toast("Your website isn't live yet — this is a preview. Publish it to open it for customers.");
       const html = SiteKit.storeHTML(store.site, store.pages, { products: store.products, discounts: discountsForSite(), tracking: trackingCode(store.marketing) });
       window.open(URL.createObjectURL(new Blob([html], { type: "text/html" })), "_blank");
     },
@@ -2872,6 +2908,13 @@ export const start = async () => {
       t.querySelectorAll("tbody tr").forEach((tr) => [...tr.children].forEach((td, i) => { if (heads[i] && !td.hasAttribute("colspan")) td.dataset.label = heads[i]; }));
     });
   };
+
+  // "View website" (top bar, profile menu, Account sheet): the real website in a new tab
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("[data-visit]")) return;
+    toggleMenu(false); setMore(false);
+    actions["view-store"]();
+  });
 
   hydrateIcons();
   refreshChrome();

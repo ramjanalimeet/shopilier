@@ -76,6 +76,8 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
                 <div className="dd-menu dd-months" role="listbox" aria-label="Month" hidden />
               </div>
             </div>
+            {/* Opens the published website in a new tab (a preview before it's published) */}
+            <button className="top-visit" type="button" data-visit title="View your website" aria-label="View your website"><Icon name="globe" /><span>View website</span></button>
             <div className="bell-wrap">
               <button className="top-bell" type="button" id="bell" aria-label="Notifications" title="Notifications" aria-haspopup="true" aria-expanded="false" aria-controls="bell-menu"><Icon name="bell" /><span className="badge" id="bell-count" /></button>
               <div className="bell-menu" id="bell-menu" hidden />
@@ -88,7 +90,7 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
               </button>
               <div className="profile-menu" id="profile-menu" role="menu" hidden>
                 <div className="profile-menu-head"><b id="menu-name" /><span id="me-email" /><span className="tag green" id="me-plan" /></div>
-                <a role="menuitem" href="#/themes"><Icon name="external" />My website</a>
+                <button role="menuitem" type="button" data-visit><Icon name="external" />View my website</button>
                 <button role="menuitem" type="button" data-settings="general"><Icon name="settings" />Settings</button>
                 <button role="menuitem" type="button" data-settings="billing"><Icon name="billing" />Plan &amp; billing</button>
                 {demo ? (
@@ -125,6 +127,7 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
             ))}
           </div>
           <div className="more-list">
+            <button type="button" data-visit className="more-visit"><Icon name="globe" />View your website<Icon name="external" /></button>
             <button type="button" data-more="chat"><Icon name="chat" />Help &amp; chat<span className="more-badge" data-more-msgs /></button>
             <button type="button" data-more="settings"><Icon name="settings" />Settings</button>
             <button type="button" data-more="billing"><Icon name="billing" />Plan &amp; billing</button>

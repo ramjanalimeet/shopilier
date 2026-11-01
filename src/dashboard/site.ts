@@ -93,7 +93,7 @@ export const SiteKit = (() => {
       "Account": "অ্যাকাউন্ট", "Cart": "কার্ট", "Wishlist": "পছন্দের তালিকা", "Track order": "অর্ডার ট্র্যাক করুন", "Call us": "কল করুন", "Menu": "মেনু",
       "Previous": "আগেরটি", "Next": "পরেরটি", "Add an image": "ছবি যোগ করুন", "Featured": "বাছাই করা", "Categories": "ক্যাটাগরি",
       "{name} added to your cart": "{name} কার্টে যোগ হয়েছে", "Only {n} more left in stock": "স্টকে আর মাত্র {n}টি আছে", "No more left in stock": "স্টকে আর নেই",
-      "Your cart is empty.": "আপনার কার্ট খালি।", "Your cart is empty": "আপনার কার্ট খালি", "Continue shopping": "কেনাকাটা চালিয়ে যান", "Remove": "বাদ দিন",
+      "Your cart is empty.": "আপনার কার্ট খালি।", "Your cart is empty": "আপনার কার্ট খালি", "Couldn't place your order. Please check your connection and try again.": "অর্ডার করা যায়নি। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।", "Continue shopping": "কেনাকাটা চালিয়ে যান", "Remove": "বাদ দিন",
       "One less": "একটি কম", "One more": "একটি বেশি", "Close": "বন্ধ করুন", "Please choose a {opt}": "{opt} বাছাই করুন",
       "Code {code} applied": "কোড {code} যোগ হয়েছে", " (one use per customer)": " (প্রতি কাস্টমার একবার)",
       "Thank you!": "ধন্যবাদ!", "Your order is placed. We'll call you soon to confirm it.": "আপনার অর্ডারটি হয়েছে। নিশ্চিত করতে আমরা শিগগিরই ফোন করব।", "Back to the shop": "শপে ফিরে যান",
@@ -1024,12 +1024,23 @@ export const SiteKit = (() => {
       form.querySelectorAll("[data-q]").forEach(function (f) { if (f.value.trim()) answers.push({ label: f.getAttribute("data-q"), type: f.getAttribute("data-type"), value: f.value.trim() }); });
       var pick = function (n) { var r = form.querySelector('input[name="' + n + '"]:checked'); return r ? r.value : ""; };
       var fee = feeNow(), paid = Math.max(0, subtotal() + fee - (code ? discountFor(code, lines(), fee) : 0));
-      track("buy", paid, lines());
       var order = { items: cart.map(function (it) { return { id: it.id, qty: it.qty, v: it.v || "" }; }), answers: answers, delivery: pick("delivery"), payment: pick("pay"), code: code ? code.code : "" };
+      var done = function () {
+        track("buy", paid, lines());
+        cart = []; code = null; save();
+        root.innerHTML = '<div class="co-done"><span>\u2713</span><h1>' + esc(tr("Thank you!")) + '</h1><p class="lead">' + esc(tr("Your order is placed. We'll call you soon to confirm it.")) + '</p><a class="btn" href="/">' + esc(tr("Back to the shop")) + "</a></div>";
+        scrollTo(0, 0);
+      };
+      // The live website sends the order to the shop's dashboard; the preview hands it to the dashboard that opened it
+      if (D.orderUrl) {
+        var btn = form.querySelector('[type="submit"]'); if (btn) btn.disabled = true;
+        fetch(D.orderUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(order) })
+          .then(function (r) { if (!r.ok) throw new Error(); done(); })
+          .catch(function () { if (btn) btn.disabled = false; note(tr("Couldn't place your order. Please check your connection and try again.")); });
+        return;
+      }
       if (window.opener) { try { window.opener.postMessage({ type: "shopilier-order", order: order }, location.origin === "null" ? "*" : location.origin); } catch (err) {} }
-      cart = []; code = null; save();
-      root.innerHTML = '<div class="co-done"><span>\u2713</span><h1>' + esc(tr("Thank you!")) + '</h1><p class="lead">' + esc(tr("Your order is placed. We'll call you soon to confirm it.")) + '</p><a class="btn" href="/">' + esc(tr("Back to the shop")) + "</a></div>";
-      scrollTo(0, 0);
+      done();
     });
     draw();
   };
@@ -1042,7 +1053,7 @@ export const SiteKit = (() => {
     const nav = `<script>document.addEventListener("click",function(e){var m=e.target.closest(".burger");if(m){m.closest(".s-header").classList.toggle("m-open");return}document.querySelectorAll(".m-open").forEach(function(h){h.classList.remove("m-open")});var a=e.target.closest("a[href^='/']");if(!a)return;var slug=a.getAttribute("href").slice(1),pg=document.querySelector('[data-slug="'+slug+'"]');e.preventDefault();if(!pg)return;document.querySelectorAll("[data-slug]").forEach(function(d){d.hidden=d!==pg});scrollTo(0,0)});<\/script>`;
     // What the shop script needs: products that are for sale and the discount codes that work
     const shop = {
-      t: STRINGS[site.lang] || null, bn: site.lang === "bn",
+      t: STRINGS[site.lang] || null, bn: site.lang === "bn", orderUrl: opts.orderUrl || "",
       products: (opts.products || []).filter((p) => p.status !== "draft").map((p) => ({
         id: p.id, name: p.name, price: Number(p.price) || 0, compare: onSale(p) ? Number(p.compare) : 0, stock: p.stock == null ? null : Number(p.stock), color: color(p.color),
         image: safeImg(p.image) ? p.image : "", images: (p.images || []).filter((u) => safeImg(u)).slice(0, 8), description: String(p.description || "").slice(0, 2000),
