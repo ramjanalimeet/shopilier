@@ -1642,3 +1642,27 @@ body.editor-open .chat-fab, body.editor-open .chat-panel { display: none; }
   .m-visit-text small { font-size: 12.5px; color: #667085; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .m-visit > .i { width: 18px; height: 18px; flex: none; color: var(--accent); }
 }
+/* Account sheet: "View your website" sits right under your store, as a green card */
+.more-panel > .m-visit { margin-top: 10px; }
+
+/* Website editor on phones: every page as a chip under the top bar */
+.ed-m-pages { display: none; }
+@media (max-width: 760px) {
+  .ed-m-pages { display: flex; gap: 8px; flex: none; padding: 8px 12px 10px; overflow-x: auto; background: #fff; border-bottom: 1px solid #eef0f3; scrollbar-width: none; position: relative; z-index: 1; }
+  .ed-m-pages::-webkit-scrollbar { display: none; }
+  .ed-m-pages button { flex: none; height: 34px; padding: 0 14px; border: 1px solid #e4e7ec; border-radius: 999px; background: #fff; color: #344054; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .ed-m-pages button.on { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .ed-m-pages .ed-m-addpage { display: inline-flex; align-items: center; gap: 4px; border-style: dashed; color: var(--accent); }
+  .ed-m-pages .ed-m-addpage .i { width: 14px; height: 14px; }
+  .ed-top { box-shadow: none; }
+}
+/* (editor.css loads after this file, so the phone editor rules need the extra body.editor-open to win) */
+@media (max-width: 760px) {
+  body.editor-open .ed-canvas { padding: 0 0 calc(72px + env(safe-area-inset-bottom)); background: #fff; }
+  body.editor-open .ed.panel-open .ed-canvas { padding-bottom: 0; }
+  body.editor-open .ed-top { height: 58px; padding: 0 10px; }
+  body.editor-open .ed-panel { height: 62vh; height: 62dvh; border-radius: 26px 26px 0 0; }
+  body.editor-open .ed-row { min-height: 52px; border-radius: 14px; }
+  body.editor-open .ed-row-tools { display: flex; gap: 2px; margin-left: auto; opacity: 1; }
+  body.editor-open .ed-row-tools button { width: 34px; height: 34px; border-radius: 10px; }
+}

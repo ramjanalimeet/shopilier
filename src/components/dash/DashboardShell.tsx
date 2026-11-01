@@ -121,13 +121,18 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
           <button className="more-store" type="button" data-more="stores">
             <span className="top-store-ava" data-acct-ava /><span className="top-store-text"><b data-acct-name /><small data-acct-plan /></span><span className="more-switch">Switch<Icon name="chevronRight" /></span>
           </button>
+          {/* Your website, live in a new tab */}
+          <button className="m-visit" type="button" data-visit>
+            <span className="m-visit-ico"><Icon name="globe" /></span>
+            <span className="m-visit-text"><b>View your website</b><small data-visit-url>Opens in a new tab</small></span>
+            <Icon name="external" />
+          </button>
           <div className="more-grid">
             {MORE.map(([route, icon, label]) => (
               <a key={route} className="more-tile" data-route={route} href={`#/${route}`}><span className="more-ico"><Icon name={icon} /></span>{label}</a>
             ))}
           </div>
           <div className="more-list">
-            <button type="button" data-visit className="more-visit"><Icon name="globe" />View your website<Icon name="external" /></button>
             <button type="button" data-more="chat"><Icon name="chat" />Help &amp; chat<span className="more-badge" data-more-msgs /></button>
             <button type="button" data-more="settings"><Icon name="settings" />Settings</button>
             <button type="button" data-more="billing"><Icon name="billing" />Plan &amp; billing</button>

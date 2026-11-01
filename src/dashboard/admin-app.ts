@@ -213,6 +213,7 @@ export const start = async () => {
     document.getElementById("me-avatar").innerHTML = avatar(account.name);
     document.getElementById("me-name").textContent = account.name.split(" ")[0];
     document.getElementById("me-store").textContent = siteUrl();
+    document.querySelectorAll("[data-visit-url]").forEach((el) => { el.textContent = store.published ? siteUrl() : "Not live yet · opens a preview"; });
     document.getElementById("menu-name").textContent = account.name;
     document.getElementById("me-email").textContent = account.email;
     document.getElementById("me-plan").textContent = plan().name + " · " + (account.billing === "yearly" ? "Yearly" : "Monthly");
@@ -877,7 +878,6 @@ export const start = async () => {
             ${stat('<span class="d-label">Online store sessions</span><span class="m-label">Store sessions</span>', visits.toLocaleString("en-IN"), "barchart", "c3", store.published || visits ? (visitsPrev ? delta(visits, visitsPrev) + vsText : '<span class="muted"><span class="d-label">Visitor counts cover the last 14 days</span><span class="m-label">Last 14 days</span></span>') : '<span class="muted">Counting starts when you publish</span>')}
             ${stat("Returning customers", ret.toFixed(1).replace(/\.0$/, "") + "%", "customers", "c4", delta(ret, retPrev, true) + vsText)}
           </div>
-          <button type="button" class="m-visit" data-visit><span class="m-visit-ico">${icon("globe")}</span><span class="m-visit-text"><b>${store.published ? "View your website" : "Preview your website"}</b><small>${esc(siteUrl())}</small></span>${icon("external")}</button>
           <div class="home-grid">
             <div class="home-main">
               <div class="card"><div class="card-head"><span class="card-title">Sales overview</span><a class="btn" href="#/analytics">View report</a></div>

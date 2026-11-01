@@ -65,7 +65,10 @@ export const SiteEditor = (() => {
     header: [["image", "logo", "Logo (optional)", { hint: () => "square, 512 × 512" }], ["toggle", "hideName", "Logo only (hide the website name beside it)", { when: "logo" }],
       ["note", "", "Your logo shows as a square with rounded corners, with your website name beside it."], ["toggle", "announcement.show", "Show announcement bar"], ["text", "announcement.text", "Announcement", { when: "announcement.show" }],
       ["toggle", "search", "Search"], ["toggle", "searchBar", "Show a search box (instead of an icon)", { when: "search" }], ["text", "searchText", "Search box text", { when: (c) => c.search && c.searchBar, placeholder: "Search products…" }],
-      ["toggle", "account", "Account icon"], ["toggle", "cart", "Cart icon"], ["note", "", 'The menu, the banner\'s link and color, and more header buttons are in <a href="#/navigation">Navigation</a>. The website name and logo are also in <a href="#/preferences">Preferences</a>.']],
+      ["toggle", "account", "Account icon"], ["toggle", "cart", "Cart icon"],
+      ["toggle", "mbar.show", "Sticky bar at the bottom on phones"], ["text", "mbar.cta", "Its main button", { when: "mbar.show", placeholder: "Order now" }], ["url", "mbar.link", "Main button link", { when: (c) => c.mbar && c.mbar.show && c.mbar.cta }],
+      ["toggle", "mbar.chat", "WhatsApp (or Call) button in the bar", { when: "mbar.show" }],
+      ["note", "", "The bar shows Home, Shop, your main button, Cart and WhatsApp on phones, so shoppers can order with one thumb."], ["note", "", 'The menu, the banner\'s link and color, and more header buttons are in <a href="#/navigation">Navigation</a>. The website name and logo are also in <a href="#/preferences">Preferences</a>.']],
     footer: [["textarea", "text", "About text"], ["toggle", "showMenu", "Show pages"], ["toggle", "showContact", "Show contact details"], ["toggle", "showSocial", "Show social links"], ["text", "copyright", "Copyright line", { placeholder: "© 2026 Your store. All rights reserved." }],
       ["note", "", 'Social links come from <a href="#/preferences">Preferences</a>.']],
   };
@@ -189,6 +192,7 @@ export const SiteEditor = (() => {
           <button class="ed-btn ed-publish" type="button" id="ed-publish">${icon("rocket")}<span class="ed-label" id="ed-publish-label"></span></button>
         </div>
       </header>
+      <nav class="ed-m-pages" aria-label="Pages"></nav>
       <div class="ed-body">
         <div class="ed-canvas"><div class="ed-frame-wrap"><iframe class="ed-frame" title="Website preview"></iframe></div></div>
         <aside class="ed-panel" id="ed-panel" aria-label="Editor panel"></aside>
@@ -202,6 +206,12 @@ export const SiteEditor = (() => {
     const $ = (sel) => root.querySelector(sel);
     const frame = $(".ed-frame"), panel = $("#ed-panel");
     // Phones: a floating button opens the sections panel as a bottom sheet
+    $(".ed-m-pages").addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      if (b.dataset.goto) { if (b.dataset.goto !== state.pageId) goPage(b.dataset.goto); b.scrollIntoView({ inline: "center", block: "nearest" }); return; }
+      if (b.hasAttribute("data-m-pages")) { state.mode = "pages"; state.panelOpen = true; paintPanel(); }
+    });
     $(".ed-m-bar").addEventListener("click", (e) => {
       const b = e.target.closest("[data-m]");
       if (!b) return;
@@ -227,7 +237,17 @@ export const SiteEditor = (() => {
       });
     }
 
+    // Open another page in the editor (from the menu bar, the page chips or the Pages panel)
+    const goPage = (id) => {
+      state.pageId = id; state.selected = null; state.mode = "sections";
+      if (frame.contentWindow) frame.contentWindow.scrollTo(0, 0);
+      paintAll();
+      toast(`Editing the “${page().title}” page`);
+    };
     const paintTop = () => {
+      // Phones: every page as a chip under the top bar
+      const chips = root.querySelector(".ed-m-pages");
+      if (chips) chips.innerHTML = store.pages.map((p) => `<button type="button" class="${p.id === state.pageId ? "on" : ""}" data-goto="${p.id}">${esc(p.title)}</button>`).join("") + `<button type="button" class="ed-m-addpage" data-m-pages>${icon("plus")}Page</button>`;
       root.querySelectorAll("[data-device]").forEach((b) => b.classList.toggle("on", b.dataset.device === state.device));
       root.querySelectorAll(".ed-top [data-mode]").forEach((b) => b.classList.toggle("on", state.mode === b.dataset.mode && state.panelOpen));
       $(".ed-frame-wrap").style.width = DEVICES[state.device].width;
@@ -252,6 +272,12 @@ export const SiteEditor = (() => {
         if (plus) { openLibrary(Number(plus.dataset.edAdd)); return; }
         const chip = e.target.closest("[data-ed]");
         if (chip) { sectionAction(chip.dataset.ed, state.selected); return; }
+        // A link in the menu bar, its dropdowns, the footer or the phone bar opens that page here, ready to edit
+        const link = e.target.closest(".s-header a[href^='/'], .s-footer a[href^='/'], .s-mbar a[href^='/']");
+        if (link) {
+          const slug = link.getAttribute("href").slice(1), to = store.pages.find((p) => (p.slug || "") === slug);
+          if (to && to.id !== state.pageId) { goPage(to.id); return; }
+        }
         const el = e.target.closest("[data-sid]");
         if (el) select(el.dataset.sid, false);
       });
