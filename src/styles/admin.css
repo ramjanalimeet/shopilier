@@ -1142,3 +1142,116 @@ body.editor-open .chat-fab, body.editor-open .chat-panel { display: none; }
   #view .table td .sub { text-align: left; }
   #view .table select.select { height: 30px; }
 }
+
+/* ======================================================================
+   Phones, refined: the look of a shopping app
+   Soft off-white background, borderless rounded cards with gentle shadows, a search pill, a gradient banner,
+   round action chips, pastel number cards, a two-column product grid and a bottom bar whose active tab rises
+   as a green circle. Shopilier's green is the accent.
+   ====================================================================== */
+.m-grid-btn, .top-title, .m-search, .m-banner, .m-sec-head, .g-fab { display: none; }
+.g-badge { position: absolute; top: 10px; left: 10px; padding: 3px 9px; border-radius: 999px; background: #fff; color: var(--ink); font-size: 11px; font-weight: 700; box-shadow: 0 2px 6px rgba(16, 24, 40, .1); }
+.g-badge.sale { background: #fde8e8; color: #c81e1e; }
+.g-cover { position: relative; }
+@media (max-width: 760px) {
+  body:not(.master-admin) { --m-bg: #f7f7f9; --m-card: 0 8px 24px -14px rgba(16, 24, 40, .22); --m-r: 20px; background: var(--m-bg); }
+  body:not(.master-admin) .app, body:not(.master-admin) .scroll { background: var(--m-bg); }
+
+  /* Top bar: menu button, the page title in the middle, notifications and you */
+  body:not(.master-admin) .topbar { position: relative; height: 60px; padding: 0 14px; background: var(--m-bg); border-bottom: 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  body:not(.master-admin) .top-store { display: none; }
+  .m-grid-btn { display: grid; place-items: center; width: 42px; height: 42px; margin-right: auto; border: 0; border-radius: 14px; background: #fff; color: var(--accent); box-shadow: var(--m-card); }
+  .m-grid-btn .i { width: 20px; height: 20px; }
+  .top-title { display: block; position: absolute; left: 50%; transform: translateX(-50%); max-width: 46%; font-size: 18px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+  body:not(.master-admin) .top-filters { display: none !important; }
+  body:not(.master-admin) .top-bell { background: #fff; box-shadow: var(--m-card); border: 0; }
+  body:not(.master-admin) .profile-avatar .avatar { width: 40px; height: 40px; box-shadow: 0 0 0 3px #fff, var(--m-card); }
+
+  /* Page titles are in the top bar, so the page itself starts with its actions */
+  body:not(.master-admin) .page-head > div:first-child { display: none; }
+  body:not(.master-admin) .page-head { justify-content: flex-end; margin-bottom: 12px; }
+  body:not(.master-admin) .page-actions { width: 100%; }
+  body:not(.master-admin) .page-actions > .btn-primary:last-child { margin-left: auto; }
+  body:not(.master-admin) .btn { border-radius: 14px; }
+
+  /* Cards: no borders, soft shadows, round corners */
+  body:not(.master-admin) .card, body:not(.master-admin) .stat, body:not(.master-admin) .callout { border: 0; border-radius: var(--m-r); box-shadow: var(--m-card); }
+  body:not(.master-admin) .card-head { border-bottom: 0; }
+
+  /* Home: search, the sales banner, action chips, pastel numbers */
+  .m-search { display: flex; gap: 10px; margin-bottom: 16px; }
+  .m-search-box { flex: 1; display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 16px; border-radius: 16px; background: #fff; box-shadow: var(--m-card); color: #98a2b3; }
+  .m-search-box .i { width: 19px; height: 19px; flex: none; }
+  .m-search-box input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; font-size: 14.5px; color: var(--ink); }
+  .m-filter { width: 50px; height: 50px; display: grid; place-items: center; border: 0; border-radius: 16px; background: var(--accent); color: #fff; box-shadow: 0 10px 22px -10px var(--accent); }
+  .m-filter .i { width: 21px; height: 21px; }
+  .m-banner { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; padding: 20px; overflow: hidden; border-radius: 24px; color: #fff;
+    background: radial-gradient(circle at 92% 10%, rgba(255, 255, 255, .22) 0 70px, transparent 71px), radial-gradient(circle at 78% 120%, rgba(255, 255, 255, .14) 0 90px, transparent 91px), linear-gradient(125deg, #0b6b42 0%, #129a5c 55%, #3cc38c 100%);
+    box-shadow: 0 16px 30px -16px rgba(11, 107, 66, .7); }
+  .m-banner-text { display: grid; gap: 4px; }
+  .m-banner-text small { font-size: 12.5px; opacity: .9; }
+  .m-banner-text b { font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+  .m-banner-text span { font-size: 13px; opacity: .9; }
+  .m-banner-text em { justify-self: start; margin-top: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, .22); font-style: normal; font-size: 12.5px; font-weight: 700; }
+  .m-banner-art { width: 76px; height: 76px; flex: none; display: grid; place-items: center; border-radius: 22px; background: rgba(255, 255, 255, .18); }
+  .m-banner-art .i { width: 38px; height: 38px; }
+  .m-quick { display: flex; grid-template-columns: none; gap: 10px; margin: 0 -14px 18px; padding: 2px 14px 6px; overflow-x: auto; scrollbar-width: none; }
+  .m-quick::-webkit-scrollbar { display: none; }
+  .m-quick > * { flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 14px 8px 8px; border: 0; border-radius: 16px; background: #fff; box-shadow: var(--m-card); font-size: 13px; white-space: nowrap; }
+  .m-quick > *:first-child { background: var(--accent); color: #fff; }
+  .m-quick .i { width: 32px; height: 32px; padding: 7px; border-radius: 11px; }
+  .m-quick > *:first-child .i { background: rgba(255, 255, 255, .22); color: #fff; }
+  .m-sec-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 2px 10px; }
+  .m-sec-head b { font-size: 17px; color: var(--ink); }
+  .m-sec-head a { font-size: 13px; color: var(--muted); }
+  body:not(.master-admin) .stats .stat:nth-child(4n+1) { background: #e9f7ef; }
+  body:not(.master-admin) .stats .stat:nth-child(4n+2) { background: #fdeef1; }
+  body:not(.master-admin) .stats .stat:nth-child(4n+3) { background: #eaf2fd; }
+  body:not(.master-admin) .stats .stat:nth-child(4n+4) { background: #fff5e3; }
+  body:not(.master-admin) .stats .stat { box-shadow: none; }
+  body:not(.master-admin) .stat-label { font-weight: 600; color: #475467; }
+  body:not(.master-admin) .stat-value { font-size: 24px; }
+
+  /* Products: a two-column grid of cards */
+  body:not(.master-admin) .seg:has([data-action="product-view"]) { display: none; }
+  body:not(.master-admin) .gallery { grid-template-columns: 1fr 1fr; gap: 12px; }
+  body:not(.master-admin) .g-card { position: relative; padding: 8px 8px 12px; border: 0; border-radius: var(--m-r); background: #fff; box-shadow: var(--m-card); overflow: visible; }
+  body:not(.master-admin) .g-cover { aspect-ratio: 1; border-radius: 16px; overflow: hidden; background-image: radial-gradient(circle at 50% 60%, rgba(255, 255, 255, .55) 0 38%, transparent 39%); }
+  body:not(.master-admin) .g-cover img { width: 100%; height: 100%; object-fit: cover; }
+  body:not(.master-admin) .g-body { padding: 10px 4px 0; gap: 4px; }
+  body:not(.master-admin) .g-title { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 2px; }
+  body:not(.master-admin) .g-meta { display: block; }
+  body:not(.master-admin) .g-meta b { display: block; font-size: 16px; }
+  body:not(.master-admin) .g-meta .tag, body:not(.master-admin) .g-meta .muted { display: none; }
+  body:not(.master-admin) .g-card .g-actions { display: none; }
+  .g-fab { display: grid; position: absolute; right: 10px; bottom: 12px; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--accent); color: #fff; box-shadow: 0 8px 16px -8px var(--accent); }
+  .g-fab .i { width: 16px; height: 16px; }
+  body:not(.master-admin) .card:has(.gallery) { background: none; box-shadow: none; }
+  body:not(.master-admin) .card:has(.gallery) > .card-head { padding: 0 0 12px; }
+  body:not(.master-admin) .card:has(.gallery) > .card-body { padding: 0; }
+
+  /* Lists: white cards with a little room between them */
+  body:not(.master-admin) #view .table tbody tr { margin-bottom: 10px; border: 0; border-radius: 18px; background: #fff; box-shadow: var(--m-card); }
+  body:not(.master-admin) .card:has(.table) { background: none; box-shadow: none; }
+  body:not(.master-admin) .card:has(.table) > .card-head { padding: 0 0 12px; flex-wrap: wrap; }
+
+  /* Bottom bar: icons only; the open tab rises as a green circle */
+  .tabbar { --tab-h: 70px; margin: 0 10px calc(10px + env(safe-area-inset-bottom)); height: 66px; padding: 0; border: 0; border-radius: 24px; background: #fff; box-shadow: 0 14px 34px -12px rgba(16, 24, 40, .3); }
+  body:not(.master-admin) .scroll { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .tab span:not(.tab-badge) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tab .i { width: 24px; height: 24px; transition: transform .2s; }
+  .tab::before { display: none !important; }
+  .tab.on { color: #fff; }
+  .tab.on::after { content: ""; position: absolute; top: -16px; left: 50%; z-index: -1; width: 56px; height: 56px; margin-left: -28px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 6px #fff, 0 12px 24px -8px var(--accent); }
+  .tab.on .i { transform: translateY(-16px); }
+  .tab { z-index: 0; }
+  .tab-badge { top: 12px; }
+  .tab.on .tab-badge { top: -18px; }
+}
+@media (max-width: 760px) {
+  /* The calendar button by the search opens the date-range list under the top bar (its own button stays hidden) */
+  body:not(.master-admin) .top-filters:not([hidden]) { display: block !important; position: absolute; top: 58px; right: 14px; width: 0; height: 0; z-index: 70; }
+  body:not(.master-admin) .top-filters .top-select, body:not(.master-admin) #dd-month { display: none !important; }
+  body:not(.master-admin) #dd-range { position: static; }
+  body:not(.master-admin) #dd-range .dd-menu { position: absolute; top: 0; right: 0; left: auto; width: 230px; border-radius: 18px; box-shadow: 0 18px 40px -12px rgba(16, 24, 40, .3); }
+}

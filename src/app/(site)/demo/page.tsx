@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import DemoStage from "@/components/site/DemoStage";
 import SiteFooter from "@/components/site/SiteFooter";
+import DesktopOnly from "@/components/site/DesktopOnly";
 
 export const metadata: Metadata = {
   title: "Live demo — Shopilier dashboard",
@@ -12,6 +13,7 @@ const Check = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 export default function DemoPage() {
   return (
     <>
+      <DesktopOnly />
       <main className="container demo-page">
         <section className="page-head">
           <span className="pill">Live demo</span>

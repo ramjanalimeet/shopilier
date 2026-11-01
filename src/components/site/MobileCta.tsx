@@ -31,10 +31,7 @@ export default function MobileCta() {
       {signedIn ? (
         <a className="m-cta-main" href="/admin" tabIndex={show ? 0 : -1}>Open your dashboard<span aria-hidden="true">→</span></a>
       ) : (
-        <>
-          <Link className="m-cta-side" href="/demo" tabIndex={show ? 0 : -1}>Live demo</Link>
-          <Link className="m-cta-main bn" href="/signup" tabIndex={show ? 0 : -1}>আজই শুরু করুন<span aria-hidden="true">→</span></Link>
-        </>
+        <Link className="m-cta-main bn" href="/signup" tabIndex={show ? 0 : -1}>আজই শুরু করুন<span aria-hidden="true">→</span></Link>
       )}
     </div>
   );

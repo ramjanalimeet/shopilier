@@ -388,6 +388,17 @@ export const start = async () => {
     if (web) web.classList.toggle("on", WEBSITE_ROUTES.includes(route) && !MORE_ROUTES.includes(route));
     if (moreBtn) moreBtn.classList.toggle("on", MORE_ROUTES.includes(route));
   };
+  document.querySelectorAll("[data-more-open]").forEach((b) => b.addEventListener("click", () => setMore(true)));
+  document.addEventListener("submit", (e) => {
+    const f = e.target.closest(".m-search");
+    if (!f) return;
+    e.preventDefault();
+    const top = document.getElementById("top-search");
+    top.value = f.elements.q.value;
+    top.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  });
+  // The calendar by the phone search opens the date-range list (after this tap's "click outside closes menus" has run)
+  document.addEventListener("click", (e) => { if (e.target.closest("[data-m-filter]")) setTimeout(() => document.querySelector("#dd-range .top-select").click(), 0); });
   if (moreBtn) {
     moreBtn.addEventListener("click", () => setMore(moreSheet.hidden));
     moreSheet.addEventListener("click", (e) => {
@@ -800,12 +811,19 @@ export const start = async () => {
         const ret = returning(cur, p.from), retPrev = returning(prev, p.prevFrom);
         return `<div class="page">
           ${store.published ? "" : `<div class="callout yellow"><span class="ico">${icon("rocket")}</span><div><b>Your website isn't live yet.</b> Customize it, then publish when you're ready.</div><a class="btn btn-sm btn-dark" href="#/website">Customize &amp; publish</a></div>`}
+          <form class="m-search" role="search"><span class="m-search-box">${icon("search")}<input type="search" name="q" placeholder="Search orders or products" aria-label="Search orders or products"></span>
+            <button type="button" class="m-filter" data-m-filter aria-label="Date range">${icon("calendar")}</button></form>
+          <a class="m-banner" href="#/analytics">
+            <span class="m-banner-text"><small>Total sales · ${esc(p.vs.replace(/^vs\. previous /, "last "))}</small><b>${taka(curSales)}</b><span>${cur.length} order${cur.length === 1 ? "" : "s"} · ${store.products.length} product${store.products.length === 1 ? "" : "s"}</span><em>View report →</em></span>
+            <span class="m-banner-art" aria-hidden="true">${icon("barchart")}</span>
+          </a>
           <div class="m-quick" aria-label="Quick actions">
             <button type="button" data-action="add-product">${icon("plus")}<span>Add product</span></button>
             <button type="button" data-action="add-order">${icon("orders")}<span>New order</span></button>
             <a href="#/website">${icon("brush")}<span>Edit website</span></a>
             <button type="button" data-action="view-store">${icon("eye")}<span>View store</span></button>
           </div>
+          <div class="m-sec-head"><b>Your numbers</b><a href="#/analytics">See all</a></div>
           <div class="stats">
             ${stat("Total sales", taka(curSales), "bag", "c1", delta(curSales, prevSales) + vsText)}
             ${stat("Total orders", cur.length.toLocaleString("en-IN"), "cart", "c2", delta(cur.length, prev.length) + vsText)}
@@ -956,7 +974,7 @@ export const start = async () => {
               </div>
               ${searchBox("product-search", productSearch, "Search products")}
             </div>
-            ${productView === "table" ? `
+            ${productView === "table" && !matchMedia("(max-width: 760px)").matches ? `
             <div class="table-wrap"><table class="table">
               <thead><tr><th>Product</th><th>Category</th><th class="t-right">Price</th><th class="t-right">Stock</th><th>Status</th><th class="t-actions"></th></tr></thead>
               <tbody>${list.length ? list.map((p) => `
@@ -971,7 +989,8 @@ export const start = async () => {
             </table></div>` : `
             <div class="card-body"><div class="gallery">${list.map((p) => `
               <div class="g-card">
-                <div class="g-cover" style="background:${esc(p.color)}">${SiteKit.safeImg(p.image) ? `<img src="${esc(p.image)}" alt="">` : ""}${p.status === "draft" ? '<span class="tag gray">Draft</span>' : ""}</div>
+                <div class="g-cover" style="background:${esc(p.color)}">${SiteKit.safeImg(p.image) ? `<img src="${esc(p.image)}" alt="">` : ""}${p.status === "draft" ? '<span class="tag gray">Draft</span>' : p.compare > p.price ? `<span class="g-badge sale">${Math.round((1 - p.price / p.compare) * 100)}% OFF</span>` : p.badge ? `<span class="g-badge">${p.badge === "new" ? "New" : p.badge === "best" ? "Best seller" : "Sale"}</span>` : ""}</div>
+                <button class="g-fab" type="button" data-action="edit-product" data-id="${p.id}" aria-label="Edit ${esc(p.name)}">${icon("edit")}</button>
                 <div class="g-body"><div class="g-title">${esc(p.name)}</div><div class="g-meta"><b style="color:var(--ink)">${taka(p.price)}</b>${p.category ? tag(p.category, "brown") : ""}<span class="muted small">${p.stock} in stock</span></div>
                 <div class="g-actions"><button class="btn btn-sm" data-action="edit-product" data-id="${p.id}">${icon("edit")}Edit</button><button class="icon-btn danger" data-action="delete-product" data-id="${p.id}" aria-label="Delete ${esc(p.name)}">${icon("trash")}</button></div></div>
               </div>`).join("") || '<p class="muted">No products yet.</p>'}</div></div>`}
