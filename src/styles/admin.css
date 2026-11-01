@@ -1431,3 +1431,63 @@ body.editor-open .chat-fab, body.editor-open .chat-panel { display: none; }
   .ed-m-edit .i { width: 18px; height: 18px; }
   .ed.panel-open ~ .ed-m-edit, .ed.panel-open .ed-m-edit { display: none; }
 }
+
+/* ======================================================================
+   Phones, v5: calmer cards, a cleaner bottom bar, menus that never hide behind the date chips
+   ====================================================================== */
+@media (max-width: 760px) {
+  /* Cards: white with a soft shadow (the colour stays in the round icons) */
+  body:not(.master-admin) { --m-card: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 22px -12px rgba(16, 24, 40, .16); }
+  body:not(.master-admin) .stats .stat, body.on-home:not(.master-admin) .stats .stat,
+  body.on-home:not(.master-admin) .stats .stat:nth-child(n) { background: #fff !important; border: 1px solid #eef0f3; box-shadow: var(--m-card); }
+  body:not(.master-admin) .card, body:not(.master-admin) .m-empty-row { border: 1px solid #eef0f3; box-shadow: var(--m-card); }
+  body:not(.master-admin) .card:has(.table), body:not(.master-admin) .card:has(.gallery) { border: 0; box-shadow: none; }
+  body:not(.master-admin) #view .table tbody tr, body:not(.master-admin) .g-card { border: 1px solid #eef0f3 !important; box-shadow: var(--m-card) !important; }
+  body.on-home:not(.master-admin) .stat-ico { box-shadow: none; }
+  body.on-home:not(.master-admin) .stat-ico.c1 { background: #e6f6ea !important; }
+  body.on-home:not(.master-admin) .stat-ico.c2 { background: #e8effd !important; }
+  body.on-home:not(.master-admin) .stat-ico.c3 { background: #efebfd !important; }
+  body.on-home:not(.master-admin) .stat-ico.c4 { background: #fdf0e3 !important; }
+  body:not(.master-admin) .stat-label { color: #475467; }
+
+  /* Top bar menus (profile, notifications) open as cards under the bar, above everything else */
+  body:not(.master-admin) .profile-menu, body:not(.master-admin) .bell-menu { position: fixed; top: 64px; right: 12px; left: auto; z-index: 120; width: min(300px, calc(100vw - 24px)); border: 0; border-radius: 18px; box-shadow: 0 20px 48px -12px rgba(16, 24, 40, .3), 0 0 0 1px rgba(16, 24, 40, .05); }
+  body:not(.master-admin) .bell-menu { left: 12px; width: auto; }
+  body:not(.master-admin) .profile-menu-head { overflow: hidden; }
+  body:not(.master-admin) .profile-menu-head span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  body:not(.master-admin) .profile-menu [role="menuitem"] { min-height: 46px; border-radius: 12px; }
+
+  /* Bottom bar: equal tabs; the open one gets a soft green pill behind its icon; Home sits in a smaller raised circle */
+  .tabbar { height: calc(68px + env(safe-area-inset-bottom)); padding: 0 4px env(safe-area-inset-bottom); border-radius: 22px 22px 0 0; border-top: 1px solid #eef0f3; box-shadow: 0 -8px 24px -16px rgba(16, 24, 40, .25); }
+  .tab { gap: 3px; color: #667085; }
+  .tab .i { width: 50px; height: 30px; padding: 5px 13px; border-radius: 999px; stroke-width: 1.9; transition: background .2s, color .2s; }
+  .tab span:not(.tab-badge) { font-size: 11px; font-weight: 600; letter-spacing: .01em; }
+  .tab.on { color: var(--accent); }
+  .tab.on:not(.tab-home) .i { background: var(--accent-soft); }
+  .tab-badge { top: 4px; left: calc(50% + 6px); min-width: 17px; height: 17px; font-size: 10px; box-shadow: 0 0 0 2px #fff; }
+  .tab.on .tab-badge { top: 4px; }
+  .tab-home, .tab-home.on { color: #667085; }
+  .tab-home.on { color: var(--accent); }
+  .tab-home::after, .tab-home.on::after { display: none !important; }
+  .tab-home .i, .tab-home.on .i { width: 54px; height: 54px; padding: 15px; margin-top: -28px; border-radius: 50%; color: #fff; transform: none;
+    background: linear-gradient(160deg, #22a85a, #0e7a4b); box-shadow: 0 0 0 5px #fff, 0 10px 20px -6px rgba(14, 122, 75, .55); }
+  .tab-home span:not(.tab-badge), .tab-home.on span:not(.tab-badge) { transform: none; font-weight: 600; }
+  .tab:active .i { transform: scale(.94); }
+}
+/* Small phones (360px and under): a tighter top bar */
+@media (max-width: 380px) {
+  body.on-home .m-brand { gap: 8px; font-size: 18px; }
+  .m-brand img { width: 32px; height: 32px; }
+  .m-brand small { padding: 3px 8px; font-size: 11px; }
+  body.on-home:not(.master-admin) .top-bell, body.on-home:not(.master-admin) .profile-avatar .avatar { width: 40px; height: 40px; }
+  body.on-home:not(.master-admin) .top-filters .top-select { height: 40px; padding: 0 12px; font-size: 13px; }
+  body.on-home:not(.master-admin) .stat .stat-value { font-size: 21px; }
+  body.on-home:not(.master-admin) .stat { grid-template-columns: 34px minmax(0, 1fr); padding: 14px 10px 14px 10px; }
+  body.on-home:not(.master-admin) .stat-ico { width: 34px !important; height: 34px !important; }
+  body.on-home:not(.master-admin) .stat-ico .i { width: 17px; height: 17px; }
+  .tab span:not(.tab-badge) { font-size: 10.5px; }
+}
+@media (max-width: 760px) {
+  /* Products always show as the photo grid on phones, so the List / Grid switch stays hidden */
+  body:not(.master-admin) #view .seg:has([data-action="product-view"]) { display: none !important; }
+}
