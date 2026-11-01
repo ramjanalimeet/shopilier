@@ -393,7 +393,7 @@ export const SiteKit = (() => {
     site.header.mbar ||= { show: true, cta: site.lang === "bn" ? "অর্ডার করুন" : "Order now", link: "/shop", chat: true };
     const mb = site.header.mbar;
     ["home", "shop", "cart", "chat"].forEach((k) => { if (mb[k] === undefined) mb[k] = true; });
-    mb.where ||= "phone"; mb.shape ||= "float";
+    mb.where ||= "phone"; mb.shape ||= "flat";
     pages.forEach((p) => { if (!Array.isArray(p.sections)) p.sections = pageSections(p, ctx); });
     // Every store has a Checkout page: it can be edited or reset, but not deleted, and its link stays /checkout
     if (!pages.some((p) => p.system === "checkout")) {

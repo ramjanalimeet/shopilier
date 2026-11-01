@@ -699,3 +699,41 @@ figcaption span { font-size: 14px; opacity: .7; }
   .news-form, .theme-fashion .news-form { flex-direction: column; }
   .news-form .btn, .theme-fashion .news-form .btn { width: 100%; justify-content: center; }
 }
+
+/* ---------- Tablets and computers: Fashion & Clothing (and every template) ---------- */
+/* Checkout: the discount button never breaks onto two lines */
+.co-coupon { display: flex; gap: 8px; }
+.co-coupon .co-code { flex: 1; min-width: 0; }
+.co-coupon .co-apply { flex: none; white-space: nowrap; padding: 0 16px; }
+@media (min-width: 761px) and (max-width: 1024px) {
+  /* Header: menu links a little bigger and easier to tap */
+  .s-header .menu { gap: 18px; }
+  .s-header .menu a { font-size: 14.5px; padding: 6px 0; }
+  .s-header .h-search input { height: 44px; }
+  /* Hero: both buttons side by side */
+  .hero-story .btns { flex-wrap: nowrap; gap: 10px; }
+  .hero-story .btns .btn { padding: 0 18px; font-size: 14.5px; white-space: nowrap; }
+  /* Products: four per row (8 products fill two rows), cards a touch tighter */
+  .s-products .grid.cols-3, .s-products .grid.cols-4, .s-products .grid.cols-5 { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .theme-fashion .p-body { padding: 10px 10px 12px; }
+  .theme-fashion .p-name { font-size: 14px; }
+  .theme-fashion .p-add { min-height: 40px; padding: 0 8px; font-size: 13px; gap: 6px; }
+  /* Why us: four across */
+  .s-perks .cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .s-perks .perk { flex-direction: column; align-items: flex-start; gap: 10px; padding: 18px 16px; }
+}
+/* Big tablets (iPad Pro, small laptops): categories as a full row of five, no swiping needed */
+@media (min-width: 821px) and (max-width: 1024px) {
+  .s-categories .grid { display: grid; grid-template-columns: repeat(5, 1fr); overflow: visible; padding: 0; }
+  .s-categories .grid > * { flex: none; }
+}
+/* Portrait tablets: the trust strip as two rows of two, so each line has room */
+@media (min-width: 761px) and (max-width: 860px) {
+  .strip { grid-template-columns: repeat(2, 1fr); }
+  .strip .feature { justify-content: flex-start; padding: 16px 18px; }
+  .strip .feature + .feature { border-left: 0; }
+  .strip .feature:nth-child(even) { border-left: 1px solid var(--line); }
+  .strip .feature:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+/* The sticky bar sits flush on the bottom edge (no gap under it); the floating shape is only used when chosen */
+.s-mbar.mb-flat { bottom: 0; margin: 0; }
