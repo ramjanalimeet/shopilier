@@ -221,7 +221,12 @@ button { font: inherit; cursor: pointer; }
 .thumb-portfolio::after { content: ""; position: absolute; right: 8px; bottom: 6px; width: 26px; height: 32px; background: linear-gradient(135deg, #c9a27e, #6b4f3a); box-shadow: 30px -4px 0 -2px #e9a35a; }
 
 /* dashboard */
-.dash { position: absolute; left: 170px; right: 175px; top: 0; height: 418px; overflow: hidden; z-index: 1; background: #f9fafb; }
+/* The dashboard on a computer (left) and on a phone (right, overlapping it) */
+.dash { position: absolute; left: 0; right: 200px; top: 6px; height: 418px; overflow: hidden; z-index: 1; background: #f9fafb; }
+.device-phone { position: absolute; right: 24px; top: -18px; z-index: 3; width: 214px; padding: 9px; border-radius: 38px; background: #12151c;
+  box-shadow: 0 0 0 2px #2b303b inset, 0 30px 60px -20px rgba(16, 24, 40, .45), 0 12px 24px -12px rgba(16, 24, 40, .3); }
+.device-phone img { display: block; width: 100%; height: auto; border-radius: 30px; background: #f7f7f9; }
+.device-notch { position: absolute; top: 15px; left: 50%; z-index: 1; width: 64px; height: 18px; margin-left: -32px; border-radius: 999px; background: #12151c; }
 .dash-bar { height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-bottom: 1px solid #f1f2f5; }
 .dash-bar i { width: 8px; height: 8px; border-radius: 50%; }
 .dash-bar i:nth-child(1) { background: #ff5f57; }
@@ -483,7 +488,10 @@ button { font: inherit; cursor: pointer; }
   .try-grid { grid-template-columns: 1fr 1fr; }
   .showcase { height: auto; display: flex; justify-content: center; }
   .picker, .phone { display: none; }
-  .dash { position: relative; left: auto; right: auto; width: 100%; max-width: 720px; height: auto; }
+  .dash { position: relative; left: auto; right: auto; width: 100%; max-width: 720px; height: auto; margin-right: 16%; }
+  .device-phone { right: max(0px, calc(50% - 400px)); top: auto; bottom: -26px; width: 26%; max-width: 190px; padding: 6px; border-radius: 26px; }
+  .device-phone img { border-radius: 21px; }
+  .device-notch { top: 10px; width: 40px; height: 11px; margin-left: -20px; }
   .dash-shot { height: auto; }
 }
 @media (max-width: 760px) {
@@ -496,7 +504,9 @@ button { font: inherit; cursor: pointer; }
   .watch { position: static; transform: none; display: flex; align-items: center; gap: 14px; }
   .watch-note { position: static; transform: none; font-size: 19px; }
   .watch-note svg { display: none; }
-  .showcase { margin-bottom: 8px; }
+  .showcase { margin-bottom: 34px; }
+  .dash { margin-right: 22%; }
+  .device-phone { right: -4px; bottom: -30px; width: 34%; }
   .trusted { padding-top: 36px; }
   .logo-marquee, .logo-track { gap: 36px; }
   .logo .word { font-size: 15px; }
