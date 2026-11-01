@@ -16,6 +16,8 @@ const NAV: [string, string, string][] = [
 export default function DashboardShell({ demo = false }: { demo?: boolean }) {
   return (
     <>
+      {/* Phones: lay out Home (logo, date chips, green glow) before the dashboard script runs, so nothing jumps on load */}
+      <script dangerouslySetInnerHTML={{ __html: 'if(/^(#\\/?(home)?)?$/.test(location.hash))document.body.classList.add("on-home")' }} />
       {demo && (
         // Demo mode: the real dashboard running on a sample store that lives in this browser (see /assets/demo.js)
         <div className="demo-bar" role="status">
@@ -68,11 +70,11 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
             {/* Date filters for Home: a preset range, or one whole month */}
             <div className="top-filters" id="top-filters" hidden>
               <div className="dd" id="dd-range">
-                <button className="top-select" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Date range"><Icon name="calendar" /><span className="dd-label" /><Icon name="chevronDown" /></button>
+                <button className="top-select" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Date range"><Icon name="calendar" /><span className="dd-label">Last 30 days</span><Icon name="chevronDown" /></button>
                 <div className="dd-menu" role="listbox" aria-label="Date range" hidden />
               </div>
               <div className="dd" id="dd-month">
-                <button className="top-select" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Month"><Icon name="calendar" /><span className="dd-label" /><Icon name="chevronDown" /></button>
+                <button className="top-select" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Month"><Icon name="calendar" /><span className="dd-label">Month</span><Icon name="chevronDown" /></button>
                 <div className="dd-menu dd-months" role="listbox" aria-label="Month" hidden />
               </div>
             </div>
@@ -104,7 +106,13 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
               </div>
             </div>
           </header>
-          <div className="scroll"><div id="view" /></div>
+          <div className="scroll"><div id="view">
+            {/* Shown until the dashboard draws the page (phones), in the shape of Home, so the page doesn't jump */}
+            <div className="page m-skel" aria-hidden="true">
+              <div className="m-skel-grid"><i /><i /><i /><i /></div>
+              <i className="m-skel-card" /><i className="m-skel-card short" />
+            </div>
+          </div></div>
         </div>
       </div>
       {/* Phones: bottom tab bar and the More sheet */}

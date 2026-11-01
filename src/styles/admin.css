@@ -1702,3 +1702,24 @@ body.editor-open .ed-row-tools .ed-sm, body.editor-open .ed-add-section.ed-sm, b
 .sub-msg { margin-top: 10px; }
 .sub-msg.bad { color: var(--danger); }
 @media (max-width: 760px) { .sub-row .btn { flex: 1 1 100%; justify-content: center; height: 44px; } .sub-field .input { font-size: 16px; } }
+
+/* ======================================================================
+   Phones: a calm first load. Home's layout is set before the dashboard script runs (see DashboardShell),
+   the date chips and the avatar keep their place, and grey cards stand in until the numbers arrive.
+   ====================================================================== */
+.m-skel { display: none; }
+@media (max-width: 760px) {
+  body.on-home:not(.master-admin) .top-filters[hidden] { display: flex !important; position: static; order: 10; flex-basis: 100%; width: auto; height: auto; gap: 10px; }
+  body:not(.master-admin) .profile-avatar:empty { display: block; width: 44px; height: 44px; border-radius: 50%; background: #e9ecf0; }
+  body:not(.master-admin) .top-bell:not(:has(.i)) { visibility: hidden; }
+  .m-skel { display: block; }
+  .m-skel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .m-skel i { display: block; border-radius: 18px; background: linear-gradient(100deg, #eef0f3 30%, #f7f8fa 50%, #eef0f3 70%) 0 0 / 300% 100%; animation: m-skel 1.3s ease-in-out infinite; }
+  .m-skel-grid i { height: 92px; }
+  .m-skel-card { height: 260px; margin-top: 16px; }
+  .m-skel-card.short { height: 84px; }
+  @keyframes m-skel { from { background-position: 100% 0; } to { background-position: 0 0; } }
+  @media (prefers-reduced-motion: reduce) { .m-skel i { animation: none; } }
+  /* No springy overscroll on the page itself; pull to refresh is drawn by the dashboard */
+  html:has(body.store-admin), body.store-admin { overscroll-behavior-y: none; }
+}
