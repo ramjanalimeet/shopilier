@@ -3,6 +3,8 @@
 # never shows a new page with an old stylesheet or script. Images and the favicon rarely change
 # and are kept for a day, refreshed in the background. Next.js build output carries a hash in
 # its name, so it can be kept for good.
+# The home page's dashboard pictures (public/showcase, made by scripts/showcase-shots.mjs) are checked on
+# every load too, so new pictures show the moment they're deployed.
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
 /assets/*.css
@@ -11,5 +13,7 @@
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 /assets/*.png
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/showcase/*
+  Cache-Control: public, max-age=0, must-revalidate
 /favicon.ico
   Cache-Control: public, max-age=86400
