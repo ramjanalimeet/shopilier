@@ -178,6 +178,7 @@ export const SiteEditor = (() => {
       <header class="ed-top">
         <div class="ed-group">
           <button class="ed-btn ed-icon" type="button" id="ed-side" aria-controls="dashboard-nav">${icon("sidebar")}</button>
+          <button class="ed-btn ed-icon ed-m-back" type="button" id="ed-back" aria-label="Back to Themes" title="Back">${icon("arrowLeft")}</button>
         </div>
         <div class="ed-devices" role="group" aria-label="Preview size">${Object.entries(DEVICES).map(([k, v]) => `<button type="button" data-device="${k}">${icon(v.icon)}<span class="ed-label">${v.label}</span></button>`).join("")}</div>
         <div class="ed-group">
@@ -191,10 +192,13 @@ export const SiteEditor = (() => {
       <div class="ed-body">
         <div class="ed-canvas"><div class="ed-frame-wrap"><iframe class="ed-frame" title="Website preview"></iframe></div></div>
         <aside class="ed-panel" id="ed-panel" aria-label="Editor panel"></aside>
+        <button class="ed-m-edit" type="button" id="ed-m-edit">${icon("edit")}Edit sections</button>
       </div>
     </div>`;
     const $ = (sel) => root.querySelector(sel);
     const frame = $(".ed-frame"), panel = $("#ed-panel");
+    // Phones: a floating button opens the sections panel as a bottom sheet
+    $("#ed-m-edit").addEventListener("click", () => { state.mode = "sections"; state.panelOpen = true; paintPanel(); paintTop(); });
 
     const paintTop = () => {
       root.querySelectorAll("[data-device]").forEach((b) => b.classList.toggle("on", b.dataset.device === state.device));
@@ -548,6 +552,7 @@ export const SiteEditor = (() => {
       if (!b) return;
       // Stop here: a click reaching the page area would close the phone menu again
       if (b.id === "ed-side") { e.stopPropagation(); toggleSide(); return; }
+      if (b.id === "ed-back") { location.hash = "#/themes"; return; }
       if (b.dataset.device) { state.device = b.dataset.device; paintTop(); return; }
       if (b.dataset.mode) {
         const same = state.mode === b.dataset.mode && state.panelOpen;

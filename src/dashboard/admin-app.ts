@@ -748,7 +748,7 @@ export const start = async () => {
       <td>${compact ? statusTag(o.status) : `<select class="select" style="height:32px;width:auto;font-size:13px" data-action="order-status" data-id="${o.id}" aria-label="Order status">${Object.keys(ORDER_STATUS).map((s) => `<option${s === o.status ? " selected" : ""}>${s}</option>`).join("")}</select>`}</td>
       ${compact ? "" : `<td class="t-actions">${o.shipment ? "" : `<button class="icon-btn" data-action="ship-order" data-id="${o.id}" aria-label="Send to courier" title="Send to courier">${icon("truck")}</button>`}<button class="icon-btn" data-action="view-order" data-id="${o.id}" aria-label="View order">${icon("eye")}</button><button class="icon-btn danger" data-action="delete-order" data-id="${o.id}" aria-label="Delete order">${icon("trash")}</button></td>`}
     </tr>`).join("") : `<tr><td colspan="7" class="table-empty">No orders yet. They'll appear here as soon as customers buy.</td></tr>`;
-  const orderTable = (orders, compact = false) => `<div class="table-wrap"><table class="table">
+  const orderTable = (orders, compact = false) => `<div class="table-wrap"><table class="table${compact ? "" : " t-orders"}">
       <thead><tr><th>Order</th><th>Customer</th><th>Date</th>${compact ? "" : "<th>Payment</th>"}<th class="t-right">Total</th><th>Status</th>${compact ? "" : '<th class="t-actions"></th>'}</tr></thead>
       <tbody>${orderRows(orders, compact)}</tbody></table></div>`;
 
@@ -1133,11 +1133,11 @@ export const start = async () => {
         const list = store.customers.filter((c) => !q || `${c.name} ${c.email || ""} ${c.city || ""}`.toLowerCase().includes(q) || (qPhone.length >= 3 && normPhone(c.phone).includes(qPhone)));
         return `${head("Customers", "People who bought from you. Totals update automatically from your orders.", `<button class="btn btn-primary" data-action="add-customer">${icon("plus")}Add customer</button>`)}
           <div class="card"><div class="card-head"><span class="card-title">All customers<small>${store.customers.length}</small></span>${store.customers.length ? searchBox("customer-search", customerSearch, "Search name or phone") : ""}</div>
-          <div class="table-wrap"><table class="table">
+          <div class="table-wrap"><table class="table t-customers">
             <thead><tr><th>Customer</th><th>Phone</th><th>City</th><th class="t-right">Orders</th><th class="t-right">Total spent</th><th>Since</th><th class="t-actions"></th></tr></thead>
             <tbody>${list.length ? list.map((c) => { const s = customerStats(c); return `
               <tr><td><button class="t-title" data-action="edit-customer" data-id="${c.id}">${avatar(c.name)}<span>${esc(c.name)}<span class="sub">${esc(c.email || "")}</span></span></button></td><td class="muted">${esc(c.phone || "")}</td><td>${c.city ? tag(c.city, "blue") : '<span class="muted">—</span>'}</td>
-              <td class="t-right">${s.count}</td><td class="t-right" style="font-weight:600;color:var(--ink)">${taka(s.spent)}</td><td class="muted">${day(c.joined)}</td>
+              <td class="t-right">${s.count}<span class="m-label"> order${s.count === 1 ? "" : "s"}</span></td><td class="t-right" style="font-weight:600;color:var(--ink)">${taka(s.spent)}</td><td class="muted">${day(c.joined)}</td>
               <td class="t-actions"><button class="icon-btn" data-action="edit-customer" data-id="${c.id}" aria-label="Edit ${esc(c.name)}" title="Edit">${icon("edit")}</button><button class="icon-btn danger" data-action="delete-customer" data-id="${c.id}" aria-label="Delete ${esc(c.name)}" title="Delete">${icon("trash")}</button></td></tr>`; }).join("") : `<tr><td colspan="7" class="table-empty">${store.customers.length ? "No customers match." : "No customers yet."}</td></tr>`}</tbody>
           </table></div></div>
         </div>`;

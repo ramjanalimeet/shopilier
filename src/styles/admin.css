@@ -1337,3 +1337,97 @@ body.editor-open .chat-fab, body.editor-open .chat-panel { display: none; }
   .tab-home .i, .tab-home.on .i { transform: translateY(-14px); }
   .tab-home span:not(.tab-badge) { transform: translateY(-14px); font-weight: 700; }
 }
+
+/* ======================================================================
+   Phones, v4: every page polished
+   The app fills the real screen (dvh, so nothing hides under the browser bar and the page itself never
+   scrolls), the bottom bar sits flush on the bottom edge, lists read like an app instead of labelled fields,
+   filters scroll sideways, searches fill the width, and the website editor is a full-screen preview.
+   ====================================================================== */
+.ed-m-back, .ed-m-edit { display: none; }
+@media (max-width: 760px) {
+  body:not(.master-admin) { overflow: hidden; overscroll-behavior: none; }
+  body:not(.master-admin) .app { height: 100vh; height: 100dvh; }
+  .store-admin.demo .app { height: calc(100vh - 46px); height: calc(100dvh - 46px); }
+  body:not(.master-admin) .scroll { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+  /* Bottom bar: flush with the bottom edge, rounded only on top, the home-indicator area kept white */
+  .tabbar { left: 0; right: 0; bottom: 0; margin: 0; height: calc(70px + env(safe-area-inset-bottom)); padding: 0 6px env(safe-area-inset-bottom);
+    border-radius: 26px 26px 0 0; background: #fff; box-shadow: 0 -10px 30px -14px rgba(16, 24, 40, .22); }
+  body:not(.master-admin) .scroll { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .tab-home::after, .tab-home.on::after { top: -22px; }
+
+  /* Page tops: a little count or note on the left, the main action on the right, both on one line */
+  body:not(.master-admin) .page { padding: 12px 16px 28px; }
+  body:not(.master-admin) .page-head { margin-bottom: 14px; }
+  body:not(.master-admin) .page-actions { align-items: center; }
+  body:not(.master-admin) .page-actions .btn-primary { height: 44px; padding: 0 18px; border-radius: 14px; box-shadow: 0 10px 20px -12px var(--accent); }
+
+  /* Filters (All, Pending, Paid…) scroll sideways as pills */
+  body:not(.master-admin) #view .card-head:has(.seg) { flex-wrap: wrap; gap: 12px; }
+  body:not(.master-admin) #view .seg { display: flex; flex-wrap: nowrap; gap: 8px; width: calc(100% + 32px); margin: 0 -16px !important; padding: 2px 16px; overflow-x: auto; background: none; border-radius: 0; scrollbar-width: none; }
+  body:not(.master-admin) #view .seg::-webkit-scrollbar { display: none; }
+  body:not(.master-admin) #view .seg > button { flex: none; height: 38px; padding: 0 14px; border-radius: 999px; background: #fff; box-shadow: 0 4px 12px -8px rgba(16, 24, 40, .3); font-weight: 600; color: #475467; }
+  body:not(.master-admin) #view .seg > button.on { background: var(--accent); color: #fff; }
+  body:not(.master-admin) #view .seg > button span { margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: #f2f4f7; color: #475467; font-size: 11.5px; }
+  body:not(.master-admin) #view .seg > button.on span { background: rgba(255, 255, 255, .25); color: #fff; }
+
+  /* Searches fill the width */
+  body:not(.master-admin) #view .card-head .box-search { flex: 1 1 100%; order: 5; }
+  body:not(.master-admin) #view .box-search input { width: 100%; height: 46px; border: 0; border-radius: 14px; background: #fff; box-shadow: 0 6px 18px -12px rgba(16, 24, 40, .3); font-size: 14.5px; }
+  body:not(.master-admin) #view .card-title small { margin-left: 6px; }
+
+  /* Orders: number and status, then customer and total, then date, payment and actions */
+  body:not(.master-admin) #view .t-orders tbody tr { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "no no st" "cu cu to" "da pa ac"; align-items: center; gap: 10px 10px; padding: 16px; }
+  body:not(.master-admin) #view .t-orders td { padding: 0 !important; background: none !important; min-width: 0; }
+  body:not(.master-admin) #view .t-orders td::before { display: none !important; }
+  body:not(.master-admin) #view .t-orders td:nth-child(1) { grid-area: no; display: block; padding-bottom: 0 !important; }
+  body:not(.master-admin) #view .t-orders td:nth-child(1) .t-title { font-size: 16px; font-weight: 700; }
+  body:not(.master-admin) #view .t-orders td:nth-child(1) .sub { display: block; margin-top: 2px; font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  body:not(.master-admin) #view .t-orders td:nth-child(2) { grid-area: cu; font-size: 14px; }
+  body:not(.master-admin) #view .t-orders td:nth-child(3) { grid-area: da; font-size: 12.5px; white-space: nowrap; }
+  body:not(.master-admin) #view .t-orders td:nth-child(4) { grid-area: pa; }
+  body:not(.master-admin) #view .t-orders td:nth-child(5) { grid-area: to; justify-content: flex-end; font-size: 17px; font-weight: 800 !important; }
+  body:not(.master-admin) #view .t-orders td:nth-child(6) { grid-area: st; align-self: start; }
+  body:not(.master-admin) #view .t-orders td:nth-child(6) select { height: 34px !important; padding: 0 30px 0 12px; border: 0; border-radius: 999px; background-color: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  body:not(.master-admin) #view .t-orders td.t-actions { grid-area: ac; margin: 0; }
+  body:not(.master-admin) #view .t-orders td:nth-child(2), body:not(.master-admin) #view .t-orders td:nth-child(3) { color: #475467; }
+  body:not(.master-admin) #view .t-orders tbody tr:has(.table-empty), body:not(.master-admin) #view .t-customers tbody tr:has(.table-empty) { display: block; }
+
+  /* Customers: who, total spent, then phone, city and orders */
+  body:not(.master-admin) #view .t-customers tbody tr { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "who who sp" "who who or" "ph ci ac"; align-items: center; gap: 4px 8px; padding: 16px; }
+  body:not(.master-admin) #view .t-customers td { padding: 0 !important; min-width: 0; }
+  body:not(.master-admin) #view .t-customers td::before { display: none !important; }
+  body:not(.master-admin) #view .t-customers td:nth-child(1) { grid-area: who; padding-bottom: 0 !important; }
+  body:not(.master-admin) #view .t-customers td:nth-child(1) .t-title { font-size: 15px; font-weight: 700; text-align: left; }
+  body:not(.master-admin) #view .t-customers td:nth-child(2) { grid-area: ph; margin-top: 10px; padding: 5px 10px !important; font-size: 12.5px; }
+  body:not(.master-admin) #view .t-customers td:nth-child(3) { grid-area: ci; margin-top: 10px; background: none !important; }
+  body:not(.master-admin) #view .t-customers td:nth-child(4) { grid-area: or; justify-self: end; align-self: start; background: none !important; font-size: 12.5px; color: var(--muted); }
+  body:not(.master-admin) #view .t-customers td:nth-child(5) { grid-area: sp; justify-content: flex-end; align-self: end; font-size: 16px; font-weight: 800 !important; background: none !important; }
+  body:not(.master-admin) #view .t-customers td:nth-child(6) { display: none; }
+  body:not(.master-admin) #view .t-customers td.t-actions { grid-area: ac; margin: 10px 0 0; }
+
+  /* Other lists: quieter labels (normal case, no shouting) */
+  body:not(.master-admin) #view .table td[data-label]::before { font-size: 11.5px; font-weight: 500; text-transform: none; letter-spacing: 0; color: #98a2b3; }
+  body:not(.master-admin) #view .table td.t-actions .icon-btn { width: 36px; height: 36px; border-radius: 12px; background: #f6f7f9; }
+
+  /* Empty states and charts in the brand colours */
+  body:not(.master-admin) #view .table-empty, body:not(.master-admin) #view .empty-note { padding: 34px 18px; text-align: center; color: var(--muted); }
+  body:not(.master-admin) .bars i { background: linear-gradient(180deg, #4cc070, #0e7a4b); opacity: 1; }
+  body:not(.master-admin) .card-title { font-size: 17px; font-weight: 700; }
+
+  /* Website editor: a full-screen preview, a back button, and the sections in a bottom sheet */
+  body.editor-open:not(.master-admin) .scroll { padding-bottom: 0; }
+  #ed-side, .ed-devices { display: none !important; }
+  .ed-m-back { display: inline-flex; }
+  .ed-top { height: 58px; padding: 0 10px; box-shadow: 0 6px 18px -14px rgba(16, 24, 40, .4); border-bottom: 0; position: relative; z-index: 2; }
+  .ed-btn { border-radius: 12px; }
+  .ed-canvas { padding: 0; background: #fff; }
+  .ed-frame-wrap { max-width: none !important; height: 100% !important; border-radius: 0 !important; box-shadow: none !important; border: 0 !important; }
+  .ed-panel { height: 74vh; height: 74dvh; border-radius: 26px 26px 0 0; padding-bottom: env(safe-area-inset-bottom); }
+  .ed-panel::before { content: ""; display: block; flex: none; width: 40px; height: 5px; margin: 8px auto 2px; border-radius: 999px; background: #d0d5dd; }
+  .ed-m-edit { display: inline-flex; align-items: center; gap: 8px; position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 4; transform: translateX(-50%); height: 50px; padding: 0 22px; border: 0; border-radius: 999px;
+    background: var(--accent); color: #fff; font: inherit; font-size: 15px; font-weight: 700; box-shadow: 0 14px 28px -10px rgba(14, 122, 75, .7); cursor: pointer; }
+  .ed-m-edit .i { width: 18px; height: 18px; }
+  .ed.panel-open ~ .ed-m-edit, .ed.panel-open .ed-m-edit { display: none; }
+}
