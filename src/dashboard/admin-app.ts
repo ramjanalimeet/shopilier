@@ -689,12 +689,6 @@ export const start = async () => {
   };
   const inPeriod = (orders, from, to) => orders.filter((o) => { const t = new Date(o.date).getTime(); return t >= from && t < to; });
   const delta = Dash.delta;
-  // Big numbers on the number cards: in full on computers; on phones, short once they pass a lakh (৳12.5L, ৳1.25Cr)
-  const shortNum = (n) => { const f = (x) => String(+x.toFixed(Math.abs(x) >= 100 ? 0 : Math.abs(x) >= 10 ? 1 : 2)); return Math.abs(n) >= 1e7 ? f(n / 1e7) + "Cr" : f(n / 1e5) + "L"; };
-  const bigNum = (n, money = true) => {
-    const full = money ? taka(n) : Math.round(n).toLocaleString("en-IN");
-    return Math.abs(n) < 1e5 ? full : `<span class="v-full">${full}</span><span class="v-short" title="${full}">${money ? "৳" : ""}${shortNum(n)}</span>`;
-  };
   // Share of this period's customers who had ordered before
   const returning = (orders, from) => {
     const names = [...new Set(orders.map((o) => o.customer.toLowerCase()))];
@@ -876,9 +870,9 @@ export const start = async () => {
           </div>
           <div class="m-sec-head"><b>Your numbers</b><a href="#/analytics">See all</a></div>
           <div class="stats">
-            ${stat("Total sales", bigNum(curSales), "bag", "c1", delta(curSales, prevSales) + vsText)}
-            ${stat("Total orders", bigNum(cur.length, false), "cart", "c2", delta(cur.length, prev.length) + vsText)}
-            ${stat('<span class="d-label">Online store sessions</span><span class="m-label">Store sessions</span>', bigNum(visits, false), "barchart", "c3", store.published || visits ? (visitsPrev ? delta(visits, visitsPrev) + vsText : '<span class="muted"><span class="d-label">Visitor counts cover the last 14 days</span><span class="m-label">Last 14 days</span></span>') : '<span class="muted">Counting starts when you publish</span>')}
+            ${stat("Total sales", taka(curSales), "bag", "c1", delta(curSales, prevSales) + vsText)}
+            ${stat("Total orders", cur.length.toLocaleString("en-IN"), "cart", "c2", delta(cur.length, prev.length) + vsText)}
+            ${stat('<span class="d-label">Online store sessions</span><span class="m-label">Store sessions</span>', visits.toLocaleString("en-IN"), "barchart", "c3", store.published || visits ? (visitsPrev ? delta(visits, visitsPrev) + vsText : '<span class="muted"><span class="d-label">Visitor counts cover the last 14 days</span><span class="m-label">Last 14 days</span></span>') : '<span class="muted">Counting starts when you publish</span>')}
             ${stat("Returning customers", ret.toFixed(1).replace(/\.0$/, "") + "%", "customers", "c4", delta(ret, retPrev, true) + vsText)}
           </div>
           <div class="home-grid">
@@ -1211,9 +1205,9 @@ export const start = async () => {
         const visTotal = store.visitors.reduce((a, b) => a + b, 0);
         return `${head("Analytics", "How your website and sales are doing.")}
           <div class="stats">
-            <div class="stat"><div class="stat-top"><span class="stat-label">Revenue</span><span class="stat-ico c1">${icon("money")}</span></div><div class="stat-value">${bigNum(sales(store.orders))}</div><div class="stat-delta">All time</div></div>
-            <div class="stat"><div class="stat-top"><span class="stat-label">Average order</span><span class="stat-ico c2">${icon("orders")}</span></div><div class="stat-value">${bigNum(done.length ? sales(done) / done.length : 0)}</div><div class="stat-delta">${done.length} ${done.length === 1 ? "order" : "orders"}</div></div>
-            <div class="stat"><div class="stat-top"><span class="stat-label">Visitors · 14 days</span><span class="stat-ico c3">${icon("eye")}</span></div><div class="stat-value">${bigNum(visTotal, false)}</div><div class="stat-delta">${visTotal ? "Sample data" : "Counting starts when you publish"}</div></div>
+            <div class="stat"><div class="stat-top"><span class="stat-label">Revenue</span><span class="stat-ico c1">${icon("money")}</span></div><div class="stat-value">${taka(sales(store.orders))}</div><div class="stat-delta">All time</div></div>
+            <div class="stat"><div class="stat-top"><span class="stat-label">Average order</span><span class="stat-ico c2">${icon("orders")}</span></div><div class="stat-value">${taka(done.length ? sales(done) / done.length : 0)}</div><div class="stat-delta">${done.length} ${done.length === 1 ? "order" : "orders"}</div></div>
+            <div class="stat"><div class="stat-top"><span class="stat-label">Visitors · 14 days</span><span class="stat-ico c3">${icon("eye")}</span></div><div class="stat-value">${visTotal.toLocaleString("en-IN")}</div><div class="stat-delta">${visTotal ? "Sample data" : "Counting starts when you publish"}</div></div>
             <div class="stat"><div class="stat-top"><span class="stat-label">Customers</span><span class="stat-ico c4">${icon("customers")}</span></div><div class="stat-value">${store.customers.length}</div><div class="stat-delta">All time</div></div>
           </div>
           <div class="grid-2" style="margin-top:18px">

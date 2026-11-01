@@ -1567,11 +1567,17 @@ body.editor-open .chat-fab, body.editor-open .chat-panel { display: none; }
   body:not(.master-admin) #view .card-head .link { color: var(--accent); font-weight: 600; }
 }
 
-/* Number cards: big numbers never spill out of their card */
-.v-short { display: none; }
-.stat-value { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@media (min-width: 761px) and (max-width: 1400px) { .store-admin .stat-value { font-size: clamp(22px, 2.1vw, 30px); } }
+/* Phones: home number cards fit amounts up to ৳10,00,000 (and beyond) in full.
+   Icon and name share the top row; the number gets the card's whole width underneath. */
 @media (max-width: 760px) {
-  .v-full { display: none; }
-  .v-short { display: inline; }
+  body.on-home:not(.master-admin) .stats .stat { grid-template-columns: 34px minmax(0, 1fr); grid-template-areas: "ico lb" "val val"; column-gap: 9px; row-gap: 10px; align-items: center; min-height: 0; padding: 13px 12px 14px; }
+  body.on-home:not(.master-admin) .stats .stat-ico { width: 34px !important; height: 34px !important; border-radius: 11px; }
+  body.on-home:not(.master-admin) .stats .stat-ico .i { width: 17px; height: 17px; }
+  body.on-home:not(.master-admin) .stats .stat-label { align-self: center; font-size: 12.5px; }
+  body.on-home:not(.master-admin) .stats .stat .stat-value { font-size: clamp(17px, 5.4vw, 22px); white-space: nowrap; overflow: visible; }
+}
+/* Very small phones (320px): drop the plan badge so the bell and avatar stay on the logo's row */
+@media (max-width: 340px) {
+  .m-brand small { display: none; }
+  body.on-home .m-brand { font-size: 17px; }
 }
