@@ -1491,3 +1491,53 @@ body.editor-open .chat-fab, body.editor-open .chat-panel { display: none; }
   /* Products always show as the photo grid on phones, so the List / Grid switch stays hidden */
   body:not(.master-admin) #view .seg:has([data-action="product-view"]) { display: none !important; }
 }
+
+/* ======================================================================
+   Phones, v6: tidy home cards, an editor made for thumbs
+   ====================================================================== */
+.ed-sm, .ed-m-bar { display: none; }
+@media (max-width: 760px) {
+  /* Home cards: icon and change at the top, then the number, then its name. No filler text. */
+  body.on-home:not(.master-admin) .stat { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "ico dl" "val val" "lb lb"; row-gap: 0; padding: 14px 14px 16px; border-radius: 20px; }
+  body.on-home:not(.master-admin) .stat-ico { grid-area: ico; grid-row: auto; grid-column: auto; width: 38px !important; height: 38px !important; border-radius: 12px; }
+  body.on-home:not(.master-admin) .stat-ico .i { width: 19px; height: 19px; }
+  body.on-home:not(.master-admin) .stat .stat-value { grid-area: val; grid-column: auto; margin: 14px 0 2px !important; font-size: 24px; letter-spacing: -.02em; line-height: 1.1; }
+  body.on-home:not(.master-admin) .stat-label { grid-area: lb; grid-column: auto; font-size: 13px; font-weight: 500; color: #667085; }
+  body.on-home:not(.master-admin) .stat-delta { grid-area: dl; grid-column: auto; align-self: start; margin: 0; }
+  body.on-home:not(.master-admin) .stat-delta > .muted, body.on-home:not(.master-admin) .stat-delta .delta.flat { display: none !important; }
+  body.on-home:not(.master-admin) .stat-delta .delta { display: inline-flex !important; align-items: center; gap: 2px; margin: 0; padding: 3px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; }
+  body.on-home:not(.master-admin) .stat-delta .delta.up { background: #e6f6ea; color: #138a43; }
+  body.on-home:not(.master-admin) .stat-delta .delta.down { background: #fdecec; color: #c62828; }
+  body.on-home:not(.master-admin) .stat-delta .delta .i { width: 12px; height: 12px; }
+  body.on-home:not(.master-admin) .stats { gap: 12px; }
+  /* The chart card: the total once, no repeated "vs." line */
+  body.on-home:not(.master-admin) .sales-top .stat-delta .muted { display: none; }
+  body.on-home:not(.master-admin) .sales-top .delta.flat { display: none; }
+
+  /* Account sheet: a real grip and a smooth pull-down */
+  .more-panel { touch-action: pan-y; }
+  .more-grip { width: 44px; height: 5px; margin: 8px auto 16px; }
+
+  /* Editor: a bottom bar (Sections, Add section, Pages); the panel is a half-height sheet you can pull down */
+  .ed-sm { display: inline-flex; }
+  p.ed-sm { display: block; }
+  .ed-lg { display: none; }
+  .ed-m-edit { display: none !important; }
+  .ed-canvas { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .ed-m-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; height: calc(72px + env(safe-area-inset-bottom)); padding: 0 14px env(safe-area-inset-bottom);
+    background: #fff; border-radius: 22px 22px 0 0; border-top: 1px solid #eef0f3; box-shadow: 0 -8px 24px -16px rgba(16, 24, 40, .25); }
+  .ed-m-bar button { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 0; background: none; color: #475467; font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; }
+  .ed-m-bar button .i { width: 22px; height: 22px; }
+  .ed-m-bar .ed-m-add { flex-direction: row; gap: 8px; height: 48px; padding: 0 20px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 14.5px; box-shadow: 0 10px 22px -10px rgba(14, 122, 75, .7); }
+  .ed-m-bar .ed-m-add .i { width: 18px; height: 18px; }
+  .ed.panel-open .ed-m-bar { display: none; }
+  .ed-panel { height: 62vh; height: 62dvh; z-index: 6; touch-action: pan-y; }
+  .ed-panel .ed-tabs { display: none; }
+  .ed-panel-head { padding-top: 6px; }
+  .ed-row { min-height: 52px; border-radius: 14px; }
+  .ed-row-tools { display: flex; gap: 2px; margin-left: auto; }
+  .ed-row-tools button { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; }
+  .ed-row-tools button:disabled { opacity: .3; }
+  .ed-grip { display: none !important; }
+  .ed-add-section { width: 100%; justify-content: center; height: 46px; margin: 12px 0 4px; border: 1.5px dashed #b7dcc6; border-radius: 14px; background: #f3faf6; color: var(--accent); font-weight: 600; }
+}
