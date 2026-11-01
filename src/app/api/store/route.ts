@@ -1,6 +1,7 @@
 import { currentUser, publicAccount } from "@/lib/auth";
 import { api, clean, json } from "@/lib/http";
 import { CATEGORY, EMAIL, isPlan, templateOf } from "@/lib/plans";
+import { subdomainProblem, subdomainTaken } from "@/lib/subdomain";
 
 const MAX_STORE_BYTES = 1_000_000;
 
@@ -28,6 +29,14 @@ export const PUT = api(async (request, env) => {
   if (next.email !== user.email) {
     const taken = await env.DB.prepare("SELECT 1 FROM users WHERE email = ? AND id != ?").bind(next.email, user.id).first();
     if (taken) return json({ error: "That email is already used by another account." }, 409);
+  }
+
+  // A new free sub-domain must follow the rules and not belong to another store (an unchanged one is always fine)
+  const sub = String((body.store as { settings?: { subdomain?: unknown } }).settings?.subdomain ?? "").toLowerCase();
+  const was = await env.DB.prepare("SELECT json_extract(data, '$.settings.subdomain') AS sub FROM stores WHERE user_id = ?").bind(user.id).first<{ sub: string | null }>();
+  if (sub && was && sub !== was.sub) {
+    const problem = subdomainProblem(sub) || ((await subdomainTaken(env, sub, user.id)) ? "Another store already uses this website address." : "");
+    if (problem) return json({ error: problem }, 422);
   }
 
   const now = new Date().toISOString();

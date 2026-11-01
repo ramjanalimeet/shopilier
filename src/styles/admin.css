@@ -1666,3 +1666,39 @@ body.editor-open .chat-fab, body.editor-open .chat-panel { display: none; }
   body.editor-open .ed-row-tools { display: flex; gap: 2px; margin-left: auto; opacity: 1; }
   body.editor-open .ed-row-tools button { width: 34px; height: 34px; border-radius: 10px; }
 }
+
+/* Computers: the phone-only ↑ ↓ buttons and "Add a section" stay hidden, so section rows stay slim
+   (editor.css loads after this file, hence body.editor-open) */
+body.editor-open .ed-row-tools .ed-sm, body.editor-open .ed-add-section.ed-sm, body.editor-open p.ed-sm { display: none; }
+@media (max-width: 760px) {
+  body.editor-open .ed-row-tools .ed-sm { display: grid; }
+  body.editor-open .ed-add-section.ed-sm { display: inline-flex; }
+  body.editor-open p.ed-sm { display: block; }
+  body.editor-open p.ed-lg { display: none; }
+}
+
+/* Phone editor: big section actions under the sheet's title, a sticky Done button, fields that don't zoom */
+.ed-qa, .ed-done { display: none; }
+@media (max-width: 760px) {
+  body.editor-open .ed-qa { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex: none; padding: 0 14px 10px; border-bottom: 1px solid #eef0f3; }
+  body.editor-open .ed-qa button { display: grid; justify-items: center; gap: 3px; padding: 8px 2px; border: 0; border-radius: 12px; background: #f4f5f7; color: #344054; font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; }
+  body.editor-open .ed-qa button .i { width: 18px; height: 18px; }
+  body.editor-open .ed-qa button.danger { color: #d92d20; background: #fef3f2; }
+  body.editor-open .ed-qa button:active { transform: scale(.96); }
+  body.editor-open .ed-done { display: block; flex: none; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid #eef0f3; background: #fff; }
+  body.editor-open .ed-done .btn { width: 100%; height: 48px; justify-content: center; border-radius: 14px; font-size: 15px; }
+  body.editor-open .ed-panel { padding-bottom: 0; }
+  body.editor-open .ed-panel .input, body.editor-open .ed-panel .select, body.editor-open .ed-panel textarea, body.editor-open .ed-panel input[type="text"], body.editor-open .ed-panel input[type="url"] { min-height: 46px; font-size: 16px; border-radius: 12px; }
+  body.editor-open .ed-panel .ed-toggle { min-height: 50px; font-size: 15px; }
+  body.editor-open .ed-panel .ed-field label { font-size: 13.5px; }
+  body.editor-open .ed-panel .ed-seg button { min-height: 40px; padding: 0 14px; border-radius: 10px; }
+}
+/* Settings → Domain: the sub-domain field with ".shopilier.com" after it */
+.sub-row { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+.sub-field { flex: 1; min-width: 220px; display: flex; align-items: center; border: 1px solid var(--border); border-radius: 10px; background: #fff; overflow: hidden; }
+.sub-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.sub-field .input { flex: 1; min-width: 0; border: 0; box-shadow: none !important; border-radius: 0; }
+.sub-field span { padding: 0 12px; color: var(--muted); font-size: 14px; white-space: nowrap; background: #f9fafb; align-self: stretch; display: grid; place-items: center; border-left: 1px solid var(--border); }
+.sub-msg { margin-top: 10px; }
+.sub-msg.bad { color: var(--danger); }
+@media (max-width: 760px) { .sub-row .btn { flex: 1 1 100%; justify-content: center; height: 44px; } .sub-field .input { font-size: 16px; } }

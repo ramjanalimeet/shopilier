@@ -1,0 +1,11 @@
+// Free sub-domains (<name>.shopilier.com, live at /s/<name>): 3–40 letters, numbers or hyphens, not starting or
+// ending with a hyphen, not a reserved word, and not used by another store.
+const RESERVED = new Set(["www", "app", "api", "admin", "master", "master-admin", "mail", "shop", "store", "help", "support", "blog", "demo", "static", "assets", "media", "shopilier", "shopiliar", "dashboard", "signin", "signup", "login", "s"]);
+
+export const subdomainProblem = (name: string) =>
+  name.length < 3 ? "Use at least 3 characters." : name.length > 40 ? "Use 40 characters or fewer."
+    : !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(name) ? "Use only English letters, numbers and hyphens (not at the start or end)."
+    : RESERVED.has(name) ? "That name is reserved. Please pick another." : "";
+
+export const subdomainTaken = async (env: CloudflareEnv, name: string, userId: string) =>
+  !!(await env.DB.prepare("SELECT 1 FROM stores WHERE json_extract(data, '$.settings.subdomain') = ? AND user_id != ? LIMIT 1").bind(name, userId).first());

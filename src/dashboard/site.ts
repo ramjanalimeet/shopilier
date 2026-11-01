@@ -391,6 +391,9 @@ export const SiteKit = (() => {
     site.footer ||= { text: site.about || "", showMenu: true, showContact: true, showSocial: true, copyright: "", style: blankStyle() };
     // Phones: a sticky bar at the bottom (Home, Shop, the main button, Cart, WhatsApp or Call); on for every website
     site.header.mbar ||= { show: true, cta: site.lang === "bn" ? "অর্ডার করুন" : "Order now", link: "/shop", chat: true };
+    const mb = site.header.mbar;
+    ["home", "shop", "cart", "chat"].forEach((k) => { if (mb[k] === undefined) mb[k] = true; });
+    mb.where ||= "phone"; mb.shape ||= "flat";
     pages.forEach((p) => { if (!Array.isArray(p.sections)) p.sections = pageSections(p, ctx); });
     // Every store has a Checkout page: it can be edited or reset, but not deleted, and its link stays /checkout
     if (!pages.some((p) => p.system === "checkout")) {
@@ -743,18 +746,21 @@ export const SiteKit = (() => {
       </div>
     </header>`;
   };
-  // Phones: the sticky bottom bar (hidden on bigger screens by the stylesheet)
+  // The sticky bottom bar: Home, Shop, the main button, Cart, WhatsApp/Call and Account, each can be turned off.
+  // b.where: "phone" (default), "tablet" (phones and tablets) or "all" (also a floating bar on computers)
+  // b.shape: "flat" (on the bottom edge) or "float" (rounded, with a gap); b.bg / b.text / b.ctaBg: colours
   const renderMobileBar = (site, pages) => {
     const b = (site.header || {}).mbar;
     if (!b || !b.show) return "";
-    const T = (s) => tr(site, s), wa = waLink(site), tel = digits(site.phone);
+    const T = (s) => tr(site, s), wa = waLink(site), tel = digits(site.phone), on = (k) => b[k] !== false;
     const shop = pages.find((p) => p.slug === "shop") ? "/shop" : "/";
     const item = (href, ico, label, extra = "") => `<a href="${esc(href)}"${extra}>${ico}<span>${esc(label)}</span></a>`;
-    const chat = b.chat && wa ? item(wa, socialIcon("whatsapp"), "WhatsApp", ' target="_blank" rel="noopener" class="mb-wa"') : b.chat && tel ? item("tel:" + tel, svg("phone"), T("Call")) : "";
-    return `<nav class="s-mbar" data-sid="header" aria-label="${esc(T("Menu"))}">
-      ${item("/", svg("home"), T("Home"))}${item(shop, svg("bag"), T("Shop"))}
-      ${b.cta ? `<a class="mb-cta" href="${esc(safeLink(b.link) || shop)}">${esc(b.cta)}</a>` : ""}
-      ${item("/checkout", svg("cart"), T("Cart"), ' class="mb-cart"')}${chat}
+    const chat = on("chat") && wa ? item(wa, socialIcon("whatsapp"), "WhatsApp", ' target="_blank" rel="noopener" class="mb-wa"') : on("chat") && tel ? item("tel:" + tel, svg("phone"), T("Call")) : "";
+    const left = [on("home") ? item("/", svg("home"), T("Home")) : "", on("shop") ? item(shop, svg("bag"), T("Shop")) : ""].join("");
+    const right = [on("cart") ? item("/checkout", svg("cart"), T("Cart"), ' class="mb-cart"') : "", chat, b.account ? `<span class="mb-acc">${svg("user")}<span>${esc(T("Account"))}</span></span>` : ""].join("");
+    const css = [b.bg && `--mb-bg:${b.bg}`, b.text && `--mb-text:${b.text}`, b.ctaBg && `--mb-cta:${b.ctaBg};--mb-on-cta:${isDark(b.ctaBg) ? "#fff" : "#111"}`].filter(Boolean).join(";");
+    return `<nav class="s-mbar mb-${esc(b.where || "phone")} mb-${esc(b.shape || "flat")}" data-sid="mbar" aria-label="${esc(T("Menu"))}"${css ? ` style="${esc(css)}"` : ""}>
+      ${left}${b.cta ? `<a class="mb-cta" href="${esc(safeLink(b.link) || shop)}">${esc(b.cta)}</a>` : ""}${right}
     </nav>`;
   };
   const renderFooter = (site, pages) => {
@@ -797,7 +803,7 @@ export const SiteKit = (() => {
         return `<section class="s s-${esc(s.type)} pad-${esc(st.padding || "m")} align-${esc(st.align || "left")}${hide}${s.hidden ? " is-hidden" : ""}${sel(s.id)}" data-sid="${esc(s.id)}" style="${sectionStyle(st)}">${label(s)}${R(s.content || {}, st, { products: opts.products, ed, blocks: renderBlocks(s.blocks, ed), site, theme, hints: !!opts.hints, T, money: m })}</section>${insert(i + 1)}`;
       }).join("") || (ed ? '<section class="s pad-l align-center"><div class="wrap"><p class="empty">This page has no sections yet. Click + to add one.</p></div></section>' : "")}</main>
       ${opts.bare ? "" : renderFooter(site, pages).replace('class="s-footer', `class="s-footer${sel("footer")}`).replace(/(<footer[^>]*>)/, `$1${fixedLabel("footer", "Footer")}`)}
-      ${opts.bare ? "" : renderMobileBar(site, pages)}
+      ${opts.bare || page.system === "checkout" ? "" : renderMobileBar(site, pages).replace('class="s-mbar', `class="s-mbar${sel("mbar")}`)}
     </div>`;
   };
 
