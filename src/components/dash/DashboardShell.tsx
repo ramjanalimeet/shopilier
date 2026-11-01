@@ -58,6 +58,9 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
         <div className="main">
           <header className="topbar">
             <button className="top-icon menu-btn" type="button" aria-label="Open menu"><Icon name="menu" /></button>
+            {/* Phones: a menu button (opens More), the page's title in the middle */}
+            <button className="top-icon m-grid-btn" type="button" aria-label="Menu" data-more-open><Icon name="grid" /></button>
+            <b className="top-title" id="crumb" />
             {/* Phones: the store's name where the sidebar would be */}
             <a className="top-store" href="#/home" aria-label="Home"><span className="top-store-ava" data-acct-ava /><span className="top-store-text"><b data-acct-name /><small data-acct-plan /></span></a>
             <label className="top-search"><Icon name="search" /><input id="top-search" type="search" placeholder="Search products, orders, customers…" aria-label="Search products, orders and customers" /></label>

@@ -569,8 +569,10 @@ button { font: inherit; cursor: pointer; }
   body.menu-open { overflow: hidden; }
 
   /* Header: sticky and frosted, a hairline once the page scrolls */
-  .site-header { position: sticky; top: 0; z-index: 60; padding: 10px 0; background: rgba(255, 255, 255, .82); -webkit-backdrop-filter: saturate(180%) blur(14px); backdrop-filter: saturate(180%) blur(14px); transition: box-shadow .2s, background .2s; }
-  .site-header.scrolled, .site-header.open { box-shadow: 0 1px 0 rgba(16, 24, 40, .08); background: rgba(255, 255, 255, .94); }
+  /* At the top the header keeps the page's own colours (as before); once the page scrolls it turns white and frosted */
+  .site-header { position: sticky; top: 0; z-index: 60; padding: 10px 0; background: transparent; transition: box-shadow .2s, background .2s; }
+  .site-header.scrolled { -webkit-backdrop-filter: saturate(180%) blur(14px); backdrop-filter: saturate(180%) blur(14px); }
+  .site-header.scrolled { box-shadow: 0 1px 0 rgba(16, 24, 40, .08); background: rgba(255, 255, 255, .94); }
   /* The blur would hold the menu sheet inside the header, so it's off while the menu is open */
   .site-header.open { -webkit-backdrop-filter: none; backdrop-filter: none; background: #fff; }
   .brand { font-size: 21px; }
@@ -623,5 +625,8 @@ button { font: inherit; cursor: pointer; }
   .m-cta-main { flex: 1; background: var(--m-green); color: #fff; box-shadow: var(--m-shadow); }
   .m-cta-side { padding: 0 16px; background: #f2f4f7; color: var(--ink); font-weight: 600 !important; }
   body.menu-open .m-cta { transform: translateY(140%); }
+
+  /* The live demo is a desktop experience: no links to it on phones */
+  .site-header .main-nav a[href="/demo"], .footer-nav a[href="/demo"], .demo-pill { display: none !important; }
   body.has-mcta .site-footer .footer-bottom { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
 }
