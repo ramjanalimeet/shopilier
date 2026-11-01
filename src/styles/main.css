@@ -504,10 +504,16 @@ button { font: inherit; cursor: pointer; }
   .watch { position: static; transform: none; display: flex; align-items: center; gap: 14px; }
   .watch-note { position: static; transform: none; font-size: 19px; }
   .watch-note svg { display: none; }
-  .showcase { margin-bottom: 34px; }
-  .dash { margin-right: 22%; }
-  .device-phone { right: -4px; bottom: -30px; width: 34%; }
-  .trusted { padding-top: 36px; }
+  /* Phones: the desktop shot on the left, the phone overlapping its bottom-right corner,
+     with room underneath so the phone never runs into the next section */
+  .showcase { margin: 30px auto 0; padding-bottom: 46px; justify-content: flex-start; }
+  .dash { margin-right: 20%; border-radius: 14px; box-shadow: 0 14px 34px -18px rgba(16, 24, 40, .35); }
+  .device-phone { right: 0; bottom: 0; width: 34%; max-width: 150px; padding: 5px; border-radius: 24px;
+    box-shadow: 0 0 0 1.5px #2b303b inset, 0 16px 30px -14px rgba(16, 24, 40, .5); }
+  .device-phone img { border-radius: 19px; }
+  .device-notch { top: 9px; width: 34px; height: 9px; margin-left: -17px; }
+  .trusted { padding-top: 26px; }
+  .trusted h6 { letter-spacing: .14em; line-height: 1.6; }
   .logo-marquee, .logo-track { gap: 36px; }
   .logo .word { font-size: 15px; }
   .reviews { padding: 44px 16px 70px; }
