@@ -24,12 +24,13 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   color: var(--text);
-  /* Soft brand-green glow on white: top-left, top-right and a faint wash behind the hero */
+  /* Clean white with a light brand-green glow behind the hero (premium, not blotchy) */
   background:
-    radial-gradient(640px 420px at 4% 140px, rgba(65, 162, 18, .2) 0%, rgba(65, 162, 18, 0) 70%),
-    radial-gradient(760px 520px at 98% 300px, rgba(65, 162, 18, .22) 0%, rgba(65, 162, 18, 0) 70%),
-    radial-gradient(1200px 600px at 50% -10%, #eef8e7 0%, rgba(238, 248, 231, 0) 60%),
-    var(--bg);
+    radial-gradient(1100px 560px at 50% -180px, rgba(65, 162, 18, .13) 0%, rgba(65, 162, 18, .05) 45%, rgba(65, 162, 18, 0) 72%),
+    radial-gradient(520px 360px at 92% 180px, rgba(132, 204, 22, .08) 0%, rgba(132, 204, 22, 0) 70%),
+    radial-gradient(520px 360px at 8% 120px, rgba(16, 185, 129, .06) 0%, rgba(16, 185, 129, 0) 70%),
+    #fff;
+  background-repeat: no-repeat;
   min-height: 100vh;
   line-height: 1.5;
   overflow-x: hidden;
@@ -652,4 +653,30 @@ button { font: inherit; cursor: pointer; }
   /* The live demo is a desktop experience: no links to it on phones */
   .site-header .main-nav a[href="/demo"], .footer-nav a[href="/demo"], .demo-pill { display: none !important; }
   body.has-mcta .site-footer .footer-bottom { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+}
+
+/* ---------- Phones: a premium white hero ----------
+   White with one soft brand glow at the top (no blotches), the main button and the play button side by side,
+   and the three promises on one line. */
+@media (max-width: 760px) {
+  body {
+    background:
+      radial-gradient(130% 380px at 50% -60px, rgba(65, 162, 18, .14) 0%, rgba(65, 162, 18, .05) 50%, rgba(65, 162, 18, 0) 78%),
+      linear-gradient(180deg, #f7fbf4 0, #ffffff 640px) no-repeat,
+      #fff;
+  }
+  .hero .cta { flex-direction: row; justify-content: center; align-items: center; gap: 14px; }
+  .hero .cta .btn { flex: 0 1 auto; }
+  .watch { gap: 0; }
+  .watch-btn { width: 54px; height: 54px; }
+  .watch-btn svg { width: 22px; height: 22px; margin-left: 3px; }
+  .watch-note { display: none; }
+  .checks { flex-wrap: nowrap; justify-content: center; gap: 0 14px; margin-top: 18px; font-size: 12px; white-space: nowrap; }
+  .checks span { gap: 5px; }
+  .checks svg { width: 13px; height: 13px; color: var(--brand-text, #2f7d0c); }
+}
+@media (max-width: 370px) {
+  .checks { gap: 0 9px; font-size: 11px; }
+  .checks svg { width: 11px; height: 11px; }
+  .hero .cta { gap: 10px; }
 }
