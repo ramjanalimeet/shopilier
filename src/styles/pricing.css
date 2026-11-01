@@ -106,3 +106,14 @@
 .yearly-gift.always { background: var(--brand-text); color: #fff; box-shadow: 0 6px 18px rgba(47, 125, 12, .25); }
 .compare table[hidden] { display: none; }
 
+
+/* Phones: the plans sit side by side to swipe through (the popular one is shown first), not one very long stack */
+.pcards-hint { display: none; }
+@media (max-width: 760px) {
+  .pcards { display: flex; grid-template-columns: none; max-width: none; gap: 12px; margin: 0 -16px; padding: 10px 16px 18px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .pcards::-webkit-scrollbar { display: none; }
+  .pcard { flex: 0 0 86%; scroll-snap-align: center; }
+  .pcards-hint { display: flex; justify-content: center; gap: 6px; margin-top: 2px; }
+  .pcards-hint i { width: 7px; height: 7px; border-radius: 999px; background: #d0d5dd; transition: width .2s, background .2s; }
+  .pcards-hint i.on { width: 20px; background: var(--brand); }
+}

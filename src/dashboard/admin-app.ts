@@ -19,6 +19,9 @@ export const start = async () => {
     document.getElementById("acct-sub").textContent = a.planName ? a.planName + " plan" : "";
     document.getElementById("acct-ava").innerHTML = a.logo ? `<img class="acct-logo" src="${esc(a.logo)}" alt="">` : avatar(a.business || "S");
     const bp = document.getElementById("brand-plan"); if (bp && a.planName) bp.textContent = a.planName;
+    document.querySelectorAll("[data-acct-name]").forEach((el) => { el.textContent = a.business || "My Store"; });
+    document.querySelectorAll("[data-acct-plan]").forEach((el) => { el.textContent = a.planName ? a.planName + " plan" : ""; });
+    document.querySelectorAll("[data-acct-ava]").forEach((el) => { el.innerHTML = a.logo ? `<img class="acct-logo" src="${esc(a.logo)}" alt="">` : avatar(a.business || "S"); });
   };
   try { paintAcctBtn(JSON.parse(localStorage.getItem(ACCT_CACHE) || "null")); } catch (e) { /* storage blocked */ }
 
@@ -245,14 +248,33 @@ export const start = async () => {
   const fetchAccounts = () => (acctFetch ||= fetch("/api/accounts").then((r) => r.ok ? r.json() : Promise.reject()).then((d) => { acctList = d.accounts; return acctList; }).catch(() => acctList).finally(() => { acctFetch = null; }));
   setTimeout(fetchAccounts, 1200);
   const acctLogo = (a) => (a.logo ? `<img class="acct-logo" src="${esc(a.logo)}" alt="">` : avatar(a.business || a.name || "S"));
-  const paintAcct = () => {
+  const acctHTML = () => {
     const mine = { id: "me", ...account, logo: SiteKit.safeImg(store.site.header && store.site.header.logo) || "", current: true };
     const list = acctList && acctList.length ? acctList.map((a) => (a.current ? { ...a, ...mine, id: a.id } : a)) : [mine];
-    acctMenu.innerHTML = `<div class="acct-head">Your stores</div>
+    return `<div class="acct-head">Your stores</div>
       ${list.map((a) => `<button type="button" role="menuitem" class="acct-item${a.current ? " on" : ""}" ${a.current ? 'aria-current="true"' : `data-switch="${esc(a.id)}"`}>
         ${acctLogo(a)}<span class="acct-text" title="${esc(a.email || "")}"><b>${esc(a.business || a.name)}</b><small>${esc((PLANS[a.plan] || PLANS.starter).name)} plan</small></span>${a.current ? icon("check") : ""}</button>`).join("")}
       <div class="acct-sep"></div>
       <button type="button" role="menuitem" class="acct-add" data-acct-add>${icon("plus")}<span><b>Add another store</b><small>Each store has its own plan and payment</small></span></button>`;
+  };
+  const paintAcct = () => { acctMenu.innerHTML = acctHTML(); };
+  const switchTo = async (btn, id) => {
+    btn.disabled = true;
+    if (saveTimer) await saveNow();
+    const r = await fetch("/api/accounts/switch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { btn.disabled = false; toast(d.error || "Couldn't switch stores."); return; }
+    location.href = "/admin";
+  };
+  // Phones: the store list as a sheet (from More)
+  const storesDialog = () => {
+    const d = dialog({ title: "Your stores", submit: "", body: `<div class="acct-sheet">${acctHTML()}</div>` });
+    d.form.addEventListener("click", (e) => {
+      const sw = e.target.closest("[data-switch]");
+      if (sw) { switchTo(sw, sw.dataset.switch); return; }
+      if (e.target.closest("[data-acct-add]")) { d.close(); addStoreDialog(); }
+    });
+    fetchAccounts().then(() => { const box = d.form.querySelector(".acct-sheet"); if (box) box.innerHTML = acctHTML(); });
   };
   // Add another store, all inside this popup: create a new one (its own account and plan) or sign in to one you have.
   // Either way this store stays signed in on the device, and the dashboard opens the other one.
@@ -343,19 +365,46 @@ export const start = async () => {
     });
     acctMenu.addEventListener("click", async (e) => {
       const sw = e.target.closest("[data-switch]");
-      if (sw) {
-        sw.disabled = true;
-        if (saveTimer) await saveNow();
-        const r = await fetch("/api/accounts/switch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: sw.dataset.switch }) });
-        const d = await r.json().catch(() => ({}));
-        if (!r.ok) { sw.disabled = false; toast(d.error || "Couldn't switch stores."); return; }
-        location.href = "/admin";
-        return;
-      }
+      if (sw) { switchTo(sw, sw.dataset.switch); return; }
       if (e.target.closest("[data-acct-add]")) { closeAcct(); addStoreDialog(); }
     });
     document.addEventListener("click", (e) => { if (!e.target.closest(".acct")) closeAcct(); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAcct(); });
+  }
+
+  // ---------- Phones: bottom tabs and the More sheet ----------
+  const moreBtn = document.getElementById("more-btn"), moreSheet = document.getElementById("more-sheet");
+  const WEBSITE_ROUTES = ["themes", "website", "pages", "navigation", "preferences"];
+  const MORE_ROUTES = ["customers", "shipping", "categories", "discounts", "analytics", "marketing", "pages", "navigation", "preferences"];
+  const setMore = (open) => {
+    if (!moreSheet) return;
+    moreSheet.hidden = !open; moreBtn.setAttribute("aria-expanded", String(open));
+    document.body.classList.toggle("sheet-open", open);
+    if (open) { const m = document.querySelector("[data-more-msgs]"), c = document.getElementById("msg-count"); if (m && c) m.textContent = c.textContent; }
+  };
+  const paintTabs = () => {
+    const route = location.hash.replace(/^#\/?/, "").split("?")[0] || "home";
+    const web = document.querySelector('.tabbar [data-tab="themes"]');
+    if (web) web.classList.toggle("on", WEBSITE_ROUTES.includes(route) && !MORE_ROUTES.includes(route));
+    if (moreBtn) moreBtn.classList.toggle("on", MORE_ROUTES.includes(route));
+  };
+  if (moreBtn) {
+    moreBtn.addEventListener("click", () => setMore(moreSheet.hidden));
+    moreSheet.addEventListener("click", (e) => {
+      if (e.target === moreSheet) { setMore(false); return; }
+      if (e.target.closest("a")) { setMore(false); return; }
+      const b = e.target.closest("[data-more]");
+      if (!b) return;
+      setMore(false);
+      const k = b.dataset.more;
+      if (k === "stores") storesDialog();
+      else if (k === "chat") document.getElementById("chat-fab").click();
+      else if (k === "settings" || k === "billing") openSettings(k === "billing" ? "billing" : "general");
+      else if (k === "logout") document.getElementById("logout").click();
+    });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !moreSheet.hidden) setMore(false); });
+    window.addEventListener("hashchange", () => { setMore(false); paintTabs(); });
+    paintTabs();
   }
 
   // ---------- Helpers ----------
@@ -751,6 +800,12 @@ export const start = async () => {
         const ret = returning(cur, p.from), retPrev = returning(prev, p.prevFrom);
         return `<div class="page">
           ${store.published ? "" : `<div class="callout yellow"><span class="ico">${icon("rocket")}</span><div><b>Your website isn't live yet.</b> Customize it, then publish when you're ready.</div><a class="btn btn-sm btn-dark" href="#/website">Customize &amp; publish</a></div>`}
+          <div class="m-quick" aria-label="Quick actions">
+            <button type="button" data-action="add-product">${icon("plus")}<span>Add product</span></button>
+            <button type="button" data-action="add-order">${icon("orders")}<span>New order</span></button>
+            <a href="#/website">${icon("brush")}<span>Edit website</span></a>
+            <button type="button" data-action="view-store">${icon("eye")}<span>View store</span></button>
+          </div>
           <div class="stats">
             ${stat("Total sales", taka(curSales), "bag", "c1", delta(curSales, prevSales) + vsText)}
             ${stat("Total orders", cur.length.toLocaleString("en-IN"), "cart", "c2", delta(cur.length, prev.length) + vsText)}
@@ -775,7 +830,7 @@ export const start = async () => {
                 </table></div></div>
             </div>
             <div class="home-side">
-              <div class="card"><div class="card-body" style="padding-top:20px">
+              <div class="card m-hide"><div class="card-body" style="padding-top:20px">
                 <div class="live-top"><span class="card-title">Visitors</span><span class="live-dot ${store.published ? "" : "off"}">${store.published ? "Live" : "Offline"}</span></div>
                 <div class="live-value">${store.visitors.reduce((a, b) => a + b, 0).toLocaleString("en-IN")}</div>
                 <div class="muted">visitors in the last 14 days</div>
@@ -783,7 +838,7 @@ export const start = async () => {
               </div></div>
               <div class="card"><div class="card-head"><span class="card-title">Top products</span><a class="link" href="#/products">View all</a></div>
                 <div class="card-body">${topProducts(cur)}</div></div>
-              <div class="card"><div class="card-head"><a class="card-title card-title-link" href="#/marketing">Marketing${icon("chevronRight")}</a></div>
+              <div class="card m-hide"><div class="card-head"><a class="card-title card-title-link" href="#/marketing">Marketing${icon("chevronRight")}</a></div>
                 <div class="card-body"><div class="mk-list">
                   <button class="mk-item" data-action="add-discount"><span class="mk-ico">${icon("tag")}</span><span class="t"><b>Create discount</b><span>Run a promotion to boost sales</span></span>${icon("chevronRight")}</button>
                   <a class="mk-item" href="#/marketing"><span class="mk-ico">${icon("megaphone")}</span><span class="t"><b>Connect an ad pixel</b><span>Meta, Google, TikTok and more</span></span>${icon("chevronRight")}</a>
