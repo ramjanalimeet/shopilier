@@ -654,3 +654,48 @@ figcaption span { font-size: 14px; opacity: .7; }
   /* Fields 16px, so phones don't zoom in when you tap them */
   .site input, .site textarea, .site select { font-size: 16px; }
 }
+
+/* ---------- Phones: the header and the sticky bar, polished ----------
+   Header: room above the logo, stays at the top while you scroll, a small round cart count.
+   Bar: frosted glass, the page you're on in the brand colour with a dot, a main button with an icon. */
+@media (max-width: 760px) {
+  .s-header { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--bg) 94%, transparent); -webkit-backdrop-filter: saturate(160%) blur(12px); backdrop-filter: saturate(160%) blur(12px); }
+  .editing .s-header { position: relative; }
+  .nav, .theme-fashion .nav { min-height: 60px; gap: 12px; }
+  .nav:has(.h-search), .theme-fashion .nav:has(.h-search) { min-height: 0; padding-top: 12px; padding-bottom: 12px; row-gap: 12px; }
+  .s-header .logo { display: inline-flex; align-items: center; gap: 10px; }
+  .s-header .logo-mark { width: 36px; height: 36px; border-radius: 10px; }
+  .s-header .logo-name { font-size: 20px; }
+  .s-header .tools { gap: 16px; }
+  .s-header .tools .ic, .theme-fashion .tools .ic { width: 23px; height: 23px; }
+  .tools a[data-count]::after, .theme-fashion .tools a[data-count]::after { display: block; top: -6px; right: -8px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; font-size: 10px; line-height: 17px; text-align: center; box-shadow: 0 0 0 2px var(--bg); }
+  .h-search input { height: 44px; font-size: 16px; }
+
+  .s-mbar { gap: 2px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--mb-bg) 92%, transparent); -webkit-backdrop-filter: saturate(170%) blur(16px); backdrop-filter: saturate(170%) blur(16px);
+    border-top: 1px solid color-mix(in srgb, var(--mb-text) 8%, transparent); border-radius: 22px 22px 0 0; box-shadow: 0 -10px 30px -16px rgba(0, 0, 0, .28); }
+  .s-mbar.mb-float { left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); padding: 8px; border: 1px solid color-mix(in srgb, var(--mb-text) 8%, transparent); border-radius: 26px; box-shadow: 0 18px 40px -14px rgba(0, 0, 0, .35); }
+  .s-mbar > a, .s-mbar > .mb-acc { flex: 1 1 0; min-width: 0; gap: 4px; padding: 4px 0; border-radius: 14px; font-size: 10.5px; letter-spacing: .01em; opacity: .62; transition: opacity .15s, color .15s; }
+  .s-mbar > a .ic, .s-mbar > .mb-acc .ic { width: 23px; height: 23px; stroke-width: 1.7; }
+  .s-mbar > a[aria-current="page"] { opacity: 1; color: var(--mb-cta); }
+  .s-mbar > a[aria-current="page"]::before { content: ""; position: absolute; bottom: -3px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; }
+  .s-mbar > a.mb-wa { opacity: 1; }
+  .s-mbar > a:active { transform: scale(.94); }
+  .s-mbar > a.mb-cta { flex: 0 0 auto; gap: 7px; height: 48px; padding: 0 18px; border-radius: 16px; opacity: 1; font-size: 14px; letter-spacing: 0;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--mb-cta) 82%, #fff), var(--mb-cta)); box-shadow: 0 10px 20px -10px var(--mb-cta), inset 0 1px 0 rgba(255, 255, 255, .25); }
+  .s-mbar > a.mb-cta .ic { width: 18px; height: 18px; stroke-width: 2; }
+  .s-mbar > a.mb-cart[data-count]::after { top: -2px; left: calc(50% + 5px); }
+  .site:has(.mb-float) { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 350px) {
+  .s-mbar > a.mb-cta { padding: 0 12px; }
+  .s-mbar > a.mb-cta .ic { display: none; }
+  .s-mbar > a, .s-mbar > .mb-acc { font-size: 10px; }
+}
+/* Small phones: the newsletter's field and button stack, so nothing pushes the page wider than the screen */
+@media (max-width: 380px) {
+  .s-newsletter .news, .theme-fashion .s-newsletter .news { padding: 20px 16px; }
+  .news-copy, .news-form, .news-copy h2 { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+  .news-form, .theme-fashion .news-form { flex-direction: column; }
+  .news-form .btn, .theme-fashion .news-form .btn { width: 100%; justify-content: center; }
+}
