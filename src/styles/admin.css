@@ -1599,3 +1599,12 @@ body.editor-open .chat-fab, body.editor-open .chat-panel { display: none; }
   body.on-home:not(.master-admin) .stats .stat-label { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12.5px; }
   body.on-home:not(.master-admin) .stats .stat .stat-value { margin-top: 10px !important; }
 }
+
+/* Phones, v9: icon before the name on the top row; the number centred in the card */
+@media (max-width: 760px) {
+  body.on-home:not(.master-admin) .stats .stat { grid-template-columns: 30px minmax(0, 1fr); grid-template-areas: "ico lb" "val val" "dl dl"; column-gap: 8px; }
+  body.on-home:not(.master-admin) .stats .stat-ico { justify-self: start; width: 30px !important; height: 30px !important; border-radius: 9px; }
+  body.on-home:not(.master-admin) .stats .stat-ico .i { width: 15px; height: 15px; }
+  body.on-home:not(.master-admin) .stats .stat .stat-value { justify-self: center; text-align: center; margin-top: 12px !important; }
+  body.on-home:not(.master-admin) .stats .stat-delta { justify-self: center; }
+}
