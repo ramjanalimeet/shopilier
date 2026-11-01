@@ -415,6 +415,17 @@ export const start = async () => {
       else if (k === "logout") document.getElementById("logout").click();
     });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !moreSheet.hidden) setMore(false); });
+    // Pull the sheet down to close it (from its top, or anywhere once its list is scrolled to the top)
+    const morePanel = moreSheet.querySelector(".more-panel");
+    let y0 = null, dy = 0;
+    morePanel.addEventListener("touchstart", (e) => { if (morePanel.scrollTop > 0) return; y0 = e.touches[0].clientY; dy = 0; morePanel.style.transition = "none"; }, { passive: true });
+    morePanel.addEventListener("touchmove", (e) => { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); morePanel.style.transform = dy ? `translateY(${dy}px)` : ""; }, { passive: true });
+    morePanel.addEventListener("touchend", () => {
+      if (y0 == null) return;
+      y0 = null;
+      if (dy > 80) { morePanel.style.transition = "transform .2s"; morePanel.style.transform = "translateY(100%)"; setTimeout(() => { setMore(false); morePanel.style.transform = ""; morePanel.style.transition = ""; }, 180); }
+      else { morePanel.style.transition = "transform .2s"; morePanel.style.transform = ""; }
+    });
     window.addEventListener("hashchange", () => { setMore(false); paintTabs(); });
     paintTabs();
   }

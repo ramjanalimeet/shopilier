@@ -192,13 +192,40 @@ export const SiteEditor = (() => {
       <div class="ed-body">
         <div class="ed-canvas"><div class="ed-frame-wrap"><iframe class="ed-frame" title="Website preview"></iframe></div></div>
         <aside class="ed-panel" id="ed-panel" aria-label="Editor panel"></aside>
-        <button class="ed-m-edit" type="button" id="ed-m-edit">${icon("edit")}Edit sections</button>
+        <nav class="ed-m-bar" aria-label="Editor">
+          <button type="button" data-m="sections">${icon("layout")}<span>Sections</span></button>
+          <button type="button" class="ed-m-add" data-m="add">${icon("plus")}<span>Add section</span></button>
+          <button type="button" data-m="pages">${icon("pages")}<span>Pages</span></button>
+        </nav>
       </div>
     </div>`;
     const $ = (sel) => root.querySelector(sel);
     const frame = $(".ed-frame"), panel = $("#ed-panel");
     // Phones: a floating button opens the sections panel as a bottom sheet
-    $("#ed-m-edit").addEventListener("click", () => { state.mode = "sections"; state.panelOpen = true; paintPanel(); paintTop(); });
+    $(".ed-m-bar").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-m]");
+      if (!b) return;
+      if (b.dataset.m === "add") { openLibrary(page().sections.length); return; }
+      if (b.dataset.m === "sections") state.selected = null;
+      state.mode = b.dataset.m; state.panelOpen = true; paintCanvas(); paintPanel();
+    });
+    // Phones: pull the panel down by its top to close it
+    {
+      let y0 = null, dy = 0;
+      panel.addEventListener("touchstart", (e) => {
+        if (innerWidth > 899) return;
+        const body = panel.querySelector(".ed-panel-body"), top = e.touches[0].clientY - panel.getBoundingClientRect().top;
+        if (top > 90 && body && body.scrollTop > 0) return;
+        if (e.target.closest("input, textarea, select")) return;
+        y0 = e.touches[0].clientY; dy = 0; panel.style.transition = "none";
+      }, { passive: true });
+      panel.addEventListener("touchmove", (e) => { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); panel.style.transform = dy ? `translateY(${dy}px)` : ""; }, { passive: true });
+      panel.addEventListener("touchend", () => {
+        if (y0 == null) return;
+        y0 = null; panel.style.transition = ""; panel.style.transform = "";
+        if (dy > 90) { state.panelOpen = false; paintPanel(); }
+      });
+    }
 
     const paintTop = () => {
       root.querySelectorAll("[data-device]").forEach((b) => b.classList.toggle("on", b.dataset.device === state.device));
@@ -304,11 +331,13 @@ export const SiteEditor = (() => {
       const p = page();
       const row = (id, label, ico, s) => `<div class="ed-row ${state.selected === id ? "on" : ""}" data-select="${id}"${s && s.type !== "checkout" ? ` draggable="true" data-drag="${s.id}" title="Drag to move"` : ""}>${s && s.type !== "checkout" ? `<span class="ed-grip" aria-hidden="true">${icon("grip")}</span>` : ""}
         <span class="ed-row-ico">${icon(ico)}</span><span class="ed-row-label">${esc(label)}</span>
-        ${s && s.type !== "checkout" ? `<span class="ed-row-tools"><button type="button" data-row="hide" data-id="${s.id}" aria-label="${s.hidden ? "Show" : "Hide"} section" title="${s.hidden ? "Show" : "Hide"}">${icon(s.hidden ? "eyeOff" : "eye")}</button></span>` : ""}
+        ${s && s.type !== "checkout" ? `<span class="ed-row-tools"><button type="button" class="ed-sm" data-row="up" data-id="${s.id}" aria-label="Move up" title="Move up">${icon("up")}</button><button type="button" class="ed-sm" data-row="down" data-id="${s.id}" aria-label="Move down" title="Move down">${icon("down")}</button><button type="button" data-row="hide" data-id="${s.id}" aria-label="${s.hidden ? "Show" : "Hide"} section" title="${s.hidden ? "Show" : "Hide"}">${icon(s.hidden ? "eyeOff" : "eye")}</button></span>` : ""}
       </div>`;
       return `<div class="ed-sub">Sections on ${esc(p.title)}</div>
         <div class="ed-outline">${row("header", "Header", "layout")}${p.sections.map((s) => row(s.id, (K.TYPES[s.type] || {}).label || s.type, (K.TYPES[s.type] || {}).icon || "layout", s)).join("")}${row("footer", "Footer", "layout")}</div>
-        <p class="ed-note">Drag sections in this list to change their order. To add a section, point at the line between two sections on your website and click the green <b>+</b>.</p>`;
+        <button type="button" class="btn ed-add ed-add-section ed-sm" data-add-section>${icon("plus")}Add a section</button>
+        <p class="ed-note ed-lg">Drag sections in this list to change their order. To add a section, point at the line between two sections on your website and click the green <b>+</b>.</p>
+        <p class="ed-note ed-sm">Tap a section to edit it, or tap it right on your website. Use the arrows to move it up or down.</p>`;
     };
 
     const elements = (t) => {
@@ -502,6 +531,8 @@ export const SiteEditor = (() => {
       if (!b) return;
       if (b.hasAttribute("data-close")) { if (state.mode !== "sections" && innerWidth >= 900) state.mode = "sections"; else state.panelOpen = false; paintPanel(); return; }
       if (b.hasAttribute("data-deselect")) { select(null, false); return; }
+      if (b.dataset.row === "up" || b.dataset.row === "down") { e.stopPropagation(); sectionAction(b.dataset.row, b.dataset.id); return; }
+      if (b.hasAttribute("data-add-section")) { openLibrary(page().sections.length); return; }
       if (b.dataset.row === "hide") { e.stopPropagation(); const s = sectionById(b.dataset.id); if (s.type === "checkout") { toast("The checkout form can't be hidden — it's how customers order"); return; } s.hidden = !s.hidden; changed({ panel: true }); return; }
       if (b.dataset.select) { select(b.dataset.select); return; }
       if (b.dataset.page) { state.pageId = b.dataset.page; state.selected = null; state.mode = "sections"; frame.contentWindow && frame.contentWindow.scrollTo(0, 0); paintAll(); return; }
