@@ -749,18 +749,20 @@ export const SiteKit = (() => {
   // The sticky bottom bar: Home, Shop, the main button, Cart, WhatsApp/Call and Account, each can be turned off.
   // b.where: "phone" (default), "tablet" (phones and tablets) or "all" (also a floating bar on computers)
   // b.shape: "flat" (on the bottom edge) or "float" (rounded, with a gap); b.bg / b.text / b.ctaBg: colours
-  const renderMobileBar = (site, pages) => {
+  const renderMobileBar = (site, pages, page) => {
     const b = (site.header || {}).mbar;
     if (!b || !b.show) return "";
     const T = (s) => tr(site, s), wa = waLink(site), tel = digits(site.phone), on = (k) => b[k] !== false;
     const shop = pages.find((p) => p.slug === "shop") ? "/shop" : "/";
-    const item = (href, ico, label, extra = "") => `<a href="${esc(href)}"${extra}>${ico}<span>${esc(label)}</span></a>`;
+    // The page you're on is highlighted (Home on the home page, Shop on the shop page)
+    const here = page ? "/" + (page.slug || "") : "";
+    const item = (href, ico, label, extra = "") => `<a href="${esc(href)}"${extra}${href === here ? ' aria-current="page"' : ""}>${ico}<span>${esc(label)}</span></a>`;
     const chat = on("chat") && wa ? item(wa, socialIcon("whatsapp"), "WhatsApp", ' target="_blank" rel="noopener" class="mb-wa"') : on("chat") && tel ? item("tel:" + tel, svg("phone"), T("Call")) : "";
     const left = [on("home") ? item("/", svg("home"), T("Home")) : "", on("shop") ? item(shop, svg("bag"), T("Shop")) : ""].join("");
     const right = [on("cart") ? item("/checkout", svg("cart"), T("Cart"), ' class="mb-cart"') : "", chat, b.account ? `<span class="mb-acc">${svg("user")}<span>${esc(T("Account"))}</span></span>` : ""].join("");
     const css = [b.bg && `--mb-bg:${b.bg}`, b.text && `--mb-text:${b.text}`, b.ctaBg && `--mb-cta:${b.ctaBg};--mb-on-cta:${isDark(b.ctaBg) ? "#fff" : "#111"}`].filter(Boolean).join(";");
     return `<nav class="s-mbar mb-${esc(b.where || "phone")} mb-${esc(b.shape || "flat")}" data-sid="mbar" aria-label="${esc(T("Menu"))}"${css ? ` style="${esc(css)}"` : ""}>
-      ${left}${b.cta ? `<a class="mb-cta" href="${esc(safeLink(b.link) || shop)}">${esc(b.cta)}</a>` : ""}${right}
+      ${left}${b.cta ? `<a class="mb-cta" href="${esc(safeLink(b.link) || shop)}">${svg("bag")}<span>${esc(b.cta)}</span></a>` : ""}${right}
     </nav>`;
   };
   const renderFooter = (site, pages) => {
@@ -803,7 +805,7 @@ export const SiteKit = (() => {
         return `<section class="s s-${esc(s.type)} pad-${esc(st.padding || "m")} align-${esc(st.align || "left")}${hide}${s.hidden ? " is-hidden" : ""}${sel(s.id)}" data-sid="${esc(s.id)}" style="${sectionStyle(st)}">${label(s)}${R(s.content || {}, st, { products: opts.products, ed, blocks: renderBlocks(s.blocks, ed), site, theme, hints: !!opts.hints, T, money: m })}</section>${insert(i + 1)}`;
       }).join("") || (ed ? '<section class="s pad-l align-center"><div class="wrap"><p class="empty">This page has no sections yet. Click + to add one.</p></div></section>' : "")}</main>
       ${opts.bare ? "" : renderFooter(site, pages).replace('class="s-footer', `class="s-footer${sel("footer")}`).replace(/(<footer[^>]*>)/, `$1${fixedLabel("footer", "Footer")}`)}
-      ${opts.bare || page.system === "checkout" ? "" : renderMobileBar(site, pages).replace('class="s-mbar', `class="s-mbar${sel("mbar")}`)}
+      ${opts.bare || page.system === "checkout" ? "" : renderMobileBar(site, pages, page).replace('class="s-mbar', `class="s-mbar${sel("mbar")}`)}
     </div>`;
   };
 

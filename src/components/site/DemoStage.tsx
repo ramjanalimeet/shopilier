@@ -19,7 +19,7 @@ export default function DemoStage({ autoload = false }: { autoload?: boolean }) 
 
   return (
     <div ref={stage} className={"demo-stage" + (ready ? " ready" : "")} id="demo-stage" data-autoload={autoload ? "" : undefined}>
-      <img className="demo-placeholder" src="/assets/dashboard-1x.webp" width="1430" height="777" alt="" aria-hidden="true" loading="lazy" />
+      <img className="demo-placeholder" src="/showcase/dashboard-desktop-1440.webp" width="1440" height="782" alt="" aria-hidden="true" loading="lazy" />
       <button className={"demo-start" + (started ? " loading" : "")} type="button" id="demo-start" onClick={start}>
         <span><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 4.6v14.8a1.3 1.3 0 0 0 2 1.1l11.6-7.4a1.3 1.3 0 0 0 0-2.2L9 3.5a1.3 1.3 0 0 0-2 1.1z" /></svg></span>Start the live demo
       </button>
