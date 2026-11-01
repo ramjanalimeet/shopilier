@@ -19,6 +19,7 @@ export const start = async () => {
     document.getElementById("acct-sub").textContent = a.planName ? a.planName + " plan" : "";
     document.getElementById("acct-ava").innerHTML = a.logo ? `<img class="acct-logo" src="${esc(a.logo)}" alt="">` : avatar(a.business || "S");
     const bp = document.getElementById("brand-plan"); if (bp && a.planName) bp.textContent = a.planName;
+    document.querySelectorAll("[data-brand-plan]").forEach((el) => { el.textContent = a.planName || ""; });
     document.querySelectorAll("[data-acct-name]").forEach((el) => { el.textContent = a.business || "My Store"; });
     document.querySelectorAll("[data-acct-plan]").forEach((el) => { el.textContent = a.planName ? a.planName + " plan" : ""; });
     document.querySelectorAll("[data-acct-ava]").forEach((el) => { el.innerHTML = a.logo ? `<img class="acct-logo" src="${esc(a.logo)}" alt="">` : avatar(a.business || "S"); });
@@ -375,7 +376,7 @@ export const start = async () => {
   // ---------- Phones: bottom tabs and the More sheet ----------
   const moreBtn = document.getElementById("more-btn"), moreSheet = document.getElementById("more-sheet");
   const WEBSITE_ROUTES = ["themes", "website", "pages", "navigation", "preferences"];
-  const MORE_ROUTES = ["customers", "shipping", "categories", "discounts", "analytics", "marketing", "pages", "navigation", "preferences"];
+  const MORE_ROUTES = ["products", "customers", "shipping", "categories", "discounts", "analytics", "marketing", "pages", "navigation", "preferences"];
   const setMore = (open) => {
     if (!moreSheet) return;
     moreSheet.hidden = !open; moreBtn.setAttribute("aria-expanded", String(open));
@@ -827,7 +828,7 @@ export const start = async () => {
           <div class="stats">
             ${stat("Total sales", taka(curSales), "bag", "c1", delta(curSales, prevSales) + vsText)}
             ${stat("Total orders", cur.length.toLocaleString("en-IN"), "cart", "c2", delta(cur.length, prev.length) + vsText)}
-            ${stat("Online store sessions", visits.toLocaleString("en-IN"), "barchart", "c3", store.published || visits ? (visitsPrev ? delta(visits, visitsPrev) + vsText : '<span class="muted">Visitor counts cover the last 14 days</span>') : '<span class="muted">Counting starts when you publish</span>')}
+            ${stat('<span class="d-label">Online store sessions</span><span class="m-label">Store sessions</span>', visits.toLocaleString("en-IN"), "barchart", "c3", store.published || visits ? (visitsPrev ? delta(visits, visitsPrev) + vsText : '<span class="muted"><span class="d-label">Visitor counts cover the last 14 days</span><span class="m-label">Last 14 days</span></span>') : '<span class="muted">Counting starts when you publish</span>')}
             ${stat("Returning customers", ret.toFixed(1).replace(/\.0$/, "") + "%", "customers", "c4", delta(ret, retPrev, true) + vsText)}
           </div>
           <div class="home-grid">
@@ -838,7 +839,7 @@ export const start = async () => {
                     <span class="legend"><span><i></i>This period</span><span><i class="prev"></i>Previous period</span></span></div>
                   ${salesChart(p)}
                 </div></div>
-              <div class="card"><div class="card-head"><span class="card-title">Recent orders</span><a class="link" href="#/orders">View all</a></div>
+              <div class="card m-hide"><div class="card-head"><span class="card-title">Recent orders</span><a class="link" href="#/orders">View all</a></div>
                 <div class="table-wrap"><table class="orders-mini">
                   <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>
                   <tbody>${store.orders.length ? store.orders.slice(0, 5).map((o) => {
@@ -854,8 +855,9 @@ export const start = async () => {
                 <div class="muted">visitors in the last 14 days</div>
                 <div class="spark">${(() => { const max = Math.max(1, ...store.visitors); return store.visitors.map((v) => `<i style="height:${Math.max(7, (v / max) * 100)}%" title="${v}"></i>`).join(""); })()}</div>
               </div></div>
-              <div class="card"><div class="card-head"><span class="card-title">Top products</span><a class="link" href="#/products">View all</a></div>
+              <div class="card${store.products.length ? "" : " m-hide"}"><div class="card-head"><span class="card-title">Top products</span><a class="link" href="#/products">View all</a></div>
                 <div class="card-body">${topProducts(cur)}</div></div>
+              ${store.products.length ? "" : `<button type="button" class="m-empty-row" data-action="add-product"><span class="m-empty-ico">${icon("products")}</span><span class="m-empty-text"><b>Top products</b><span>No products yet. <em>Add your first product.</em></span></span>${icon("chevronRight")}</button>`}
               <div class="card m-hide"><div class="card-head"><a class="card-title card-title-link" href="#/marketing">Marketing${icon("chevronRight")}</a></div>
                 <div class="card-body"><div class="mk-list">
                   <button class="mk-item" data-action="add-discount"><span class="mk-ico">${icon("tag")}</span><span class="t"><b>Create discount</b><span>Run a promotion to boost sales</span></span>${icon("chevronRight")}</button>
@@ -2814,6 +2816,7 @@ export const start = async () => {
   });
   const afterRender = (route) => {
     filters.hidden = route !== "home";
+    document.body.classList.toggle("on-home", route === "home");
     const inStore = STORE_ROUTES.includes(route);
     if (inStore) setStoreOpen(true);
     storeToggle.classList.toggle("in", inStore);
@@ -2825,6 +2828,9 @@ export const start = async () => {
       t.querySelectorAll("tbody tr").forEach((tr) => [...tr.children].forEach((td, i) => { if (heads[i] && !td.hasAttribute("colspan")) td.dataset.label = heads[i]; }));
     });
   };
+
+  // Phones: "Add Product" in the bottom bar
+  document.querySelector("[data-tab-add]")?.addEventListener("click", () => actions["add-product"]());
 
   hydrateIcons();
   refreshChrome();

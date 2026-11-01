@@ -2,10 +2,9 @@
 // #view gets each page and the chat panel its conversations; the icons are rendered here so nothing moves when it starts.
 import Icon from "@/components/Icon";
 
-// Phones: the bottom tab bar, and everything else in the More sheet (app-style)
-const TABS: [string, string, string][] = [["home", "home", "Home"], ["orders", "orders", "Orders"], ["products", "tag", "Products"], ["themes", "brush", "Website"]];
+// Phones: the bottom tab bar (Add product, Orders, Home in the middle, Website, Account), everything else in the Account sheet
 const MORE: [string, string, string][] = [
-  ["customers", "customers", "Customers"], ["shipping", "truck", "Shipping"], ["categories", "grid", "Categories"], ["discounts", "discount", "Discounts"],
+  ["products", "tag", "Products"], ["customers", "customers", "Customers"], ["shipping", "truck", "Shipping"], ["categories", "grid", "Categories"], ["discounts", "discount", "Discounts"],
   ["analytics", "barchart", "Analytics"], ["marketing", "megaphone", "Marketing"], ["pages", "pages", "Pages"], ["preferences", "settings", "Preferences"],
 ];
 
@@ -61,6 +60,8 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
             {/* Phones: a menu button (opens More), the page's title in the middle */}
             <button className="top-icon m-grid-btn" type="button" aria-label="Menu" data-more-open><Icon name="grid" /></button>
             <b className="top-title" id="crumb" />
+            {/* Phones, on Home: the Shopilier logo and your plan */}
+            <a className="m-brand" href="#/home" aria-label="Shopilier home"><img src="/assets/logo.webp" width="36" height="36" alt="" />Shopilier<small data-brand-plan /></a>
             {/* Phones: the store's name where the sidebar would be */}
             <a className="top-store" href="#/home" aria-label="Home"><span className="top-store-ava" data-acct-ava /><span className="top-store-text"><b data-acct-name /><small data-acct-plan /></span></a>
             <label className="top-search"><Icon name="search" /><input id="top-search" type="search" placeholder="Search products, orders, customers…" aria-label="Search products, orders and customers" /></label>
@@ -106,10 +107,11 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
       </div>
       {/* Phones: bottom tab bar and the More sheet */}
       <nav className="tabbar" aria-label="Dashboard">
-        {TABS.map(([route, icon, label]) => (
-          <a key={route} className="tab" data-route={route} data-tab={route} href={`#/${route}`}><Icon name={icon} /><span>{label}</span>{route === "orders" && <span className="tab-badge" data-badge />}</a>
-        ))}
-        <button className="tab" type="button" id="more-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="more-sheet"><Icon name="dots" /><span>More</span></button>
+        <button className="tab" type="button" data-tab-add><Icon name="products" /><span>Add Product</span></button>
+        <a className="tab" data-route="orders" data-tab="orders" href="#/orders"><Icon name="orders" /><span>Orders</span><span className="tab-badge" data-badge /></a>
+        <a className="tab tab-home" data-route="home" data-tab="home" href="#/home"><Icon name="home" /><span>Home</span></a>
+        <a className="tab" data-route="themes" data-tab="themes" href="#/themes"><Icon name="monitor" /><span>Website</span></a>
+        <button className="tab" type="button" id="more-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="more-sheet"><Icon name="user" /><span>Account</span></button>
       </nav>
       <div className="more-sheet" id="more-sheet" role="dialog" aria-modal="true" aria-label="More" hidden>
         <div className="more-panel">

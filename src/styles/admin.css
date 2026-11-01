@@ -1255,3 +1255,85 @@ body.editor-open .chat-fab, body.editor-open .chat-panel { display: none; }
   body:not(.master-admin) #dd-range { position: static; }
   body:not(.master-admin) #dd-range .dd-menu { position: absolute; top: 0; right: 0; left: auto; width: 230px; border-radius: 18px; box-shadow: 0 18px 40px -12px rgba(16, 24, 40, .3); }
 }
+
+/* ======================================================================
+   Phones, v3: Home like a banking/shopping app
+   Logo + plan at the top with the bell and you, the two date chips, pastel number cards with a round icon,
+   the sales chart, a one-line "Top products" row and a labelled bottom bar with a raised green Home.
+   ====================================================================== */
+.m-brand, .m-label, .m-empty-row { display: none; }
+@media (max-width: 760px) {
+  .d-label { display: none; }
+  .m-label { display: inline; }
+
+  /* Top: logo, name and plan; the date chips on their own row */
+  body.on-home:not(.master-admin) .app { background: radial-gradient(90% 46% at 112% 14%, rgba(65, 162, 18, .16), rgba(65, 162, 18, 0) 70%), var(--m-bg); }
+  body.on-home:not(.master-admin) .scroll { background: transparent; }
+  body.on-home .m-grid-btn, body.on-home .top-title { display: none; }
+  body.on-home .m-brand { display: flex; align-items: center; gap: 10px; min-width: 0; margin-right: auto; font-size: 21px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+  .m-brand img { width: 36px; height: 36px; flex: none; border-radius: 10px; }
+  .m-brand small { padding: 4px 11px; border-radius: 999px; background: #e3f4d9; color: #2f7d0c; font-size: 12.5px; font-weight: 600; letter-spacing: 0; white-space: nowrap; }
+  .m-brand small:empty { display: none; }
+  body.on-home:not(.master-admin) .topbar { flex-wrap: wrap; height: auto; padding: 14px 16px 2px; row-gap: 18px; column-gap: 10px; background: transparent; }
+  body.on-home:not(.master-admin) .top-bell { width: 44px; height: 44px; border-radius: 50%; }
+  body.on-home:not(.master-admin) .profile-avatar .avatar { width: 44px; height: 44px; background: #2b3344; color: #fff; }
+  body.on-home:not(.master-admin) .top-filters:not([hidden]) { display: flex !important; position: static; order: 10; flex-basis: 100%; width: auto; height: auto; gap: 10px; }
+  body.on-home:not(.master-admin) .top-filters .dd { position: relative; display: block !important; }
+  body.on-home:not(.master-admin) #dd-month.dd { display: block !important; }
+  body.on-home:not(.master-admin) .top-filters .dd-label { max-width: none; overflow: visible; }
+  body.on-home:not(.master-admin) .top-filters .top-select { display: flex !important; align-items: center; gap: 8px; width: auto; height: 42px; padding: 0 14px; border: 1px solid #e4e7ec; border-radius: 14px; background: #fff; color: var(--ink); font-size: 14px; font-weight: 600; box-shadow: none; }
+  body.on-home:not(.master-admin) .top-filters .dd-label { display: inline !important; }
+  body.on-home:not(.master-admin) .top-filters .top-select > .i { display: block !important; width: 18px; height: 18px; }
+  body.on-home:not(.master-admin) .top-filters .top-select > .i:last-child { width: 15px; height: 15px; color: #475467; }
+  body.on-home:not(.master-admin) .top-filters .dd.on .top-select { border-color: #bfe3a8; background: #eef8e8; }
+  body.on-home:not(.master-admin) .top-filters .dd.on .top-select > .i:first-child { color: #2f7d0c; }
+  body.on-home:not(.master-admin) .top-filters .dd-menu { position: absolute; top: calc(100% + 6px); left: 0; right: auto; width: 230px; border-radius: 18px; box-shadow: 0 18px 40px -12px rgba(16, 24, 40, .3); }
+  body.on-home:not(.master-admin) #dd-month .dd-menu { left: 50%; width: 250px; transform: translateX(-50%); }
+
+  /* Home content: just numbers, the chart and top products */
+  body.on-home .m-search, body.on-home .m-banner, body.on-home .m-quick, body.on-home .m-sec-head { display: none !important; }
+  body.on-home:not(.master-admin) .page { padding-top: 14px; }
+  body.on-home:not(.master-admin) .stats { grid-template-columns: 1fr 1fr; gap: 12px; }
+  body.on-home:not(.master-admin) .stat { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 9px; align-content: start; padding: 16px 10px 16px 12px; border: 1px solid rgba(255, 255, 255, .8); border-radius: 22px; box-shadow: 0 10px 24px -18px rgba(16, 24, 40, .35); }
+  body.on-home:not(.master-admin) .stat-top { display: contents; }
+  body.on-home:not(.master-admin) .stat-ico { display: grid !important; place-items: center; grid-column: 1; grid-row: 1 / span 3; width: 40px; height: 40px; border-radius: 50%; background: #fff !important; box-shadow: 0 6px 14px -8px rgba(16, 24, 40, .3); }
+  body.on-home:not(.master-admin) .stat-ico .i { width: 20px; height: 20px; }
+  body.on-home:not(.master-admin) .stat-label { grid-column: 2; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  body.on-home:not(.master-admin) .stat .stat-value { grid-column: 2; margin: 6px 0 0 !important; font-size: 25px; font-weight: 800; }
+  body.on-home:not(.master-admin) .stat-delta { display: block; grid-column: 2; margin-top: 6px; font-size: 11.5px; line-height: 1.4; }
+  body.on-home:not(.master-admin) .stat-delta > * { display: inline; margin-right: 4px; }
+  body.on-home:not(.master-admin) .stats .stat:nth-child(4n+1) { background: linear-gradient(160deg, #e6f6ea, #f1faf3); }
+  body.on-home:not(.master-admin) .stats .stat:nth-child(4n+2) { background: linear-gradient(160deg, #e7effd, #f2f6fe); }
+  body.on-home:not(.master-admin) .stats .stat:nth-child(4n+3) { background: linear-gradient(160deg, #eeeafc, #f5f3fe); }
+  body.on-home:not(.master-admin) .stats .stat:nth-child(4n+4) { background: linear-gradient(160deg, #fdf0e3, #fef7ef); }
+  body.on-home:not(.master-admin) .home-grid { gap: 16px; margin-top: 16px; }
+  body.on-home:not(.master-admin) .home-main .card-head { padding-top: 18px; }
+  body.on-home:not(.master-admin) .home-main .card-title { font-size: 18px; font-weight: 700; }
+  body.on-home:not(.master-admin) .home-main .card-head .btn { height: 36px; padding: 0 14px; border: 1px solid #e4e7ec; border-radius: 999px; background: #fff; font-weight: 600; }
+  body.on-home:not(.master-admin) .home-main .card-head .btn::after { content: "→"; margin-left: 6px; font-size: 16px; }
+  .m-empty-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 18px 16px; border: 0; border-radius: 22px; background: #fff; box-shadow: var(--m-card); font: inherit; text-align: left; color: #475467; cursor: pointer; }
+  .m-empty-row:active { transform: scale(.99); }
+  .m-empty-ico { display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: 50%; background: #e9f7ef; color: #0e8a50; }
+  .m-empty-ico .i { width: 23px; height: 23px; }
+  .m-empty-text { display: grid; gap: 3px; flex: 1; min-width: 0; font-size: 13.5px; }
+  .m-empty-text b { font-size: 16px; color: var(--ink); }
+  .m-empty-text em { font-style: normal; font-weight: 600; color: #1f9a3e; }
+  .m-empty-row > .i { width: 20px; height: 20px; flex: none; color: #475467; }
+
+  /* Bottom bar: icons with labels; Home in the middle as a raised green circle */
+  .tabbar { height: 74px; border-radius: 28px; overflow: visible; }
+  body:not(.master-admin) .scroll { padding-bottom: calc(108px + env(safe-area-inset-bottom)); }
+  .tab { gap: 5px; color: #344054; }
+  .tab span:not(.tab-badge) { position: static; width: auto; height: auto; overflow: visible; clip: auto; font-size: 11.5px; font-weight: 500; white-space: nowrap; }
+  .tab .i { width: 25px; height: 25px; stroke-width: 1.8; }
+  .tab.on { color: var(--accent); }
+  .tab.on .i { transform: none; }
+  .tab.on:not(.tab-home)::after { display: none; }
+  .tab.on .tab-badge { top: 9px; }
+  .tab-badge { top: 9px; }
+  .tab-home, .tab-home.on { color: #fff; }
+  .tab-home::after, .tab-home.on::after { content: ""; display: block; position: absolute; top: -20px; left: 50%; z-index: -1; width: 68px; height: 68px; margin-left: -34px; border-radius: 50%;
+    background: linear-gradient(160deg, #2bb24c, #0f8a3c); box-shadow: 0 0 0 7px #fff, 0 14px 26px -8px rgba(15, 138, 60, .7); }
+  .tab-home .i, .tab-home.on .i { transform: translateY(-14px); }
+  .tab-home span:not(.tab-badge) { transform: translateY(-14px); font-weight: 700; }
+}
