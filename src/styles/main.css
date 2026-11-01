@@ -222,11 +222,16 @@ button { font: inherit; cursor: pointer; }
 
 /* dashboard */
 /* The dashboard on a computer (left) and on a phone (right, overlapping it) */
-.dash { position: absolute; left: 0; right: 200px; top: 6px; height: 418px; overflow: hidden; z-index: 1; background: #f9fafb; }
-.device-phone { position: absolute; right: 24px; top: -18px; z-index: 3; width: 214px; padding: 9px; border-radius: 38px; background: #12151c;
+.dash { position: absolute; left: 0; right: 232px; top: 6px; height: 418px; overflow: hidden; z-index: 1; background: #f9fafb; }
+/* An iPhone-shaped frame (19.5:9) beside the desktop shot */
+.device-phone { position: absolute; right: 0; top: -14px; z-index: 3; width: 206px; padding: 8px; border-radius: 40px; background: #12151c;
   box-shadow: 0 0 0 2px #2b303b inset, 0 30px 60px -20px rgba(16, 24, 40, .45), 0 12px 24px -12px rgba(16, 24, 40, .3); }
-.device-phone img { display: block; width: 100%; height: auto; border-radius: 30px; background: #f7f7f9; }
-.device-notch { position: absolute; top: 15px; left: 50%; z-index: 1; width: 64px; height: 18px; margin-left: -32px; border-radius: 999px; background: #12151c; }
+.device-screen { position: relative; overflow: hidden; border-radius: 32px; background: #f7f7f9; aspect-ratio: 390 / 844; }
+.device-screen img { display: block; width: 100%; height: auto; }
+.device-status { height: 5.57%; display: flex; align-items: center; justify-content: space-between; padding: 0 9% 0 11%; background: #f7f7f9; color: #12151c; }
+.device-status b { font-size: 11px; font-weight: 600; letter-spacing: -.01em; }
+.device-status svg { width: 26px; height: 8px; fill: currentColor; }
+.device-notch { position: absolute; top: 1.3%; left: 50%; width: 31%; height: 3.4%; transform: translateX(-50%); border-radius: 999px; background: #12151c; }
 .dash-bar { height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-bottom: 1px solid #f1f2f5; }
 .dash-bar i { width: 8px; height: 8px; border-radius: 50%; }
 .dash-bar i:nth-child(1) { background: #ff5f57; }
@@ -488,10 +493,13 @@ button { font: inherit; cursor: pointer; }
   .try-grid { grid-template-columns: 1fr 1fr; }
   .showcase { height: auto; display: flex; justify-content: center; }
   .picker, .phone { display: none; }
-  .dash { position: relative; left: auto; right: auto; width: 100%; max-width: 720px; height: auto; margin-right: 16%; }
-  .device-phone { right: max(0px, calc(50% - 400px)); top: auto; bottom: -26px; width: 26%; max-width: 190px; padding: 6px; border-radius: 26px; }
-  .device-phone img { border-radius: 21px; }
-  .device-notch { top: 10px; width: 40px; height: 11px; margin-left: -20px; }
+  /* Tablets: the desktop shot and the phone side by side */
+  .showcase { align-items: center; gap: 20px; padding: 0 20px; }
+  .dash { position: relative; left: auto; right: auto; top: auto; flex: 1; min-width: 0; max-width: 720px; height: auto; }
+  .device-phone { position: relative; right: auto; top: auto; flex: none; width: 24%; max-width: 190px; padding: 6px; border-radius: 30px; }
+  .device-screen { border-radius: 25px; }
+  .device-status b { font-size: 9px; }
+  .device-status svg { width: 21px; height: 7px; }
   .dash-shot { height: auto; }
 }
 @media (max-width: 760px) {
@@ -504,14 +512,13 @@ button { font: inherit; cursor: pointer; }
   .watch { position: static; transform: none; display: flex; align-items: center; gap: 14px; }
   .watch-note { position: static; transform: none; font-size: 19px; }
   .watch-note svg { display: none; }
-  /* Phones: the desktop shot on the left, the phone overlapping its bottom-right corner,
-     with room underneath so the phone never runs into the next section */
-  .showcase { margin: 30px auto 0; padding-bottom: 46px; justify-content: flex-start; }
-  .dash { margin-right: 20%; border-radius: 14px; box-shadow: 0 14px 34px -18px rgba(16, 24, 40, .35); }
-  .device-phone { right: 0; bottom: 0; width: 34%; max-width: 150px; padding: 5px; border-radius: 24px;
-    box-shadow: 0 0 0 1.5px #2b303b inset, 0 16px 30px -14px rgba(16, 24, 40, .5); }
-  .device-phone img { border-radius: 19px; }
-  .device-notch { top: 9px; width: 34px; height: 9px; margin-left: -17px; }
+  /* Phones: the desktop shot on top, the phone app under it */
+  .showcase { margin: 30px auto 0; padding: 0; flex-direction: column; align-items: center; gap: 26px; }
+  .dash { width: 100%; flex: none; border-radius: 14px; box-shadow: 0 14px 34px -18px rgba(16, 24, 40, .35); }
+  .device-phone { width: 66%; max-width: 250px; padding: 7px; border-radius: 40px; }
+  .device-screen { border-radius: 33px; }
+  .device-status b { font-size: 12px; }
+  .device-status svg { width: 28px; height: 9px; }
   .trusted { padding-top: 26px; }
   .trusted h6 { letter-spacing: .14em; line-height: 1.6; }
   .logo-marquee, .logo-track { gap: 36px; }

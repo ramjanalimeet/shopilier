@@ -41,8 +41,13 @@ export default function HomeContent() {
           </div>
           {/* The same dashboard on a phone */}
           <div className="device-phone" aria-hidden="true">
-            <span className="device-notch" />
-            <img src="/assets/dashboard-mobile.webp" width="780" height="1328" alt="" loading="lazy" decoding="async" />
+            <div className="device-screen">
+              <div className="device-status">
+                <b>9:41</b><span className="device-notch" />
+                <svg viewBox="0 0 46 12"><rect x="0" y="7" width="3" height="5" rx="1" /><rect x="5" y="5" width="3" height="7" rx="1" /><rect x="10" y="2.5" width="3" height="9.5" rx="1" /><rect x="15" y="0" width="3" height="12" rx="1" /><rect x="23.5" y=".75" width="19" height="10.5" rx="3" fill="none" stroke="currentColor" strokeWidth="1.2" opacity=".45" /><rect x="25.5" y="2.75" width="13" height="6.5" rx="1.6" /><rect x="43.6" y="4" width="1.6" height="4" rx=".8" opacity=".45" /></svg>
+              </div>
+              <img src="/assets/dashboard-mobile.webp" width="780" height="1594" alt="" loading="lazy" decoding="async" />
+            </div>
           </div>
         </div>
       </section>
