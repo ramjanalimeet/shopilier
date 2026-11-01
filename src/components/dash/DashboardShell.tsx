@@ -2,6 +2,13 @@
 // #view gets each page and the chat panel its conversations; the icons are rendered here so nothing moves when it starts.
 import Icon from "@/components/Icon";
 
+// Phones: the bottom tab bar, and everything else in the More sheet (app-style)
+const TABS: [string, string, string][] = [["home", "home", "Home"], ["orders", "orders", "Orders"], ["products", "tag", "Products"], ["themes", "brush", "Website"]];
+const MORE: [string, string, string][] = [
+  ["customers", "customers", "Customers"], ["shipping", "truck", "Shipping"], ["categories", "grid", "Categories"], ["discounts", "discount", "Discounts"],
+  ["analytics", "barchart", "Analytics"], ["marketing", "megaphone", "Marketing"], ["pages", "pages", "Pages"], ["preferences", "settings", "Preferences"],
+];
+
 const NAV: [string, string, string][] = [
   ["home", "home", "Home"], ["orders", "orders", "Orders"], ["products", "tag", "Products"], ["categories", "grid", "Categories"],
   ["customers", "customers", "Customers"], ["shipping", "truck", "Shipping & Delivery"], ["analytics", "barchart", "Analytics"], ["marketing", "megaphone", "Marketing"], ["discounts", "discount", "Discounts"],
@@ -51,6 +58,8 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
         <div className="main">
           <header className="topbar">
             <button className="top-icon menu-btn" type="button" aria-label="Open menu"><Icon name="menu" /></button>
+            {/* Phones: the store's name where the sidebar would be */}
+            <a className="top-store" href="#/home" aria-label="Home"><span className="top-store-ava" data-acct-ava /><span className="top-store-text"><b data-acct-name /><small data-acct-plan /></span></a>
             <label className="top-search"><Icon name="search" /><input id="top-search" type="search" placeholder="Search products, orders, customers…" aria-label="Search products, orders and customers" /></label>
             {/* Date filters for Home: a preset range, or one whole month */}
             <div className="top-filters" id="top-filters" hidden>
@@ -90,6 +99,33 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
             </div>
           </header>
           <div className="scroll"><div id="view" /></div>
+        </div>
+      </div>
+      {/* Phones: bottom tab bar and the More sheet */}
+      <nav className="tabbar" aria-label="Dashboard">
+        {TABS.map(([route, icon, label]) => (
+          <a key={route} className="tab" data-route={route} data-tab={route} href={`#/${route}`}><Icon name={icon} /><span>{label}</span>{route === "orders" && <span className="tab-badge" data-badge />}</a>
+        ))}
+        <button className="tab" type="button" id="more-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="more-sheet"><Icon name="dots" /><span>More</span></button>
+      </nav>
+      <div className="more-sheet" id="more-sheet" role="dialog" aria-modal="true" aria-label="More" hidden>
+        <div className="more-panel">
+          <span className="more-grip" aria-hidden="true" />
+          <button className="more-store" type="button" data-more="stores">
+            <span className="top-store-ava" data-acct-ava /><span className="top-store-text"><b data-acct-name /><small data-acct-plan /></span><span className="more-switch">Switch<Icon name="chevronRight" /></span>
+          </button>
+          <div className="more-grid">
+            {MORE.map(([route, icon, label]) => (
+              <a key={route} className="more-tile" data-route={route} href={`#/${route}`}><span className="more-ico"><Icon name={icon} /></span>{label}</a>
+            ))}
+          </div>
+          <div className="more-list">
+            <button type="button" data-more="chat"><Icon name="chat" />Help &amp; chat<span className="more-badge" data-more-msgs /></button>
+            <button type="button" data-more="settings"><Icon name="settings" />Settings</button>
+            <button type="button" data-more="billing"><Icon name="billing" />Plan &amp; billing</button>
+            <a href="#/website"><Icon name="brush" />Edit website</a>
+            {demo ? <a href="/" target="_top"><Icon name="logout" />Exit demo</a> : <button type="button" data-more="logout" className="danger"><Icon name="logout" />Log out</button>}
+          </div>
         </div>
       </div>
       {/* Chat with the Shopilier team: a button at the bottom right opens the conversation panel */}

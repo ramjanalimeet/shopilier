@@ -53,6 +53,9 @@ button { font: inherit; cursor: pointer; }
   content: ""; position: absolute; left: 0; right: 0; bottom: -5px; height: 3px; background: var(--brand); border-radius: 3px;
 }
 .auth { display: flex; gap: 14px; }
+/* Desktop: the nav and the buttons sit in the header row; the panel only groups them for the phone menu sheet */
+.nav-panel { display: contents; }
+.m-only, .m-chev { display: none; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   height: 42px; padding: 0 20px; border-radius: 10px; font-size: 15px; font-weight: 600;
@@ -484,24 +487,7 @@ button { font: inherit; cursor: pointer; }
   .dash-shot { height: auto; }
 }
 @media (max-width: 760px) {
-  /* Mobile menu: one dropdown card under the header with the links, then the buttons */
-  .site-header { padding: 14px 0; }
-  .main-nav, .auth { display: none; }
-  .menu-toggle { display: grid; place-content: center; margin-right: -8px; border-radius: 10px; }
-  .menu-toggle span { margin: 2.5px auto; transition: transform .2s, opacity .2s; }
-  .site-header.open .menu-toggle span:nth-child(1) { transform: translateY(4.5px) rotate(45deg); }
-  .site-header.open .menu-toggle span:nth-child(2) { opacity: 0; }
-  .site-header.open .menu-toggle span:nth-child(3) { transform: translateY(-4.5px) rotate(-45deg); }
-  /* Open: links and buttons wrap under the logo as one card */
-  .site-header.open .container { flex-wrap: wrap; row-gap: 0; }
-  .site-header.open .main-nav,
-  .site-header.open .auth { display: flex; flex-basis: 100%; background: #fff; border: 1px solid var(--line); }
-  .site-header.open .main-nav { order: 3; margin-top: 12px; flex-direction: column; gap: 2px; padding: 8px; border-bottom: 0; border-radius: 16px 16px 0 0; }
-  .site-header.open .main-nav a { padding: 12px; border-radius: 10px; font-size: 16px; color: var(--ink); }
-  .site-header.open .main-nav a:hover, .site-header.open .main-nav a.active { background: var(--brand-soft); }
-  .site-header.open .main-nav a.active::after { display: none; }
-  .site-header.open .auth { order: 4; gap: 10px; padding: 8px 16px 16px; border-top: 0; border-radius: 0 0 16px 16px; box-shadow: 0 18px 30px -18px rgba(16, 24, 40, .25); }
-  .site-header.open .auth .btn { flex: 1; height: 46px; }
+  /* (The phone header and menu sheet are styled in "Phones: app-like" at the end) */
   .container { padding: 0 16px; }
   .brand { font-size: 22px; }
   .hero p.lead { font-size: 16px; }
@@ -571,3 +557,71 @@ button { font: inherit; cursor: pointer; }
 .pw-toggle { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); width: 36px; height: 36px; display: grid; place-items: center; border: 0; background: none; border-radius: 8px; color: #6b7280; cursor: pointer; padding: 0; }
 .pw-toggle:hover { color: #111827; background: rgba(0, 0, 0, .05); }
 .pw-toggle:focus-visible { outline: 2px solid #41a212; outline-offset: 1px; }
+
+
+/* ---------- Phones: app-like ----------
+   A sticky frosted header, the menu as a full sheet, the brand green for the main actions, swipeable rows
+   (reviews, plans) instead of very long stacks, thumb-size tap targets and a bottom bar with the main action. */
+.m-cta { display: none; }
+@media (max-width: 760px) {
+  :root { --m-green: linear-gradient(135deg, #43a713 0%, #2f7d0c 100%); --m-shadow: 0 10px 24px -10px rgba(36, 95, 10, .55); }
+  html { -webkit-tap-highlight-color: transparent; }
+  body.menu-open { overflow: hidden; }
+
+  /* Header: sticky and frosted, a hairline once the page scrolls */
+  .site-header { position: sticky; top: 0; z-index: 60; padding: 10px 0; background: rgba(255, 255, 255, .82); -webkit-backdrop-filter: saturate(180%) blur(14px); backdrop-filter: saturate(180%) blur(14px); transition: box-shadow .2s, background .2s; }
+  .site-header.scrolled, .site-header.open { box-shadow: 0 1px 0 rgba(16, 24, 40, .08); background: rgba(255, 255, 255, .94); }
+  /* The blur would hold the menu sheet inside the header, so it's off while the menu is open */
+  .site-header.open { -webkit-backdrop-filter: none; backdrop-filter: none; background: #fff; }
+  .brand { font-size: 21px; }
+  .brand-mark { width: 30px; height: 30px; }
+  .menu-toggle { display: grid; place-content: center; width: 44px; height: 44px; margin-right: -6px; border-radius: 12px; }
+  .menu-toggle:active { background: rgba(16, 24, 40, .06); }
+  .menu-toggle span { margin: 2.5px auto; transition: transform .2s, opacity .2s; }
+  .site-header.open .menu-toggle span:nth-child(1) { transform: translateY(4.5px) rotate(45deg); }
+  .site-header.open .menu-toggle span:nth-child(2) { opacity: 0; }
+  .site-header.open .menu-toggle span:nth-child(3) { transform: translateY(-4.5px) rotate(-45deg); }
+
+  /* Menu: a sheet under the header, big rows, the buttons at the bottom */
+  .nav-panel { display: none; }
+  .site-header.open .nav-panel { position: fixed; top: 64px; left: 0; right: 0; bottom: 0; z-index: 59; display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
+    padding: 12px 16px calc(18px + env(safe-area-inset-bottom)); background: #fff; overflow-y: auto; animation: m-sheet .22s ease-out; }
+  @keyframes m-sheet { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  .main-nav, .auth { display: flex; }
+  .site-header .main-nav { flex-direction: column; gap: 2px; }
+  .site-header .main-nav a { display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 0 14px; border-radius: 14px; font-size: 17px; font-weight: 600; color: var(--ink); }
+  .site-header .main-nav a.active, .site-header .main-nav a:active { background: var(--brand-soft); color: var(--brand-deep); }
+  .site-header .main-nav a.active::after { display: none; }
+  .m-only { display: flex; }
+  .m-chev { display: block; width: 18px; height: 18px; color: #98a2b3; }
+  .site-header .auth { flex-wrap: wrap; gap: 10px; }
+  .site-header .auth .btn { flex: 1; height: 52px; border-radius: 14px; font-size: 16px; }
+  .m-menu-note { display: block; flex-basis: 100%; margin-top: 4px; text-align: center; font-size: 13px; color: var(--muted); }
+
+  /* The main actions in the brand green: clean on white, easy to spot */
+  .btn-dark { background: var(--m-green); border-color: transparent; color: #fff; box-shadow: var(--m-shadow); }
+  .btn-dark:active { transform: scale(.98); }
+  .btn { min-height: 46px; }
+  .btn-outline { background: #fff; }
+
+  /* Thumb-size tap targets in lists and the footer */
+  .footer-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; }
+  .pill { min-height: 32px; }
+
+  /* Reviews: a row to swipe through */
+  .review-grid { display: flex; grid-template-columns: none; gap: 12px; margin: 26px -16px 0; padding: 4px 16px 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .review-grid::-webkit-scrollbar { display: none; }
+  .review-grid > * { flex: 0 0 86%; scroll-snap-align: center; }
+  .reviews { padding-bottom: 54px; }
+
+  /* Bottom bar with the main action */
+  .m-cta { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 55; display: flex; gap: 8px; padding: 8px;
+    border-radius: 20px; background: rgba(255, 255, 255, .9); -webkit-backdrop-filter: saturate(180%) blur(14px); backdrop-filter: saturate(180%) blur(14px);
+    box-shadow: 0 12px 34px -8px rgba(16, 24, 40, .28), 0 0 0 1px rgba(16, 24, 40, .06); transform: translateY(140%); transition: transform .28s cubic-bezier(.2, .8, .2, 1); }
+  .m-cta.show { transform: none; }
+  .m-cta a { display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px; border-radius: 14px; font-size: 16px; font-weight: 700; }
+  .m-cta-main { flex: 1; background: var(--m-green); color: #fff; box-shadow: var(--m-shadow); }
+  .m-cta-side { padding: 0 16px; background: #f2f4f7; color: var(--ink); font-weight: 600 !important; }
+  body.menu-open .m-cta { transform: translateY(140%); }
+  body.has-mcta .site-footer .footer-bottom { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+}

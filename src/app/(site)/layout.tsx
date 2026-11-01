@@ -5,6 +5,7 @@ import RootHtml, { ICONS, SITE_FONTS } from "@/components/RootHtml";
 import SiteHeader from "@/components/site/SiteHeader";
 import { VideoProvider } from "@/components/site/VideoModal";
 import PlatformLinks from "@/components/site/PlatformLinks";
+import MobileCta from "@/components/site/MobileCta";
 
 export const metadata: Metadata = {
   title: "Shopilier — Create Your Business Website Online",
@@ -20,6 +21,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
         <SiteHeader />
         {children}
         <PlatformLinks />
+        <MobileCta />
       </VideoProvider>
     </RootHtml>
   );
