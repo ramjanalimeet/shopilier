@@ -239,7 +239,9 @@ export const Dash = (() => {
     const y = (v) => T + (1 - v / top) * (H - T - B);
     const pts = (arr) => arr.map((v, i) => [x(i), y(v)]);
     const cur = money ? "৳" : "";
-    const short = (v) => v >= 1000 ? cur + (v / 1000).toFixed(v % 1000 ? 1 : 0).replace(/\.0$/, "") + "K" : cur + v;
+    // Axis labels the Bangladeshi way: ৳500, ৳2.5K, ৳12.5L (lakh), ৳1.25Cr (crore)
+    const trim = (x) => String(+x.toFixed(x >= 100 ? 0 : x >= 10 ? 1 : 2));
+    const short = (v) => v >= 1e7 ? cur + trim(v / 1e7) + "Cr" : v >= 1e5 ? cur + trim(v / 1e5) + "L" : v >= 1000 ? cur + trim(v / 1000) + "K" : cur + v;
     const labels = Array.from({ length: 8 }, (_, k) => Math.round((k / 7) * (n - 1)));
     const line = smooth(pts(now1));
     return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Per day, this period and the previous one">
