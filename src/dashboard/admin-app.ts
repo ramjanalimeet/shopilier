@@ -609,7 +609,7 @@ export const start = async () => {
   // fit="content" grows the box to the page's height (the header preview); otherwise the page scrolls inside the box.
   const wsScreen = (html, w, cls = "", fit = "") => `<div class="ws-screen ${cls}" data-w="${w}"${fit ? ` data-fit="${fit}"` : ""}><div class="ws-inner"><iframe class="ws-frame" srcdoc="${esc(html)}" title="Website preview" tabindex="-1"></iframe></div></div>`;
   const wsFit = (sc) => {
-    const W = Number(sc.dataset.w) || 1280, cw = sc.clientWidth;
+    const cw = sc.clientWidth, W = sc.dataset.w === "auto" ? cw : Number(sc.dataset.w) || 1280;
     if (!cw) return;
     const content = sc.dataset.fit === "content";
     // Small screens: a computer-wide header stays readable (at least half size) and scrolls sideways
@@ -669,27 +669,25 @@ export const start = async () => {
     return true;
   };
   const removeFromMenu = (pg) => { pg.inNav = false; delete pg.parent; store.pages.forEach((p) => { if (p.parent === pg.id) delete p.parent; }); };
-  // Edit Nav: the header preview (on phones, with the menu opened under it)
-  const navDocHTML = (o = {}) => {
-    const lite = curRoute() === "site-nav";
-    return SiteKit.documentHTML(store.site, store.pages, { thumb: true, page: store.pages[0], products: store.products, headerOnly: true, ddOpenFirst: !lite && menuRows().some((r) => r.child), ...o });
-  };
+  // Navigation: the header preview (the first dropdown open)
+  const navDocHTML = (o = {}) => SiteKit.documentHTML(store.site, store.pages, { thumb: true, page: store.pages[0], products: store.products, headerOnly: true, ddOpenFirst: menuRows().some((r) => r.child), ...o });
 
-  // Edit Pages: a page's settings (name, link, menu, menu bar, sticky bar, delete) in one small window
+  // Edit Pages: a page's settings in one small window. A page is a menu page, a landing page
+  // (outside the menu, can hide the header and sticky bar) or the checkout page.
+  const wsOpt = (name, label, sub, on) => `<label class="wpd-opt"><span><b>${label}</b><small>${sub}</small></span><span class="switch"><input type="checkbox" name="${name}" ${on ? "checked" : ""}><i></i></span></label>`;
+  const wsKinds = (cur) => `<div class="wpd-kinds">${[["menu", "pages", "Menu page", "In the menu"], ["landing", "rocket", "Landing page", "Outside the menu"]].map(([k, ic, l, sub]) => `<label class="wpd-kind"><input type="radio" name="kind" value="${k}" ${cur === k ? "checked" : ""}>${icon(ic)}<b>${l}</b><small>${sub}</small></label>`).join("")}</div>`;
+  const wsLandingOpts = (pg) => `<div class="wpd-opts" data-landing>${wsOpt("header", "Header", "The banner, logo and menu at the top", !pg || !pg.hideHeader)}${wsOpt("mbar", "Sticky bar", "The bar at the bottom of the screen", !pg || !pg.hideMbar)}</div>`;
+  // The header and sticky bar switches only show for landing pages
+  const wsKindSwitch = (form) => { const sync = () => { const l = form.querySelector("[data-landing]"); if (l) l.hidden = (form.querySelector('input[name="kind"]:checked') || {}).value !== "landing"; }; form.addEventListener("change", sync); sync(); };
   const wsPageSettings = (pg) => {
     if (!pg) return;
-    const opt = (name, label, sub, on) => `<label class="wpd-opt"><span><b>${label}</b><small>${sub}</small></span><span class="switch"><input type="checkbox" name="${name}" ${on ? "checked" : ""}><i></i></span></label>`;
-    const child = pg.inNav && pg.parent && store.pages.some((x) => x.id === pg.parent && x.inNav);
+    const kind = pg.system ? "checkout" : pg.inNav ? "menu" : "landing";
     dialog({
       title: "Page settings",
       submit: "Save",
       body: `<div class="field"><label>Name</label><input class="input" name="title" required maxlength="40" value="${esc(pg.title)}"></div>
         <div class="field"><label>Link</label><div class="slug-field"><span>/</span><input class="input" name="slug" maxlength="60" value="${esc(pg.slug)}" ${pg.locked ? "disabled" : 'placeholder="about-us"'} spellcheck="false" autocomplete="off"></div></div>
-        <div class="wpd-opts">
-          ${pg.system ? "" : opt("inNav", "Show in the menu", child ? "In a dropdown (Edit Nav)" : `${menuTopCount()}/${MENU_MAX} pages in the menu`, pg.inNav)}
-          ${opt("header", "Menu bar", "The banner, logo and menu at the top", !pg.hideHeader)}
-          ${pg.system ? "" : opt("mbar", "Sticky bar", "The bar at the bottom of the screen", !pg.hideMbar)}
-        </div>
+        ${pg.system ? '<p class="muted small">The checkout page is where customers order. Its link stays /checkout.</p>' : `<div class="field"><label>Page type</label>${wsKinds(kind)}</div>${wsLandingOpts(pg)}`}
         ${pg.locked ? "" : `<button type="button" class="btn btn-danger-soft wpd-del" data-wpd-del>${icon("trash")}Delete this page</button>`}`,
       onSubmit: (v) => {
         if (!pg.locked) {
@@ -699,31 +697,85 @@ export const start = async () => {
           pg.slug = slug;
         }
         if (!pg.system) {
-          if (v.inNav && !pg.inNav && !addToMenu(pg)) return false;
-          if (!v.inNav && pg.inNav) removeFromMenu(pg);
-          pg.hideMbar = !v.mbar;
+          if (v.kind === "menu") {
+            if (!pg.inNav && !addToMenu(pg)) return false;
+            delete pg.hideHeader; delete pg.hideMbar;
+          } else {
+            if (pg.inNav) removeFromMenu(pg);
+            pg.hideHeader = !v.header; pg.hideMbar = !v.mbar;
+          }
         }
-        pg.title = v.title; pg.hideHeader = !v.header;
+        pg.title = v.title;
         touchSite(); persist(); go(); toast("Page saved");
       },
       onOpen: (form) => {
+        wsKindSwitch(form);
         const del = form.querySelector("[data-wpd-del]");
         if (del) del.addEventListener("click", () => { form.querySelector("[data-close]").click(); actions["delete-page"]({ dataset: { id: pg.id } }); });
       },
     });
   };
+  // A new menu page or landing page, then straight into editing it
+  const wsAddPage = (kind) => {
+    if (!withinLimit(plan().pages, pageCount())) { toast(`Your ${plan().name} plan allows ${plan().pages} pages — upgrade to add more`); return; }
+    if (kind === "menu" && menuTopCount() >= MENU_MAX) { toast(`The menu holds ${MENU_MAX} pages. Add a landing page instead.`); return; }
+    dialog({
+      title: kind === "menu" ? "New menu page" : "New landing page",
+      submit: "Create page",
+      body: `<div class="field"><label>Page name</label><input class="input" name="title" required maxlength="40" placeholder="${kind === "menu" ? "e.g. About us" : "e.g. Eid offer"}"></div>${kind === "landing" ? wsLandingOpts(null) : ""}`,
+      onSubmit: (v) => {
+        const np = { id: uid("pg"), title: v.title, slug: uniqueSlug(v.title), inNav: false };
+        np.sections = SiteKit.pageSections(np, { site: store.site, products: store.products });
+        store.pages.push(np);
+        if (kind === "menu") addToMenu(np);
+        else { np.hideHeader = !v.header; np.hideMbar = !v.mbar; }
+        touchSite(); persist(); toast("Page created");
+        location.hash = `#/website?page=${np.id}&split=1`;
+      },
+    });
+  };
+  // Edit Nav: the header at the phone's own size, and the banner and menu cards
+  const navPhoneDoc = () => SiteKit.documentHTML(store.site, store.pages, { thumb: true, page: store.pages[0], products: store.products, headerOnly: true });
+  const wsNavCards = () => {
+    const rows = menuRows(), full = menuTopCount() >= MENU_MAX;
+    const list = rows.map(({ p, child }) => {
+      const sibs = rows.filter((r) => r.child === child && (!child || r.p.parent === p.parent)), si = sibs.findIndex((r) => r.p === p);
+      return `<div class="mn-row${child ? " child" : ""}">
+        <span class="mn-t"><b>${esc(p.title)}</b><small>/${esc(p.slug)}${child ? " · in a dropdown" : ""}</small></span>
+        <span class="mn-tools">
+          <button type="button" data-action="nav-move" data-dir="-1" data-id="${p.id}" aria-label="Move up" ${si > 0 ? "" : "disabled"}>${icon("arrowUp")}</button>
+          <button type="button" data-action="nav-move" data-dir="1" data-id="${p.id}" aria-label="Move down" ${si < sibs.length - 1 ? "" : "disabled"}>${icon("arrowDown")}</button>
+          <button type="button" data-action="nav-edit" data-id="${p.id}" aria-label="Edit ${esc(p.title)}">${icon("edit")}</button>
+          <button type="button" class="danger" data-action="nav-remove" data-id="${p.id}" aria-label="Remove ${esc(p.title)} from the menu">${icon("x")}</button>
+        </span>
+      </div>`;
+    }).join("");
+    return `<section class="card mn-card mn-banner">${navBanner().replace(/^<div class="card nv-card">|<\/div>\s*$/g, "")}</section>
+      <section class="card mn-card"><div class="wl-head"><div><b>Menu</b><small>${menuTopCount()}/${MENU_MAX} pages · tap the arrows to change the order</small></div></div>
+        <div class="mn-list">${list || '<p class="wl-empty">Your menu is empty.</p>'}</div>
+        ${full ? '<p class="wl-empty">The menu is full. Remove a page to add another.</p>' : `<button type="button" class="wl-add" data-mn-add>${icon("plus")}Add a page to the menu</button>`}
+      </section>`;
+  };
   // Edit Sticky: the bars to choose from, then what's on the bar
   const wsSwitch = (attr, on, label, sub) => `<label class="wp-opt"><span><b>${label}</b><small>${sub}</small></span><span class="switch"><input type="checkbox" ${attr} ${on ? "checked" : ""} aria-label="${esc(label)}"><i></i></span></label>`;
-  // One look of the bar with this store's buttons and colours (a card to tap)
-  const wsLookHTML = (style) => {
-    const mb = store.site.header.mbar;
-    const site = { ...store.site, header: { ...store.site.header, mbar: { ...mb, show: true, style, where: "phone", cta: mb.cta || (style === "buy" || style === "center" ? (store.site.lang === "bn" ? "অর্ডার করুন" : "Order now") : "") } } };
-    return SiteKit.documentHTML(site, store.pages, { thumb: true, mbarOnly: true, page: store.pages[0] });
+  // One look of the bar, drawn with the dashboard's own icons and this store's buttons and colours.
+  // Plain HTML (no website loaded), so the list opens at once.
+  const wsBarMock = (style) => {
+    const mb = store.site.header.mbar, site = store.site, T = (x) => SiteKit.tr(site, x);
+    const dark = style === "dark";
+    const bg = mb.bg || (dark ? "#15171c" : "#ffffff"), fg = mb.text || (dark ? "#f3f4f6" : "#111111"), cta = mb.ctaBg || site.accent || "#0e7a4b";
+    const waOn = mb.chat !== false && ((site.social && site.social.whatsapp) || site.phone);
+    const item = (ic, label, cls = "") => `<span class="mk-i ${cls}">${ic}<em>${esc(label)}</em></span>`;
+    const left = [mb.home !== false ? item(icon("home"), T("Home"), "on") : "", mb.shop !== false ? item(icon("bag"), T("Shop")) : ""].join("");
+    const right = [mb.cart !== false ? item(icon("cart"), T("Cart")) : "", waOn ? item(SiteKit.socialIcon("whatsapp"), "WhatsApp", "wa") : "", mb.account ? item(icon("user"), T("Account")) : ""].join("");
+    const ctaText = mb.cta || (style === "buy" || style === "center" ? (site.lang === "bn" ? "অর্ডার করুন" : "Order now") : "");
+    const main = ctaText ? `<span class="mk-cta">${icon("bag")}<em>${esc(ctaText)}</em></span>` : "";
+    return `<span class="mk mk-${style}${mb.shape === "float" ? " mk-float" : ""}" style="--b:${esc(bg)};--t:${esc(fg)};--c:${esc(cta)};--oc:${SiteKit.isDark(cta) ? "#fff" : "#111"}"><span class="mk-bar">${left}${main}${right}</span></span>`;
   };
   const wsLooks = () => {
     const mb = store.site.header.mbar;
     return SiteKit.MBAR_STYLES.map((x) => { const on = mb.show && (mb.style || "classic") === x.id; return `<button type="button" class="wsk-look${on ? " on" : ""}" data-mb-style="${x.id}" aria-pressed="${on}">
-        ${wsScreen(wsLookHTML(x.id), 390, "wsk-shot")}
+        ${wsBarMock(x.id)}
         <span class="wsk-look-name"><i class="wsk-radio"></i><span><b>${esc(x.name)}</b><small>${esc(x.text)}</small></span></span>
       </button>`; }).join("");
   };
@@ -1412,11 +1464,10 @@ export const start = async () => {
         let topN = 0;
         // The real header of the website, so the preview matches it exactly (with the first dropdown open)
         const doc = (o = {}) => esc(navDocHTML(o));
-        // Website → Edit Nav: the same page with only the menu and the banner, and a preview at every screen size
-        const lite = curRoute() === "site-nav", tab = lite && navTab === "buttons" ? "menu" : navTab;
+        const tab = navTab;
         const ddStyle = store.site.header.dropdown || "simple";
         const h = store.site.header, on = [h.search, h.account, h.cart, ...Object.values(h.buttons || {}), h.cta && h.cta.show].filter(Boolean).length;
-        const tabs = [["menu", "menu", "Menu", rows.length], ["banner", "megaphone", "Banner", h.announcement.show ? "On" : "Off"], ["buttons", "cart", "Buttons", on]].filter(([id]) => !lite || id !== "buttons");
+        const tabs = [["menu", "menu", "Menu", rows.length], ["banner", "megaphone", "Banner", h.announcement.show ? "On" : "Off"], ["buttons", "cart", "Buttons", on]];
         const menuTab = `<div class="card nv-card">
             <p class="nv-hint">${icon("grip")}Drag to change the order. Drag to the right, under another item, to make a dropdown.</p>
             ${rows.length ? `<ul class="nav-list" id="nav-list">${rows.map(({ p, child }, i) => {
@@ -1454,9 +1505,9 @@ export const start = async () => {
               </button>`).join("")}
             </div>
           </div>` : ""}`;
-        const W = lite ? 390 : 1280;
-        return `${lite ? wsTop("Edit Nav") + `<p class="ws-intro">Your banner and menu. Up to ${MENU_MAX} pages fit in the menu.</p>` : head("Navigation", "The top bar of your website: its menu, a banner and buttons.")}
-          <div class="card nav-live${lite ? " ws-live" : ""}">
+        const W = 1280;
+        return `${head("Navigation", "The top bar of your website: its menu, a banner and buttons.")}
+          <div class="card nav-live">
             <div class="nav-live-head"><span class="nav-live-dot">Live preview</span></div>
             <div class="nav-live-frame"><div class="nav-live-inner"><iframe class="nav-frame" data-w="${W}" style="width:${W}px" srcdoc="${doc()}" title="Menu preview" tabindex="-1" scrolling="no"></iframe></div></div>
           </div>
@@ -1474,10 +1525,6 @@ export const start = async () => {
         const panel = view.querySelector(".nv-panel"), old = new Map([...panel.querySelectorAll(".ms-frame")].map((f) => [f.getAttribute("srcdoc"), f]));
         panel.innerHTML = tmp.querySelector(".nv-panel").innerHTML;
         panel.querySelectorAll(".ms-frame").forEach((f) => { const o = old.get(f.getAttribute("srcdoc")); if (o) f.replaceWith(o); });
-        const lh = view.querySelector(".nav-live-head");
-        if (lh) lh.innerHTML = tmp.querySelector(".nav-live-head").innerHTML;
-        const pb = view.querySelector(".ws-publish");
-        if (pb) pb.replaceWith(tmp.querySelector(".ws-publish"));
         const nf = tmp.querySelector(".nav-frame");
         view.navPreview(nf.getAttribute("srcdoc"), Number(nf.dataset.w));
         cropStyleFrames(view);
@@ -1779,34 +1826,82 @@ export const start = async () => {
       },
     },
 
-    "site-nav": { title: "Edit Nav", render: () => routes.navigation.render(), update: (view) => routes.navigation.update(view), mount: (view) => routes.navigation.mount(view) },
+    // ---------- Website → Edit Nav: the banner and the menu, on one screen ----------
+    "site-nav": {
+      title: "Edit Nav",
+      render: () => `${wsTop("Edit Nav")}
+          <div class="card ws-live mn-live">${wsScreen(navPhoneDoc(), "auto", "mn-screen", "content")}</div>
+          <div class="mn-cards">${wsNavCards()}</div>
+        </div>`,
+      update: (view) => {
+        if (!view.querySelector(".mn-cards")) return false;
+        view.querySelector(".mn-cards").innerHTML = wsNavCards();
+        view.querySelector(".ws-publish").classList.toggle("has-changes", unpublished());
+        wsSwap(view.querySelector(".mn-screen"), navPhoneDoc());
+        return true;
+      },
+      mount: (view) => {
+        wsMount(view);
+        const hset = (k, val) => { const ks = k.split("."), last = ks.pop(); ks.reduce((o, x) => (o[x] ??= {}), store.site.header)[last] = val; };
+        let tt = 0;
+        const later = () => { touchSite(); persist(); clearTimeout(tt); tt = setTimeout(() => wsSwap(view.querySelector(".mn-screen"), navPhoneDoc()), 300); };
+        view.addEventListener("input", (e) => {
+          const el = e.target;
+          if (el.dataset.annCustom !== undefined) { hset("announcement.bg", el.value); hset("announcement.color", ""); later(); }
+          else if (el.dataset.nk && el.type !== "checkbox") { hset(el.dataset.nk, el.value); later(); }
+        });
+        view.addEventListener("change", (e) => {
+          const el = e.target;
+          if (el.type === "checkbox" && el.dataset.nk) { hset(el.dataset.nk, el.checked); touchSite(); persist(); go(); }
+          else if (el.dataset.annCustom !== undefined) go();
+        });
+        view.addEventListener("click", (e) => {
+          const c = e.target.closest("[data-ann]");
+          if (c) {
+            const [bg, tx] = c.dataset.ann.split(",");
+            hset("announcement.bg", bg); hset("announcement.color", tx);
+            if (!store.site.header.announcement.show) hset("announcement.show", true);
+            touchSite(); persist(); go(); return;
+          }
+          if (e.target.closest("[data-mn-add]")) {
+            if (menuTopCount() >= MENU_MAX) { toast(`The menu holds ${MENU_MAX} pages. Remove one first.`); return; }
+            actions["nav-add-item"]();
+          }
+        });
+      },
+    },
 
-    // ---------- Website → Edit Pages: every page as a card. Tap one to edit it (website left, its parts right) ----------
+    // ---------- Website → Edit Pages: menu pages, the checkout page and landing pages ----------
     "site-pages": {
       title: "Edit Pages",
       render: () => {
         const menuN = menuTopCount(), canAdd = withinLimit(plan().pages, pageCount());
-        const pages = [...menuRows().map((r) => r.p), ...store.pages.filter((p) => !p.inNav)];
-        const note = (p) => [p.system ? "Checkout" : p.inNav ? "In the menu" : "Not in the menu", p.hideHeader && "no menu bar", p.hideMbar && !p.system && "no sticky bar"].filter(Boolean).join(" · ");
+        const menu = menuRows(), checkout = store.pages.filter((p) => p.system), landing = store.pages.filter((p) => !p.inNav && !p.system);
+        const row = (p, kind, child) => {
+          const chips = kind === "landing" ? [p.hideHeader && "No header", p.hideMbar && "No sticky bar"].filter(Boolean) : child ? ["In a dropdown"] : [];
+          return `<div class="wl-row">
+            <a class="wl-open" href="#/website?page=${p.id}&split=1"><span class="wl-ico ${kind}">${icon(kind === "checkout" ? "cart" : kind === "landing" ? "rocket" : p.locked ? "home" : "pages")}</span>
+              <span class="wl-t"><b>${esc(p.title)}</b><small>/${esc(p.slug)}</small>${chips.length ? `<span class="wl-chips">${chips.map((c) => `<i>${c}</i>`).join("")}</span>` : ""}</span></a>
+            <button type="button" class="wl-more" data-wp-set="${p.id}" aria-label="Settings for ${esc(p.title)}" title="Settings">${icon("settings")}</button>
+          </div>`;
+        };
+        const group = (title, sub, rows, add) => `<section class="card wl-group"><div class="wl-head"><div><b>${title}</b><small>${sub}</small></div></div>${rows || '<p class="wl-empty">No pages yet.</p>'}${add || ""}</section>`;
         return `${wsTop("Edit Pages")}
-          <div class="wpc-head"><span>Tap a page to edit it</span><span class="wp-meter${menuN >= MENU_MAX ? " full" : ""}">${menuN}/${MENU_MAX} in menu</span></div>
-          <div class="wpc-grid">${pages.map((p) => `<article class="wpc">
-              <a class="wpc-open" href="#/website?page=${p.id}&split=1" aria-label="Edit ${esc(p.title)}" tabindex="-1">${wsScreen(pageDoc(p), 390, "wpc-shot")}</a>
-              <div class="wpc-foot">
-                <a class="wpc-name" href="#/website?page=${p.id}&split=1"><b>${esc(p.title)}</b><small>${esc(note(p))}</small></a>
-                <button type="button" class="wpc-more" data-wp-set="${p.id}" aria-label="Settings for ${esc(p.title)}" title="Settings">${icon("dots")}</button>
-              </div>
-            </article>`).join("")}
-            ${canAdd ? `<button type="button" class="wpc wpc-new" data-action="add-page"><span>${icon("plus")}</span><b>Add page</b></button>` : ""}
-          </div>
+          <p class="ws-intro">Tap a page to edit it. <span class="wp-meter${menuN >= MENU_MAX ? " full" : ""}">${menuN}/${MENU_MAX} in menu</span></p>
+          ${group("Menu pages", "Linked in your website's menu, up to " + MENU_MAX, menu.map((r) => row(r.p, "menu", r.child)).join(""),
+            canAdd && menuN < MENU_MAX ? `<button type="button" class="wl-add" data-wp-add="menu">${icon("plus")}Add menu page</button>` : "")}
+          ${group("Checkout page", "Where customers place their order", checkout.map((p) => row(p, "checkout")).join(""))}
+          ${group("Landing pages", "Pages outside the menu, for ads and offers. Hide the header or sticky bar on them.", landing.map((p) => row(p, "landing")).join(""),
+            canAdd ? `<button type="button" class="wl-add" data-wp-add="landing">${icon("plus")}Add landing page</button>` : "")}
           ${canAdd ? "" : `<p class="ws-intro">Your ${esc(plan().name)} plan allows ${plan().pages} pages.</p>`}
         </div>`;
       },
       mount: (view) => {
-        wsMount(view);
         view.addEventListener("click", (e) => {
-          const b = e.target.closest("[data-wp-set]");
-          if (b) wsPageSettings(store.pages.find((p) => p.id === b.dataset.wpSet));
+          const b = e.target.closest("[data-wp-set], [data-wp-add]");
+          if (!b) return;
+          if (b.dataset.wpAdd) wsAddPage(b.dataset.wpAdd);
+          else wsPageSettings(store.pages.find((p) => p.id === b.dataset.wpSet));
         });
       },
     },
@@ -1822,20 +1917,14 @@ export const start = async () => {
         </div>`,
       update: (view) => {
         if (!view.querySelector(".wsk")) return false;
-        view.querySelector(".ws-publish").replaceWith(document.createRange().createContextualFragment(wsTop("")).querySelector(".ws-publish"));
+        view.querySelector(".ws-publish").classList.toggle("has-changes", unpublished());
         view.wskLooks();
         view.querySelector(".wsk-rest").innerHTML = wsStickyRest();
         return true;
       },
       mount: (view) => {
-        wsMount(view);
         const mb = () => store.site.header.mbar;
-        // Each card keeps its preview; only a changed one reloads
-        view.wskLooks = () => view.querySelectorAll(".wsk-look").forEach((c) => {
-          const on = mb().show && (mb().style || "classic") === c.dataset.mbStyle;
-          c.classList.toggle("on", on); c.setAttribute("aria-pressed", String(on));
-          wsSwap(c.querySelector(".ws-screen"), wsLookHTML(c.dataset.mbStyle));
-        });
+        view.wskLooks = () => { view.querySelector(".wsk-looks").innerHTML = wsLooks(); };
         const saved = () => { touchSite(); persist(); go(); };
         let tt = 0;
         view.addEventListener("click", (e) => {

@@ -1990,24 +1990,6 @@ body.editor-open .ed.ed-split .ed-thumb { width: 100%; height: 90px; }
 body.editor-open .ed.ed-split .ed-done { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
 body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 
-/* Edit Pages (phones): every page as a card with a little picture of it */
-.wpc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 12px; color: var(--muted); font-size: 13px; }
-.wpc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.wpc { display: grid; min-width: 0; border: 1px solid var(--border); border-radius: 18px; background: #fff; overflow: hidden; box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 22px -14px rgba(16, 24, 40, .18); }
-.wpc-open { display: block; }
-.wpc-shot { height: 190px; pointer-events: none; border-bottom: 1px solid var(--border); }
-.wpc-foot { display: flex; align-items: center; gap: 4px; padding: 8px 4px 8px 12px; }
-.wpc-name { flex: 1; min-width: 0; display: grid; gap: 1px; color: var(--ink); text-decoration: none; }
-.wpc-name b, .wpc-name small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.wpc-name b { font-size: 14px; }
-.wpc-name small { color: var(--muted); font-size: 11.5px; }
-.wpc-more { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; }
-.wpc-more:active { background: var(--hover); }
-.wpc-more .i { width: 18px; height: 18px; }
-.wpc-new { place-content: center; justify-items: center; gap: 8px; min-height: 240px; border: 1.5px dashed #cfd5dc; background: none; box-shadow: none; color: var(--accent); font: inherit; cursor: pointer; }
-.wpc-new span { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: #e8f5ee; }
-.wpc-new .i { width: 22px; height: 22px; }
-.wpc-new b { font-size: 14px; }
 /* Page settings window */
 .wpd-opts { display: grid; margin: 4px 0 8px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
 .wpd-opt { display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; }
@@ -2043,3 +2025,97 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 .wsk .wsk-page { justify-content: space-between; padding: 10px 2px; border-radius: 0; }
 .wsk .wsk-page + .wsk-page { border-top: 1px solid var(--border); }
 .wsk .wsk-page span:first-child { display: grid; font-size: 14px; font-weight: 600; }
+
+/* ---------- Website screens on phones, v3: lighter (no extra website loads) and real-size ---------- */
+.ws-intro .wp-meter { margin-left: 6px; vertical-align: 1px; }
+/* Shared card heading and "add" button */
+.wl-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.wl-head > div { display: grid; gap: 2px; min-width: 0; }
+.wl-head b { color: var(--ink); font-size: 16px; }
+.wl-head small { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.wl-empty { margin: 4px 0 2px; color: var(--muted); font-size: 13px; }
+.wl-add { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 46px; margin-top: 10px; border: 1.5px dashed #cfd5dc; border-radius: 14px;
+  background: none; color: var(--accent); font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; }
+.wl-add:active { background: #f3faf6; }
+.wl-add .i { width: 18px; height: 18px; }
+
+/* Edit Pages: three groups of simple rows */
+.wl-group { display: grid; gap: 8px; padding: 16px 14px 14px; margin-bottom: 14px; }
+.wl-group .wl-head { margin-bottom: 4px; }
+.wl-row { display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 0; border: 1px solid var(--border); border-radius: 14px; background: #fff; }
+.wl-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 6px 4px 6px 8px; color: var(--ink); text-decoration: none; }
+.wl-open:active { opacity: .7; }
+.wl-ico { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 12px; background: #e8f5ee; color: var(--accent); }
+.wl-ico.checkout { background: #fff4e5; color: #b45309; }
+.wl-ico.landing { background: #eef2ff; color: #4f46e5; }
+.wl-ico .i { width: 19px; height: 19px; }
+.wl-t { display: grid; gap: 1px; min-width: 0; }
+.wl-t b, .wl-t small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.wl-t b { font-size: 15px; }
+.wl-t small { color: var(--muted); font-size: 12px; }
+.wl-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.wl-chips i { padding: 1px 7px; border-radius: 999px; background: #f1f3f5; color: #475467; font-size: 11px; font-style: normal; font-weight: 600; }
+.wl-more { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border: 0; border-radius: 12px; background: none; color: var(--muted); cursor: pointer; }
+.wl-more:active { background: var(--hover); }
+.wl-more .i { width: 19px; height: 19px; }
+/* Page type picker in the settings window */
+.wpd-kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.wpd-kind { position: relative; display: grid; justify-items: start; gap: 2px; padding: 12px; border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; }
+.wpd-kind input { position: absolute; opacity: 0; pointer-events: none; }
+.wpd-kind .i { width: 20px; height: 20px; margin-bottom: 4px; color: var(--muted); }
+.wpd-kind b { color: var(--ink); font-size: 14px; }
+.wpd-kind small { color: var(--muted); font-size: 12px; }
+.wpd-kind:has(input:checked) { border-color: var(--accent); background: #f3faf6; }
+.wpd-kind:has(input:checked) .i { color: var(--accent); }
+.wpd-opts[hidden] { display: none; }
+
+/* Edit Nav: the header at the phone's own size, then the banner and the menu */
+.mn-live { margin-bottom: 14px; }
+.mn-live .ws-screen { background: #fff; }
+.mn-cards { display: grid; gap: 14px; }
+.mn-card { padding: 16px 14px 14px; }
+.mn-card .nv-row { padding-bottom: 12px; }
+.mn-card .nv-fields .field:last-child { margin-bottom: 0; }
+.mn-card .nx-colors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.mn-card .nx-colors > * { min-width: 0; width: auto; }
+.mn-banner .nv-row-text b { font-size: 16px; }
+.wpd-kind b, .wpd-kind small { display: block; }
+.mn-list { display: grid; gap: 8px; }
+.mn-row { display: flex; align-items: center; gap: 8px; min-height: 58px; padding: 6px 6px 6px 14px; border: 1px solid var(--border); border-radius: 14px; background: #fff; }
+.mn-row.child { margin-left: 22px; background: #fafbfc; }
+.mn-t { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.mn-t b, .mn-t small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mn-t b { color: var(--ink); font-size: 15px; }
+.mn-t small { color: var(--muted); font-size: 12px; }
+.mn-tools { display: flex; gap: 2px; flex: none; }
+.mn-tools button { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 10px; background: #f4f5f7; color: #344054; cursor: pointer; }
+.mn-tools button:disabled { opacity: .35; cursor: default; }
+.mn-tools button.danger { background: #fef3f2; color: #d92d20; }
+.mn-tools .i { width: 17px; height: 17px; }
+
+/* Edit Sticky: each look drawn as a small bar (no website loaded) */
+.mk { display: flex; align-items: flex-end; height: 84px; padding: 0 12px; background: linear-gradient(180deg, #f7f8fa, #eceef1); overflow: hidden; }
+.mk-bar { flex: 1; display: flex; align-items: center; justify-content: space-around; gap: 2px; min-width: 0; padding: 8px 6px 10px; border: 1px solid rgba(16, 24, 40, .07); border-bottom: 0;
+  border-radius: 18px 18px 0 0; background: var(--b); color: var(--t); box-shadow: 0 -8px 20px -14px rgba(16, 24, 40, .35); }
+.mk-float { padding-bottom: 10px; }
+.mk-float .mk-bar { border-bottom: 1px solid rgba(16, 24, 40, .07); border-radius: 20px; }
+.mk-i { flex: 1 1 0; min-width: 0; display: grid; justify-items: center; gap: 3px; opacity: .62; }
+.mk-i .i, .mk-i svg { width: 19px; height: 19px; }
+.mk-i em { max-width: 100%; overflow: hidden; font-size: 9.5px; font-style: normal; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.mk-i.on { opacity: 1; color: var(--c); }
+.mk-i.wa { opacity: 1; color: #1f9d55; }
+.mk-cta { display: inline-flex; flex: none; align-items: center; gap: 5px; height: 36px; padding: 0 12px; border-radius: 12px; background: var(--c); color: var(--oc); box-shadow: 0 8px 16px -10px var(--c); }
+.mk-cta .i { width: 14px; height: 14px; }
+.mk-cta em { font-size: 11.5px; font-style: normal; font-weight: 700; white-space: nowrap; }
+.mk-center .mk-cta { flex-direction: column; gap: 3px; height: auto; margin-top: -30px; padding: 0; border-radius: 0; background: none; box-shadow: none; color: var(--t); }
+.mk-center .mk-cta .i { width: 46px; height: 46px; padding: 13px; border-radius: 50%; background: var(--c); color: var(--oc); box-shadow: 0 0 0 4px var(--b), 0 10px 20px -10px var(--c); }
+.mk-center .mk-cta em { font-size: 9.5px; }
+.mk-pill .mk-i { padding: 4px 0; border-radius: 10px; }
+.mk-pill .mk-i.on { background: color-mix(in srgb, var(--c) 14%, transparent); }
+.mk-pill .mk-cta { border-radius: 999px; }
+.mk-icons .mk-i em { display: none; }
+.mk-icons .mk-i { padding: 6px 0; }
+.mk-buy .mk-cta { flex: 1 1 auto; order: 10; justify-content: center; height: 40px; }
+.mk-buy .mk-i { flex: 0 0 38px; }
+.mk-dark .mk-i { opacity: .75; }
+.wsk .wsk-look .mk { border-bottom: 1px solid var(--border); }
