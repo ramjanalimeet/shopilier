@@ -736,9 +736,41 @@ export const start = async () => {
       },
     });
   };
-  // Edit Nav: the header at the phone's own size, and the banner and menu cards
+  // Edit Nav: the header at the phone's own size, and one card for the part being edited
   const navPhoneDoc = () => SiteKit.documentHTML(store.site, store.pages, { thumb: true, page: store.pages[0], products: store.products, headerOnly: true });
-  const wsNavCards = () => {
+  const MN_TABS = [["banner", "megaphone", "Banner"], ["logo", "image", "Logo"], ["buttons", "cart", "Icons"], ["menu", "menu", "Menu"], ["search", "search", "Search"]];
+  let mnTab = "banner";
+  const mnRow = (k, on, label, sub) => `<div class="nv-row"><span class="nv-row-text"><b>${label}</b><small>${sub}</small></span>${navSwitch(k, on, label)}</div>`;
+  const wsNavCard = () => {
+    const h = store.site.header, x = (h.buttons ||= {}), cta = (h.cta ||= { show: false, text: "Shop now", link: "/shop" });
+    if (mnTab === "banner") return `<section class="card mn-card mn-banner">${navBanner().replace(/^<div class="card nv-card">|<\/div>\s*$/g, "")}</section>`;
+    if (mnTab === "logo") {
+      const logo = SiteKit.safeImg(h.logo), name = store.site.name || "";
+      return `<section class="card mn-card">
+        <div class="mn-logo"><span class="mn-logo-img">${logo ? `<img src="${esc(logo)}" alt="">` : `<b>${esc((name || "S").slice(0, 1).toUpperCase())}</b>`}</span>
+          <div class="mn-logo-t"><b>Logo</b><small>A square image works best (512 × 512)</small>
+            <div class="mn-logo-btns"><label class="btn btn-sm mn-upload">${icon("plus")}${logo ? "Replace" : "Upload"}<input type="file" accept="image/*" data-logo hidden></label>${logo ? `<button type="button" class="btn btn-sm btn-danger-soft" data-logo-clear>Remove</button>` : ""}</div></div></div>
+        <div class="field"><label for="mn-name">Website name</label><input class="input" id="mn-name" data-site-name maxlength="40" value="${esc(name)}" placeholder="Your store"></div>
+        ${logo ? mnRow("hideName", h.hideName, "Logo only", "Hide the name beside the logo") : ""}
+      </section>`;
+    }
+    if (mnTab === "buttons") {
+      const waOk = (store.site.social && store.site.social.whatsapp) || store.site.phone, phoneOk = store.site.phone;
+      const tiles = [["account", icon("user"), "Account", h.account], ["cart", icon("cart"), "Cart", h.cart], ["buttons.wishlist", icon("heart"), "Wishlist", x.wishlist], ["buttons.track", icon("truck"), "Track order", x.track],
+        ["buttons.whatsapp", SiteKit.socialIcon("whatsapp"), "WhatsApp", x.whatsapp, waOk ? "" : "Add a number in Preferences"], ["buttons.phone", icon("phone"), "Call us", x.phone, phoneOk ? "" : "Add a number in Preferences"],
+        ["cta.show", '<span class="hb-btn"></span>', "Button", cta.show]];
+      return `<section class="card mn-card"><div class="wl-head"><div><b>Icons on the right</b><small>Tap to turn one on or off</small></div></div>
+        <div class="wsk-btns mn-icons">${tiles.map(([k, ico, name, on, warn]) => `<label class="wsk-btn${on ? " on" : ""}"><input type="checkbox" data-nk="${k}" ${on ? "checked" : ""}><span class="wsk-btn-ico">${ico}</span><b>${name}</b>${warn && on ? `<small>${warn}</small>` : ""}</label>`).join("")}</div>
+        ${cta.show ? `<div class="field"><label for="mn-cta">Button text</label><input class="input" id="mn-cta" data-nk="cta.text" maxlength="24" value="${esc(cta.text || "")}" placeholder="Shop now"></div>
+          <div class="field"><label for="mn-cta-link">Button link</label><input class="input" id="mn-cta-link" data-nk="cta.link" maxlength="200" value="${esc(cta.link || "")}" placeholder="/shop"></div>` : ""}
+      </section>`;
+    }
+    if (mnTab === "search") return `<section class="card mn-card">
+        ${mnRow("search", h.search, "Search", "Customers can search your products")}
+        ${h.search ? mnRow("searchBar", h.searchBar, "Search box", "A wide box under the logo (off: just an icon)") : ""}
+        ${h.search && h.searchBar ? `<div class="field"><label for="mn-st">Text in the box</label><input class="input" id="mn-st" data-nk="searchText" maxlength="60" value="${esc(h.searchText || "")}" placeholder="Search products…"></div>` : ""}
+      </section>`;
+    // Menu
     const rows = menuRows(), full = menuTopCount() >= MENU_MAX;
     const list = rows.map(({ p, child }) => {
       const sibs = rows.filter((r) => r.child === child && (!child || r.p.parent === p.parent)), si = sibs.findIndex((r) => r.p === p);
@@ -752,52 +784,10 @@ export const start = async () => {
         </span>
       </div>`;
     }).join("");
-    return `<section class="card mn-card mn-banner">${navBanner().replace(/^<div class="card nv-card">|<\/div>\s*$/g, "")}</section>
-      <section class="card mn-card"><div class="wl-head"><div><b>Menu</b><small>${menuTopCount()}/${MENU_MAX} pages · tap the arrows to change the order</small></div></div>
+    return `<section class="card mn-card"><div class="wl-head"><div><b>Menu</b><small>${menuTopCount()}/${MENU_MAX} pages · opens from ☰ on phones</small></div></div>
         <div class="mn-list">${list || '<p class="wl-empty">Your menu is empty.</p>'}</div>
         ${full ? '<p class="wl-empty">The menu is full. Remove a page to add another.</p>' : `<button type="button" class="wl-add" data-mn-add>${icon("plus")}Add a page to the menu</button>`}
       </section>`;
-  };
-  // Edit Sticky: the bars to choose from, then what's on the bar
-  const wsSwitch = (attr, on, label, sub) => `<label class="wp-opt"><span><b>${label}</b><small>${sub}</small></span><span class="switch"><input type="checkbox" ${attr} ${on ? "checked" : ""} aria-label="${esc(label)}"><i></i></span></label>`;
-  // One look of the bar, drawn with the dashboard's own icons and this store's buttons and colours.
-  // Plain HTML (no website loaded), so the list opens at once.
-  const wsBarMock = (style) => {
-    const mb = store.site.header.mbar, site = store.site, T = (x) => SiteKit.tr(site, x);
-    const dark = style === "dark";
-    const bg = mb.bg || (dark ? "#15171c" : "#ffffff"), fg = mb.text || (dark ? "#f3f4f6" : "#111111"), cta = mb.ctaBg || site.accent || "#0e7a4b";
-    const waOn = mb.chat !== false && ((site.social && site.social.whatsapp) || site.phone);
-    const item = (ic, label, cls = "") => `<span class="mk-i ${cls}">${ic}<em>${esc(label)}</em></span>`;
-    const left = [mb.home !== false ? item(icon("home"), T("Home"), "on") : "", mb.shop !== false ? item(icon("bag"), T("Shop")) : ""].join("");
-    const right = [mb.cart !== false ? item(icon("cart"), T("Cart")) : "", waOn ? item(SiteKit.socialIcon("whatsapp"), "WhatsApp", "wa") : "", mb.account ? item(icon("user"), T("Account")) : ""].join("");
-    const ctaText = mb.cta || (style === "buy" || style === "center" ? (site.lang === "bn" ? "অর্ডার করুন" : "Order now") : "");
-    const main = ctaText ? `<span class="mk-cta">${icon("bag")}<em>${esc(ctaText)}</em></span>` : "";
-    return `<span class="mk mk-${style}${mb.shape === "float" ? " mk-float" : ""}" style="--b:${esc(bg)};--t:${esc(fg)};--c:${esc(cta)};--oc:${SiteKit.isDark(cta) ? "#fff" : "#111"}"><span class="mk-bar">${left}${main}${right}</span></span>`;
-  };
-  const wsLooks = () => {
-    const mb = store.site.header.mbar;
-    return SiteKit.MBAR_STYLES.map((x) => { const on = mb.show && (mb.style || "classic") === x.id; return `<button type="button" class="wsk-look${on ? " on" : ""}" data-mb-style="${x.id}" aria-pressed="${on}">
-        ${wsBarMock(x.id)}
-        <span class="wsk-look-name"><i class="wsk-radio"></i><span><b>${esc(x.name)}</b><small>${esc(x.text)}</small></span></span>
-      </button>`; }).join("");
-  };
-  const wsStickyRest = () => {
-    const mb = store.site.header.mbar, seg = (k, opts) => `<div class="ed-seg wsk-seg">${opts.map(([v, l]) => `<button type="button" class="${(mb[k] || opts[0][0]) === v ? "on" : ""}" data-mb-set="${k}" data-v="${v}">${l}</button>`).join("")}</div>`;
-    const waOk = (store.site.social && store.site.social.whatsapp) || store.site.phone;
-    const btns = [["home", icon("home"), "Home", mb.home !== false], ["shop", icon("bag"), "Shop", mb.shop !== false], ["cart", icon("cart"), "Cart", mb.cart !== false],
-      ["chat", SiteKit.socialIcon("whatsapp"), "WhatsApp", mb.chat !== false, waOk ? "" : "Add a number in Preferences"], ["account", icon("user"), "Account", !!mb.account]];
-    const color = (k, label, fb) => { const c = /^#[0-9a-f]{6}$/i.test(String(mb[k] || "")) ? mb[k] : ""; return `<div class="wsk-color"><label><input type="color" data-mb-color="${k}" value="${esc(c || fb)}" aria-label="${label}"><span><b>${label}</b><small>${c ? esc(c) : "Website colour"}</small></span></label>${c ? `<button type="button" class="btn btn-sm" data-mb-clear="${k}">Reset</button>` : ""}</div>`; };
-    return `<div class="card wp-card">${wsSwitch('data-mb="show"', mb.show, "Show the sticky bar", "At the bottom of every page")}</div>
-      ${mb.show ? `<div class="card wp-card"><h3>Buttons on the bar</h3>
-        <div class="wsk-btns">${btns.map(([k, ico, name, on, warn]) => `<label class="wsk-btn${on ? " on" : ""}"><input type="checkbox" data-mb="${k}" ${on ? "checked" : ""}><span class="wsk-btn-ico">${ico}</span><b>${name}</b>${warn && on ? `<small>${warn}</small>` : ""}</label>`).join("")}</div>
-        <div class="field"><label for="mb-cta">Main button text</label><input class="input" id="mb-cta" data-mb-text="cta" maxlength="24" value="${esc(mb.cta || "")}" placeholder="Empty: no main button"></div>
-        <div class="field"><label for="mb-link">Main button link</label><input class="input" id="mb-link" data-mb-text="link" maxlength="200" value="${esc(mb.link || "")}" placeholder="/shop"></div>
-      </div>
-      <div class="card wp-card"><h3>Colours</h3>${color("bg", "Bar", "#ffffff")}${color("text", "Icons", "#111111")}${color("ctaBg", "Main button", store.site.accent || "#0e7a4b")}</div>
-      <div class="card wp-card"><h3>Shape</h3>${seg("shape", [["flat", "Bottom edge"], ["float", "Floating"]])}</div>
-      <div class="card wp-card"><h3>Pages with the bar</h3>
-        <div class="wsk-pages">${store.pages.filter((p) => !p.system).map((p) => `<label class="wsk-page"><span>${esc(p.title)}<small>/${esc(p.slug)}</small></span><span class="switch"><input type="checkbox" data-mb-page="${p.id}" ${p.hideMbar ? "" : "checked"} aria-label="${esc(p.title)}"><i></i></span></label>`).join("")}</div>
-      </div>` : ""}`;
   };
   const PAY_COLOR = { "Cash on delivery": "gray", bKash: "pink", Nagad: "orange", Card: "blue" };
   const sales = (orders) => orders.filter((o) => o.status !== "Cancelled").reduce((s, o) => s + o.total, 0);
@@ -1841,36 +1831,69 @@ export const start = async () => {
       },
     },
 
-    // ---------- Website → Edit Nav: the banner and the menu, on one screen ----------
+    // ---------- Website → Edit Nav: every part of the top of the website (banner, logo, icons, menu, search) ----------
     "site-nav": {
       title: "Edit Nav",
       render: () => `${wsTop("Edit Nav")}
           <div class="card ws-live mn-live">${wsScreen(navPhoneDoc(), "auto", "mn-screen", "content")}</div>
-          <div class="mn-cards">${wsNavCards()}</div>
+          <div class="mn-tabs" role="tablist">${MN_TABS.map(([id, ic, label]) => `<button type="button" role="tab" data-mn-tab="${id}" class="${mnTab === id ? "on" : ""}" aria-selected="${mnTab === id}">${icon(ic)}<span>${label}</span></button>`).join("")}</div>
+          <div class="mn-cards">${wsNavCard()}</div>
         </div>`,
       update: (view) => {
         if (!view.querySelector(".mn-cards")) return false;
-        view.querySelector(".mn-cards").innerHTML = wsNavCards();
+        view.querySelectorAll("[data-mn-tab]").forEach((b) => { const on = b.dataset.mnTab === mnTab; b.classList.toggle("on", on); b.setAttribute("aria-selected", String(on)); });
+        view.querySelector(".mn-cards").innerHTML = wsNavCard();
         view.querySelector(".ws-publish").classList.toggle("has-changes", unpublished());
-        wsSwap(view.querySelector(".mn-screen"), navPhoneDoc());
+        const sc = view.querySelector(".mn-screen");
+        wsSwap(sc, navPhoneDoc());
+        if (sc.onFit) sc.onFit();
         return true;
       },
       mount: (view) => {
         wsMount(view);
+        const sc = view.querySelector(".mn-screen");
         const hset = (k, val) => { const ks = k.split("."), last = ks.pop(); ks.reduce((o, x) => (o[x] ??= {}), store.site.header)[last] = val; };
+        const tab = (id) => {
+          if (!id || id === mnTab) return;
+          mnTab = id; go();
+          const t = view.querySelector(`[data-mn-tab="${id}"]`); if (t) t.scrollIntoView({ inline: "center", block: "nearest" });
+        };
+        // The preview: the part being edited is outlined, and tapping a part opens its tab
+        const PART_CSS = "<style>body[data-part] .s-header>*{transition:outline-color .2s}body[data-part=banner] .announce,body[data-part=logo] .s-header .logo,body[data-part=buttons] .s-header .tools,body[data-part=menu] .s-header .burger,body[data-part=search] .s-header .h-search{outline:2px dashed #0e7a4b;outline-offset:3px;border-radius:10px}.s-header *{cursor:pointer}</style>";
+        const hook = () => sc.querySelectorAll("iframe").forEach((f) => {
+          const d = f.contentDocument;
+          if (!d || !d.body) return;
+          d.body.dataset.part = mnTab;
+          if (d.wsParts) return;
+          d.wsParts = true;
+          d.head.insertAdjacentHTML("beforeend", PART_CSS);
+          d.addEventListener("click", (e) => {
+            const t = e.target;
+            tab(t.closest(".announce") ? "banner" : t.closest(".logo") ? "logo" : t.closest(".burger, .menu") ? "menu" : t.closest(".h-search") ? "search" : t.closest(".tools") ? (t.closest(`[title="${SiteKit.tr(store.site, "Search")}"]`) ? "search" : "buttons") : null);
+          });
+        });
+        sc.onFit = hook;
         let tt = 0;
-        const later = () => { touchSite(); persist(); clearTimeout(tt); tt = setTimeout(() => wsSwap(view.querySelector(".mn-screen"), navPhoneDoc()), 300); };
+        const later = () => { touchSite(); persist(); clearTimeout(tt); tt = setTimeout(() => wsSwap(sc, navPhoneDoc()), 300); };
         view.addEventListener("input", (e) => {
           const el = e.target;
           if (el.dataset.annCustom !== undefined) { hset("announcement.bg", el.value); hset("announcement.color", ""); later(); }
+          else if (el.dataset.siteName !== undefined) { store.site.name = el.value.slice(0, 40); later(); }
           else if (el.dataset.nk && el.type !== "checkbox") { hset(el.dataset.nk, el.value); later(); }
         });
-        view.addEventListener("change", (e) => {
+        view.addEventListener("change", async (e) => {
           const el = e.target;
           if (el.type === "checkbox" && el.dataset.nk) { hset(el.dataset.nk, el.checked); touchSite(); persist(); go(); }
-          else if (el.dataset.annCustom !== undefined) go();
+          else if (el.dataset.annCustom !== undefined || el.dataset.siteName !== undefined) go();
+          else if (el.dataset.logo !== undefined && el.files[0]) {
+            const lab = el.closest("label"); lab.classList.add("busy");
+            try { hset("logo", await SiteEditor.upload(el.files[0])); touchSite(); persist(); go(); toast("Logo uploaded"); }
+            catch (err) { toast(err.message); lab.classList.remove("busy"); }
+          }
         });
         view.addEventListener("click", (e) => {
+          const t = e.target.closest("[data-mn-tab]");
+          if (t) { tab(t.dataset.mnTab); return; }
           const c = e.target.closest("[data-ann]");
           if (c) {
             const [bg, tx] = c.dataset.ann.split(",");
@@ -1878,6 +1901,7 @@ export const start = async () => {
             if (!store.site.header.announcement.show) hset("announcement.show", true);
             touchSite(); persist(); go(); return;
           }
+          if (e.target.closest("[data-logo-clear]")) { hset("logo", ""); hset("hideName", false); touchSite(); persist(); go(); return; }
           if (e.target.closest("[data-mn-add]")) {
             if (menuTopCount() >= MENU_MAX) { toast(`The menu holds ${MENU_MAX} pages. Remove one first.`); return; }
             actions["nav-add-item"]();
