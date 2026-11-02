@@ -1785,9 +1785,9 @@ export const start = async () => {
         const arrow = '<i class="wh-line" aria-hidden="true"></i>';
         return `${wsTop("Edit Website", "#/home")}
           <div class="wh-stage">
-            <div class="wh-side">${calls.map(([id, href, ic, label, sub]) => `<a class="wh-pill" data-wh="${id}" href="${href}"><span class="wh-pill-ico">${icon(ic)}</span><span class="wh-pill-t"><b>Edit ${label}</b><small>${esc(sub)}</small></span>${icon("chevronRight")}${arrow}</a>`).join("")}</div>
+            <div class="wh-side">${calls.map(([id, href, ic, label, sub]) => `<a class="wh-pill" data-wh="${id}" href="${href}"><span class="wh-pill-ico">${icon(ic)}</span><span class="wh-pill-t"><b>Edit ${label}</b><small>${esc(sub)}</small></span>${arrow}</a>`).join("")}</div>
             <div class="wh-card">
-              ${wsScreen(pageDoc(store.pages[0]), 390, "wh-screen")}
+              ${wsScreen(pageDoc(store.pages[0]), 360, "wh-screen")}
               ${calls.map(([id, href, , label]) => `<a class="wh-hot" data-hot="${id}" href="${href}" tabindex="-1" aria-hidden="true" title="Edit ${label}"></a>`).join("")}
             </div>
           </div>
@@ -1799,7 +1799,7 @@ export const start = async () => {
         const stage = view.querySelector(".wh-stage"), sc = view.querySelector(".wh-screen");
         const place = () => {
           const d = sc.querySelector("iframe").contentDocument;
-          const k = sc.clientWidth / 390, H = sc.clientHeight;
+          const k = sc.clientWidth / 360, H = sc.clientHeight;
           if (!d || !d.body || !k) return;
           const head = d.querySelector(".s-header"), bar = d.querySelector(".s-mbar");
           const barOn = bar && getComputedStyle(bar).display !== "none";
@@ -1809,7 +1809,16 @@ export const start = async () => {
           const top = sc.getBoundingClientRect().top - view.querySelector(".wh-side").getBoundingClientRect().top;
           // The page button sits a little above the middle, where the page's own content is
           const at = { nav: headBot / 2, pages: headBot + (barTop - headBot) * 0.42, sticky: (barTop + H) / 2 };
-          view.querySelectorAll(".wh-pill").forEach((c) => { c.style.top = Math.round(top + at[c.dataset.wh] - c.offsetHeight / 2) + "px"; });
+          // Lined up with their part, but never above the website, below it, or on top of each other
+          let floor = 0;
+          const pills = [...view.querySelectorAll(".wh-pill")], gap = 10, end = top + H;
+          pills.forEach((c, i) => {
+            const left = pills.slice(i + 1).reduce((sum, x) => sum + x.offsetHeight + gap, 0);
+            const y = Math.min(Math.max(top + at[c.dataset.wh] - c.offsetHeight / 2, floor, top), end - left - c.offsetHeight);
+            c.style.top = Math.round(y) + "px"; floor = y + c.offsetHeight + gap;
+            // The line leaves the button level with its part (as far as the button reaches)
+            c.querySelector(".wh-line").style.top = Math.round(Math.min(Math.max(top + at[c.dataset.wh] - y, 16), c.offsetHeight - 16)) + "px";
+          });
           view.querySelectorAll(".wh-hot").forEach((a) => { const [t, b] = spots[a.dataset.hot]; a.style.top = Math.round(sc.offsetTop + t) + "px"; a.style.height = Math.max(24, Math.round(b - t)) + "px"; });
           stage.classList.add("placed");
         };
