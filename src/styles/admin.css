@@ -2070,44 +2070,27 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 .mk-dark .mk-i { opacity: .75; }
 .wsk .wsk-look .mk { border-bottom: 1px solid var(--border); }
 
-/* ---------- Edit Website (phones): a real-looking phone in the middle, with a button and an arrow for each part ---------- */
-.wh-intro { margin-bottom: 6px; text-align: center; }
-.wh-stage { position: relative; display: flex; justify-content: center; padding: 10px 0 6px; }
-.wh-phone { position: relative; width: min(68vw, 290px); padding: 8px; border-radius: 46px; background: #111318;
-  box-shadow: inset 0 0 0 1.5px #3a3d44, 0 0 0 1px #d6dae0, 0 40px 60px -30px rgba(16, 24, 40, .55), 0 18px 30px -18px rgba(16, 24, 40, .35); }
-/* Side buttons of the phone */
-.wh-phone::before, .wh-phone::after { content: ""; position: absolute; width: 3px; border-radius: 2px; background: #2a2d33; }
-.wh-phone::before { left: -3px; top: 110px; height: 52px; }
-.wh-phone::after { right: -3px; top: 130px; height: 74px; }
-.wh-status { position: relative; display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 20px 0 24px; border-radius: 38px 38px 0 0; background: #fff; color: #111; }
-.wh-status b { font-size: 12px; font-weight: 700; letter-spacing: -.01em; }
-.wh-island { position: absolute; left: 50%; top: 7px; width: 74px; height: 20px; margin-left: -37px; border-radius: 999px; background: #111318; }
-.wh-sig { display: flex; align-items: flex-end; gap: 1.5px; height: 9px; margin-left: auto; }
-.wh-sig i { width: 2.5px; border-radius: 1px; background: #111; }
-.wh-sig i:nth-child(1) { height: 3px; } .wh-sig i:nth-child(2) { height: 5px; } .wh-sig i:nth-child(3) { height: 7px; } .wh-sig i:nth-child(4) { height: 9px; }
-.wh-bat { position: relative; width: 20px; height: 10px; border: 1.5px solid #111; border-radius: 3px; }
-.wh-bat::after { content: ""; position: absolute; inset: 1.5px 4px 1.5px 1.5px; border-radius: 1px; background: #111; }
-.wh-screen { height: clamp(380px, calc(100dvh - 330px), 600px); border-radius: 0 0 38px 38px; background: #fff; }
+/* ---------- Edit Website (phones): the website as it is, with the edit buttons beside it ---------- */
+.wh-intro { margin-bottom: 8px; text-align: center; }
+.wh-stage { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); column-gap: 26px; padding: 6px 0; }
+.wh-side { position: relative; }
+.wh-card { position: relative; border: 1px solid #e3e6ea; border-radius: 22px; background: #fff; overflow: hidden;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 22px 40px -24px rgba(16, 24, 40, .4); }
+.wh-screen { height: clamp(380px, calc(100dvh - 280px), 660px); background: #fff; }
 .wh-screen .ws-inner { background: #fff; }
-/* Each part of the phone, outlined softly; tapping it opens its screen */
-.wh-hot { position: absolute; left: 8px; right: 8px; border: 1.5px dashed transparent; border-radius: 14px; transition: border-color .2s, background .2s; }
+/* Each part of the website, outlined when its button is pointed at; tapping it opens its screen */
+.wh-hot { position: absolute; left: 4px; right: 4px; border: 1.5px dashed transparent; border-radius: 14px; transition: border-color .2s, background .2s; }
 .wh-hot.glow { border-color: var(--accent); background: rgba(14, 122, 75, .06); }
-/* The buttons: floating pills on either side, with a hand-drawn arrow into the phone */
-.wh-pill { position: absolute; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 7px; border: 1px solid rgba(16, 24, 40, .06); border-radius: 999px;
-  background: rgba(255, 255, 255, .96); color: var(--ink); text-decoration: none; box-shadow: 0 12px 26px -12px rgba(16, 24, 40, .45), 0 2px 6px -2px rgba(16, 24, 40, .12);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); transition: transform .15s, box-shadow .15s, top .3s; }
-.wh-pill.left { left: 4px; }
-.wh-pill.right { right: 4px; flex-direction: row-reverse; padding: 7px 7px 7px 14px; }
+/* The buttons, outside the website, with an arrow to their part */
+.wh-pill { position: absolute; left: 0; right: 0; z-index: 2; display: grid; justify-items: center; gap: 5px; padding: 8px 2px 7px; border: 1px solid #e6e9ed; border-radius: 18px;
+  background: #fff; color: var(--ink); text-decoration: none; box-shadow: 0 10px 22px -14px rgba(16, 24, 40, .45); transition: transform .15s, box-shadow .15s, border-color .15s, top .3s; }
 .wh-stage:not(.placed) .wh-pill { opacity: 0; }
-.wh-pill:active { transform: scale(.96); }
-.wh-pill.glow { box-shadow: 0 0 0 3px rgba(14, 122, 75, .2), 0 12px 26px -12px rgba(16, 24, 40, .45); }
-.wh-pill-ico { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #18a05f, #0e7a4b); color: #fff; box-shadow: 0 6px 12px -6px rgba(14, 122, 75, .8); }
-.wh-pill-ico .i { width: 16px; height: 16px; }
-.wh-pill-t { display: grid; line-height: 1.1; }
-.wh-pill.right .wh-pill-t { text-align: right; }
-.wh-pill-t small { color: var(--muted); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
-.wh-pill-t b { font-size: 14.5px; font-weight: 700; }
-.wh-arrow { position: absolute; top: 45%; width: 46px; height: 32px; color: var(--accent); pointer-events: none; }
-.wh-pill.left .wh-arrow { left: calc(100% - 2px); }
-.wh-pill.right .wh-arrow { right: calc(100% - 2px); transform: scaleX(-1); }
+.wh-pill:active { transform: scale(.95); }
+.wh-pill.glow { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14, 122, 75, .15), 0 10px 22px -14px rgba(16, 24, 40, .45); }
+.wh-pill-ico { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: linear-gradient(135deg, #18a05f, #0e7a4b); color: #fff; box-shadow: 0 6px 12px -6px rgba(14, 122, 75, .8); }
+.wh-pill-ico .i { width: 17px; height: 17px; }
+.wh-pill-t { display: grid; justify-items: center; line-height: 1.1; }
+.wh-pill-t small { color: var(--muted); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.wh-pill-t b { font-size: 13.5px; font-weight: 700; }
+.wh-arrow { position: absolute; left: calc(100% + 1px); top: 50%; width: 26px; height: 14px; margin-top: -7px; color: var(--accent); pointer-events: none; }
 .wh-foot { margin: 14px 0 0; color: var(--muted); font-size: 12.5px; text-align: center; }

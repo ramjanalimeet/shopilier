@@ -1781,17 +1781,16 @@ export const start = async () => {
       render: () => {
         const mb = store.site.header.mbar || {}, look = (SiteKit.MBAR_STYLES.find((x) => x.id === mb.style) || SiteKit.MBAR_STYLES[0]).name;
         // [id, link, icon, name, side of the phone]
-        const calls = [["nav", "#/site-nav", "edit", "Nav", "left"], ["pages", "#/site-pages", "pages", "Pages", "right"], ["sticky", "#/site-sticky", "layers", "Sticky", "left"]];
-        const arrow = '<svg class="wh-arrow" viewBox="0 0 44 30" aria-hidden="true"><path d="M2 8C16 2 30 6 38 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 5"/><path d="M31 20.5l7.5 3 1.5-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        const calls = [["nav", "#/site-nav", "edit", "Nav"], ["pages", "#/site-pages", "pages", "Pages"], ["sticky", "#/site-sticky", "layers", "Sticky"]];
+        const arrow = '<svg class="wh-arrow" viewBox="0 0 30 16" aria-hidden="true"><path d="M2 8h22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 4.5"/><path d="M20 3.5 25.5 8 20 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         return `${wsTop("Edit Website", "#/home")}
           <p class="ws-intro wh-intro">Tap a part of your website to edit it</p>
           <div class="wh-stage">
-            <div class="wh-phone">
-              <div class="wh-status" aria-hidden="true"><b>9:41</b><i class="wh-island"></i><span class="wh-sig"><i></i><i></i><i></i><i></i></span><span class="wh-bat"></span></div>
+            <div class="wh-side">${calls.map(([id, href, ic, label]) => `<a class="wh-pill" data-wh="${id}" href="${href}"><span class="wh-pill-ico">${icon(ic)}</span><span class="wh-pill-t"><small>Edit</small><b>${label}</b></span>${arrow}</a>`).join("")}</div>
+            <div class="wh-card">
               ${wsScreen(pageDoc(store.pages[0]), 390, "wh-screen")}
               ${calls.map(([id, href, , label]) => `<a class="wh-hot" data-hot="${id}" href="${href}" tabindex="-1" aria-hidden="true" title="Edit ${label}"></a>`).join("")}
             </div>
-            ${calls.map(([id, href, ic, label, side]) => `<a class="wh-pill ${side}" data-wh="${id}" href="${href}"><span class="wh-pill-ico">${icon(ic)}</span><span class="wh-pill-t"><small>Edit</small><b>${label}</b></span>${arrow}</a>`).join("")}
           </div>
           <p class="wh-foot">${esc(store.pages.length)} pages · Sticky bar: ${esc(mb.show ? look : "off")}</p>
         </div>`;
@@ -1809,7 +1808,7 @@ export const start = async () => {
           const headBot = head ? Math.min(H * 0.3, head.getBoundingClientRect().bottom * k) : H * 0.1;
           const barTop = barOn ? Math.min(H - 24, bar.getBoundingClientRect().top * k) : H - 34;
           const spots = { nav: [0, headBot], pages: [headBot, barTop], sticky: [barTop, H] };
-          const top = sc.getBoundingClientRect().top - stage.getBoundingClientRect().top;
+          const top = sc.getBoundingClientRect().top - view.querySelector(".wh-side").getBoundingClientRect().top;
           // The page button sits a little above the middle, where the page's own content is
           const at = { nav: headBot / 2, pages: headBot + (barTop - headBot) * 0.42, sticky: (barTop + H) / 2 };
           view.querySelectorAll(".wh-pill").forEach((c) => { c.style.top = Math.round(top + at[c.dataset.wh] - c.offsetHeight / 2) + "px"; });
