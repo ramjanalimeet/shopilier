@@ -718,68 +718,23 @@ export const start = async () => {
       },
     });
   };
-  // Edit Pages: the open page (a tab), and the part of it picked in the preview
-  let wpTab = null, wpSec = null;
-  const wpPage = () => store.pages.find((p) => p.id === wpTab) || store.pages[0];
-  const wpKind = (p) => (p.system ? "checkout" : p.inNav ? "menu" : "landing");
-  const WP_KINDS = { menu: ["pages", "Menu page"], landing: ["rocket", "Landing page"], checkout: ["cart", "Checkout"] };
-  const wpTabs = () => {
-    const pages = [...menuRows().map((r) => r.p), ...store.pages.filter((p) => !p.inNav && !p.system), ...store.pages.filter((p) => p.system)], cur = wpPage();
-    return pages.map((p) => `<button type="button" role="tab" data-wp-tab="${p.id}" class="k-${wpKind(p)}${p === cur ? " on" : ""}" aria-selected="${p === cur}">${icon(p.locked && !p.system ? "home" : WP_KINDS[wpKind(p)][0])}<span>${esc(p.title)}</span></button>`).join("")
-      + (withinLimit(plan().pages, pageCount()) ? `<button type="button" class="wp-tab-add" data-wp-new>${icon("plus")}<span>Page</span></button>` : "");
-  };
-  const wpCards = () => {
-    const pg = wpPage(), kind = wpKind(pg), secs = pg.sections || [];
-    const PART = { header: ["layout", "Header"], footer: ["layout", "Footer"], mbar: ["layers", "Sticky bar"] };
-    const label = (sid) => { if (PART[sid]) return PART[sid][1]; const s = secs.find((x) => x.id === sid); return s ? (SiteKit.TYPES[s.type] || {}).label || s.type : ""; };
-    const sel = wpSec && (PART[wpSec] || secs.some((x) => x.id === wpSec)) ? wpSec : null;
-    const s = sel && secs.find((x) => x.id === sel), i = s ? secs.indexOf(s) : -1;
-    const edit = (sid) => `#/website?page=${pg.id}&section=${encodeURIComponent(sid)}&split=1`;
-    // The part picked in the preview
-    const selCard = !sel ? "" : `<section class="card mn-card wp-sel">
-        <div class="wl-head"><div><b>${esc(label(sel))}</b><small>${sel === "header" ? "The top of every page: banner, logo, icons, menu" : sel === "mbar" ? "The bar at the bottom of the screen" : sel === "footer" ? "The bottom of every page" : s && s.hidden ? "Hidden on your website" : "A part of this page"}</small></div></div>
-        ${sel === "header" ? `<a class="btn btn-primary wp-go" href="#/site-nav">${icon("edit")}Edit in Edit Nav</a>`
-          : sel === "mbar" ? `<a class="btn btn-primary wp-go" href="#/site-sticky">${icon("edit")}Edit in Edit Sticky</a>`
-          : `<div class="wp-acts4">
-              <a class="btn btn-primary" href="${edit(sel)}">${icon("edit")}Edit</a>
-              ${s ? `<button type="button" class="btn" data-wp-act="up" ${i > 0 && secs[i - 1].type !== "checkout" && s.type !== "checkout" ? "" : "disabled"} aria-label="Move up">${icon("arrowUp")}</button>
-              <button type="button" class="btn" data-wp-act="down" ${i < secs.length - 1 && s.type !== "checkout" ? "" : "disabled"} aria-label="Move down">${icon("arrowDown")}</button>
-              ${s.type === "checkout" ? "" : `<button type="button" class="btn" data-wp-act="hide" aria-label="${s.hidden ? "Show" : "Hide"}">${icon(s.hidden ? "eye" : "eyeOff")}</button>`}` : ""}
-            </div>`}
-      </section>`;
-    const rows = [...(pg.hideHeader ? [] : ["header"]), ...secs.map((x) => x.id), "footer", ...(pg.hideMbar || pg.system || !(store.site.header.mbar || {}).show ? [] : ["mbar"])];
-    return `${selCard}
-      <section class="card mn-card">
-        <div class="wp-sum"><span class="wl-ico ${kind}">${icon(WP_KINDS[kind][0])}</span><span class="wl-t"><b>${esc(pg.title)}</b><small>${WP_KINDS[kind][1]} · /${esc(pg.slug)}</small></span>
-          <button type="button" class="wl-more" data-wp-set="${pg.id}" aria-label="Page settings" title="Page settings">${icon("settings")}</button></div>
-        ${kind === "landing" ? `<div class="wp-shows">${wsShow("header", !pg.hideHeader, "Header")}${wsShow("mbar", !pg.hideMbar, "Sticky bar")}</div>` : ""}
-      </section>
-      <section class="card mn-card"><div class="wl-head"><div><b>Parts of this page</b><small>Tap one here or on the page above</small></div></div>
-        <div class="wp-parts">${rows.map((sid) => { const sx = secs.find((x) => x.id === sid), T = sx ? SiteKit.TYPES[sx.type] || {} : {}; return `<button type="button" class="wp-part${sid === sel ? " on" : ""}${sx && sx.hidden ? " off" : ""}" data-wp-pick="${esc(sid)}"><span class="wp-part-ico">${icon(PART[sid] ? PART[sid][0] : T.icon || "layout")}</span><b>${esc(label(sid))}</b>${sx && sx.hidden ? '<i>Hidden</i>' : ""}${icon("chevronRight")}</button>`; }).join("")}</div>
-        <a class="btn wp-full" href="#/website?page=${pg.id}&split=1">${icon("plus")}Add or move parts in the editor</a>
-      </section>`;
-  };
-  const wsShow = (k, on, label) => `<label class="wp-show"><b>${label}</b><span class="switch"><input type="checkbox" data-wp-show="${k}" ${on ? "checked" : ""} aria-label="Show the ${label.toLowerCase()} on this page"><i></i></span></label>`;
-  // A new page: its name and whether it's in the menu or a landing page
-  const wsNewPage = () => {
+  // A new menu page or landing page, then straight into editing it
+  const wsAddPage = (kind) => {
     if (!withinLimit(plan().pages, pageCount())) { toast(`Your ${plan().name} plan allows ${plan().pages} pages — upgrade to add more`); return; }
-    const full = menuTopCount() >= MENU_MAX;
+    if (kind === "menu" && menuTopCount() >= MENU_MAX) { toast(`The menu holds ${MENU_MAX} pages. Add a landing page instead.`); return; }
     dialog({
-      title: "New page",
+      title: kind === "menu" ? "New menu page" : "New landing page",
       submit: "Create page",
-      body: `<div class="field"><label>Page name</label><input class="input" name="title" required maxlength="40" placeholder="e.g. About us or Eid offer"></div>
-        <div class="field"><label>Page type</label>${wsKinds(full ? "landing" : "menu")}</div>${wsLandingOpts(null)}
-        ${full ? `<p class="muted small">The menu already has ${MENU_MAX} pages, so a new menu page can't be added.</p>` : ""}`,
+      body: `<div class="field"><label>Page name</label><input class="input" name="title" required maxlength="40" placeholder="${kind === "menu" ? "e.g. About us" : "e.g. Eid offer"}"></div>${kind === "landing" ? wsLandingOpts(null) : ""}`,
       onSubmit: (v) => {
-        if (v.kind === "menu" && menuTopCount() >= MENU_MAX) { toast(`The menu holds ${MENU_MAX} pages. Make it a landing page.`); return false; }
         const np = { id: uid("pg"), title: v.title, slug: uniqueSlug(v.title), inNav: false };
         np.sections = SiteKit.pageSections(np, { site: store.site, products: store.products });
         store.pages.push(np);
-        if (v.kind === "menu") addToMenu(np); else { np.hideHeader = !v.header; np.hideMbar = !v.mbar; }
-        wpTab = np.id; wpSec = null;
-        touchSite(); persist(); rerender(); toast("Page created");
+        if (kind === "menu") addToMenu(np);
+        else { np.hideHeader = !v.header; np.hideMbar = !v.mbar; }
+        touchSite(); persist(); toast("Page created");
+        location.hash = `#/website?page=${np.id}&split=1`;
       },
-      onOpen: wsKindSwitch,
     });
   };
   // A live preview whose parts can be tapped: outline(d) marks the chosen part, tap(target) picks one
@@ -2021,64 +1976,44 @@ export const start = async () => {
       },
     },
 
-    // ---------- Website → Edit Pages: a tab for each page, the page live, and its parts ----------
+    // ---------- Website → Edit Pages: every page as a card; Edit opens it with the page left and its content right ----------
     "site-pages": {
       title: "Edit Pages",
       render: () => {
-        const pg = wpPage();
+        const menuN = menuTopCount(), canAdd = withinLimit(plan().pages, pageCount());
+        const menu = menuRows(), checkout = store.pages.filter((p) => p.system), landing = store.pages.filter((p) => !p.inNav && !p.system);
+        const card = (p, kind, child) => {
+          const chips = kind === "landing" ? [p.hideHeader && "No header", p.hideMbar && "No sticky bar"].filter(Boolean) : child ? ["In a dropdown"] : [];
+          const n = (p.sections || []).filter((x) => !x.hidden).length;
+          return `<article class="pc">
+            <a class="pc-top" href="#/website?page=${p.id}&split=1"><span class="wl-ico ${kind}">${icon(kind === "checkout" ? "cart" : kind === "landing" ? "rocket" : p.locked ? "home" : "pages")}</span>
+              <span class="wl-t"><b>${esc(p.title)}</b><small>/${esc(p.slug)} · ${n} ${n === 1 ? "part" : "parts"}</small>${chips.length ? `<span class="wl-chips">${chips.map((c) => `<i>${c}</i>`).join("")}</span>` : ""}</span></a>
+            <div class="pc-acts">
+              <a class="btn btn-primary pc-edit" href="#/website?page=${p.id}&split=1">${icon("edit")}Edit</a>
+              <button type="button" class="btn pc-set" data-wp-set="${p.id}" aria-label="Settings for ${esc(p.title)}" title="Settings">${icon("settings")}</button>
+            </div>
+          </article>`;
+        };
+        const group = (title, sub, cards, add) => `<section class="pc-group"><div class="wl-head"><div><b>${title}</b><small>${sub}</small></div></div><div class="pc-list">${cards || '<p class="wl-empty">No pages yet.</p>'}</div>${add || ""}</section>`;
         return `${wsTop("Edit Pages")}
-          <div class="mn-tabs wp-tabs" role="tablist">${wpTabs()}</div>
-          <div class="card ws-live wp-live">${wsScreen(pageDoc(pg), "auto", "wp-screen")}</div>
-          <div class="mn-cards">${wpCards()}</div>
+          <p class="ws-intro">Tap Edit to change a page. <span class="wp-meter${menuN >= MENU_MAX ? " full" : ""}">${menuN}/${MENU_MAX} in menu</span></p>
+          ${group("Menu pages", "Linked in your website's menu, up to " + MENU_MAX, menu.map((r) => card(r.p, "menu", r.child)).join(""),
+            canAdd && menuN < MENU_MAX ? `<button type="button" class="wl-add" data-wp-add="menu">${icon("plus")}Add menu page</button>` : "")}
+          ${group("Checkout page", "Where customers place their order", checkout.map((p) => card(p, "checkout")).join(""))}
+          ${group("Landing pages", "Outside the menu, for ads and offers. The header or sticky bar can be hidden on them.", landing.map((p) => card(p, "landing")).join(""),
+            canAdd ? `<button type="button" class="wl-add" data-wp-add="landing">${icon("plus")}Add landing page</button>` : "")}
+          ${canAdd ? "" : `<p class="ws-intro">Your ${esc(plan().name)} plan allows ${plan().pages} pages.</p>`}
         </div>`;
-      },
-      update: (view) => {
-        const sc = view.querySelector(".wp-screen");
-        if (!sc || sc.dataset.page !== wpPage().id) return false;
-        view.querySelector(".wp-tabs").innerHTML = wpTabs();
-        view.querySelector(".mn-cards").innerHTML = wpCards();
-        view.querySelector(".ws-publish").classList.toggle("has-changes", unpublished());
-        wsSwap(sc, pageDoc(wpPage()));
-        if (sc.onFit) sc.onFit();
-        return true;
       },
       mount: (view) => {
         // Listeners go on this screen (made anew with each draw), never on #view, so they never pile up
         const root = view.querySelector(".ws-page");
-        const sc = view.querySelector(".wp-screen");
-        sc.dataset.page = wpPage().id;
-        wsMount(view);
-        const page = () => wpPage();
-        const pick = (sid, scroll) => {
-          wpSec = sid; go();
-          if (scroll) { const f = [...sc.querySelectorAll("iframe")].pop(), el = f.contentDocument && f.contentDocument.querySelector(`[data-sid="${CSS.escape(sid)}"]`); if (el) f.contentWindow.scrollTo({ top: Math.max(0, el.offsetTop - 12), behavior: "smooth" }); }
-          const c = view.querySelector(".wp-sel"); if (c) c.scrollIntoView({ block: "nearest", behavior: "smooth" });
-        };
-        sc.onFit = wsParts(sc, "[data-sid]{cursor:pointer}body[data-sel] [data-sel-on]{outline:2.5px dashed #0e7a4b;outline-offset:-3px}",
-          (d) => { d.querySelectorAll("[data-sel-on]").forEach((x) => x.removeAttribute("data-sel-on")); const el = wpSec && d.querySelector(`[data-sid="${CSS.escape(wpSec)}"]`); if (el) el.setAttribute("data-sel-on", ""); d.body.toggleAttribute("data-sel", !!el); },
-          (t) => { const el = t.closest("[data-sid]"); if (el) pick(el.dataset.sid, false); });
-        const saved = (msg) => { touchSite(); persist(); go(); if (msg) toast(msg); };
         root.addEventListener("click", (e) => {
-          const t = e.target.closest("[data-wp-tab], [data-wp-new], [data-wp-set], [data-wp-pick], [data-wp-act]");
-          if (!t) return;
-          if (t.dataset.wpTab) { if (t.dataset.wpTab !== wpTab) { wpTab = t.dataset.wpTab; wpSec = null; rerender(); } return; }
-          if (t.hasAttribute("data-wp-new")) { wsNewPage(); return; }
-          if (t.dataset.wpSet) { wsPageSettings(page()); return; }
-          if (t.dataset.wpPick) { pick(t.dataset.wpPick, true); return; }
-          const list = page().sections, i = list.findIndex((x) => x.id === wpSec), s = list[i];
-          if (!s) return;
-          const act = t.dataset.wpAct;
-          if (act === "up" && i > 0 && list[i - 1].type !== "checkout") { [list[i - 1], list[i]] = [list[i], list[i - 1]]; saved(); }
-          else if (act === "down" && i < list.length - 1) { [list[i + 1], list[i]] = [list[i], list[i + 1]]; saved(); }
-          else if (act === "hide" && s.type !== "checkout") { s.hidden = !s.hidden; saved(s.hidden ? "Hidden on your website" : "Shown again"); }
+          const b = e.target.closest("[data-wp-set], [data-wp-add]");
+          if (!b) return;
+          if (b.dataset.wpAdd) wsAddPage(b.dataset.wpAdd);
+          else wsPageSettings(store.pages.find((p) => p.id === b.dataset.wpSet));
         });
-        root.addEventListener("change", (e) => {
-          const el = e.target, pg = page();
-          if (el.dataset.wpShow === "header") { pg.hideHeader = !el.checked; saved(); }
-          else if (el.dataset.wpShow === "mbar") { pg.hideMbar = !el.checked; saved(); }
-        });
-        // The tab of the open page in view
-        const on = view.querySelector(".wp-tabs .on"); if (on) on.scrollIntoView({ inline: "center", block: "nearest" });
       },
     },
 
