@@ -25,13 +25,23 @@ export const SiteKit = (() => {
     friendly: { label: "Friendly", css: "'Poppins', ui-sans-serif, sans-serif" },
     // Made for Bangla text, with clean Latin letters too
     bangla: { label: "Bangla", css: "'Hind Siliguri', 'Noto Sans Bengali', ui-sans-serif, sans-serif" },
+    // Bangla with character: an elegant serif (beauty, jewelry) and a rounded, friendly face (grocery)
+    serifbn: { label: "Bangla elegant", css: "'Tiro Bangla', 'Hind Siliguri', Georgia, serif" },
+    roundbn: { label: "Bangla rounded", css: "'Baloo Da 2', 'Hind Siliguri', ui-sans-serif, sans-serif" },
   };
-  const FONT_LINK = "https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;600;700&family=Poppins:wght@400;500;600;700&display=swap";
-  const TEMPLATE_FONTS = { "luxe-store": "bangla", "bistro-restaurant": "elegant", "writely-blog": "classic", "mia-personal": "friendly" };
-  const TEMPLATE_BODY_FONTS = { "luxe-store": "bangla" };
+  const FONT_LINK = "https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Tiro+Bangla&family=Baloo+Da+2:wght@500;600;700&display=swap";
+  const TEMPLATE_FONTS = { "luxe-store": "bangla", "saas-landing": "bangla", "mia-personal": "serifbn", "bistro-restaurant": "roundbn", "growify-agency": "bangla", "nova-portfolio": "serifbn", "writely-blog": "bangla", "fixly-services": "bangla", "launchly-landing": "bangla" };
+  const TEMPLATE_BODY_FONTS = { "luxe-store": "bangla", "saas-landing": "bangla", "mia-personal": "bangla", "bistro-restaurant": "bangla", "growify-agency": "bangla", "nova-portfolio": "bangla", "writely-blog": "bangla", "fixly-services": "bangla", "launchly-landing": "bangla" };
   // Templates with a look of their own: a class on the website (styled in site.css) and,
   // with sizes, placeholders that show the photo size to upload (e.g. 1920 × 800)
-  const THEMES = { "luxe-store": { cls: "theme-fashion", sizes: true } };
+  // Every template shares the store design (.theme-store) and adds its own look on top
+  const THEMES = {
+    "luxe-store": { cls: "theme-store theme-fashion", sizes: true }, "saas-landing": { cls: "theme-store theme-tech", sizes: true },
+    "mia-personal": { cls: "theme-store theme-beauty", sizes: true }, "bistro-restaurant": { cls: "theme-store theme-grocery", sizes: true },
+    "growify-agency": { cls: "theme-store theme-home", sizes: true }, "nova-portfolio": { cls: "theme-store theme-jewel", sizes: true },
+    "writely-blog": { cls: "theme-store theme-single theme-trail", sizes: true }, "fixly-services": { cls: "theme-store theme-single theme-kit", sizes: true },
+    "launchly-landing": { cls: "theme-store theme-single theme-launch", sizes: true },
+  };
   const themeOf = (site) => THEMES[(site && site.template) || ""] || {};
 
   const ICONS = {
@@ -349,6 +359,248 @@ export const SiteKit = (() => {
       },
     },
   };
+  // ---------- More starter websites: one per template, each with its own look (site.css .theme-*) ----------
+  // Photos: free stock photos from Unsplash (free for commercial use, no credit needed), in /assets/templates/<folder>/
+  const IMG = (folder) => (n) => `/assets/templates/${folder}/${n}.webp`;
+  const perks4 = (ctx, title, subtitle, items) => withContent(make("perks", ctx), { eyebrow: "", title, subtitle, items: items.map(([icon, t, x]) => ({ icon, title: t, text: x })) });
+  const reviews = (ctx, title, items) => withContent(make("testimonials", ctx), { eyebrow: "রিভিউ", title, items: items.map(([quote, name, role]) => ({ quote, name, role, rating: 5 })) }, { align: "center" });
+  const faqs = (ctx, items) => withContent(make("faq", ctx), { title: "সাধারণ প্রশ্ন", items: items.map(([q, a]) => ({ q, a })) });
+  const shopOf = (ctx, k, content) => withContent(make("products", ctx), {
+    eyebrow: "", subtitle: "", count: 24, viewAll: { text: "", link: "" }, showFilters: true, filterBy: "category", tabs: { all: "সবগুলো" }, button: "কার্টে যোগ করুন", wishlist: k.wishlist !== false, ...content,
+  }, { columns: k.columns || 4 });
+
+  // A whole store: Home (hero with slides and an offer badge, collections, products, an offer card, why us,
+  // reviews, newsletter), Shop, New, Offers and Contact
+  const storeStarter = (k) => {
+    const I = IMG(k.folder);
+    const shop = (ctx, content) => shopOf(ctx, k, content);
+    const why = (ctx) => perks4(ctx, `কেন ${(ctx.site && ctx.site.name) || "আমরা"}?`, k.whySub, k.why);
+    return {
+      lang: "bn",
+      site: () => ({
+        lang: "bn", headingFont: k.font, bodyFont: "bangla", radius: k.radius || "soft", about: k.about,
+        header: { logo: "", announcement: { show: true, text: k.announce }, search: true, searchBar: true, searchText: k.search, account: true, cart: true, style: blankStyle(), buttons: { wishlist: k.wishlist !== false } },
+        footer: { text: k.footer, showMenu: true, showContact: true, showSocial: true, copyright: "", style: blankStyle() },
+      }),
+      pages: [["হোম", ""], ["সব প্রোডাক্ট", "shop"], ["নতুন এসেছে", "new"], ["অফার", "offers"], ["যোগাযোগ", "contact"]],
+      sections: {
+        "": (ctx) => {
+          const site = ctx.site || {}, own = site.headline && site.headline !== k.headline;
+          return [
+            withContent(make("hero", ctx), {
+              eyebrow: k.eyebrow, title: own ? site.headline : k.title, accent: own ? "" : k.accent, subtitle: own && site.sub ? site.sub : k.sub,
+              btn1: { text: k.cta, link: "/shop" }, btn2: { text: k.cta2, link: "/offers" }, image: I("hero-1"), slides: [{ image: I("hero-2") }, { image: I("hero-3") }],
+              badge: { show: true, top: k.badge[0], big: k.badge[1], bottom: k.badge[2] },
+              features: k.strip.map(([icon, title, text]) => ({ icon, title, text })),
+            }, { layout: "story" }),
+            withContent(make("categories", ctx), {
+              eyebrow: "", title: k.catTitle, subtitle: k.catSub, viewAll: { text: "সব দেখুন", link: "/shop" },
+              items: k.cats.map(([name, img]) => ({ name, image: I("cat-" + img), link: "/shop" })),
+            }),
+            shop(ctx, { title: k.popTitle, subtitle: k.popSub, count: 8, filterBy: "label", tabs: { all: "সবগুলো", new: "নতুন", best: "বেস্ট সেলার", sale: "অফার" } }),
+            withContent(make("featured", ctx), { eyebrow: k.promo[0], title: k.promo[1], text: k.promo[2], button: { text: k.promo[3], link: "/offers" }, image: I("promo") }, { imageSide: "right", padding: "s" }),
+            why(ctx),
+            reviews(ctx, "কাস্টমাররা যা বলছেন", k.reviews),
+            withContent(make("newsletter", ctx), { title: k.news, text: "", placeholder: "আপনার ইমেইল লিখুন...", button: "সাবস্ক্রাইব করুন", showSocial: true }, { align: "left", padding: "s" }),
+          ];
+        },
+        shop: (ctx) => [shop(ctx, { title: "সব প্রোডাক্ট", subtitle: k.catSub })],
+        new: (ctx) => [shop(ctx, { title: "নতুন এসেছে", subtitle: "একদম নতুন প্রোডাক্টগুলো সবার আগে দেখুন", only: "new", showFilters: false })],
+        offers: (ctx) => [shop(ctx, { title: "অফার", subtitle: "সীমিত সময়ের জন্য বিশেষ দামে", only: "sale", showFilters: false })],
+        about: (ctx) => [withContent(make("about", ctx), { image: I("promo") }), why(ctx), reviews(ctx, "কাস্টমাররা যা বলছেন", k.reviews)],
+        contact: (ctx) => [make("contact", ctx), faqs(ctx, k.faq)],
+      },
+    };
+  };
+
+  // One product, one page: the product big at the top, why it's worth it, its story, the versions to pick
+  // (or add-ons), reviews and questions. "অর্ডার করুন" buttons scroll to the products (#order).
+  const singleStarter = (k) => {
+    const I = IMG(k.folder);
+    return {
+      lang: "bn",
+      site: () => ({
+        lang: "bn", headingFont: k.font || "bangla", bodyFont: "bangla", radius: k.radius || "soft", about: k.about,
+        header: { logo: "", announcement: { show: true, text: k.announce }, search: false, searchBar: false, account: false, cart: true, style: blankStyle(), cta: { show: true, text: "অর্ডার করুন", link: "#order" } },
+        footer: { text: k.footer, showMenu: true, showContact: true, showSocial: true, copyright: "", style: blankStyle() },
+      }),
+      pages: [["হোম", ""], ["রিভিউ", "reviews"], ["যোগাযোগ", "contact"]],
+      sections: {
+        "": (ctx) => {
+          const site = ctx.site || {}, own = site.headline && site.headline !== k.headline;
+          return [
+            withContent(make("hero", ctx), {
+              eyebrow: k.eyebrow, title: own ? site.headline : k.title, accent: own ? "" : k.accent, subtitle: own && site.sub ? site.sub : k.sub,
+              btn1: { text: k.cta, link: "#order" }, btn2: { text: "রিভিউ দেখুন", link: "/reviews" }, image: I("hero-1"), slides: [],
+              badge: { show: true, top: k.badge[0], big: k.badge[1], bottom: k.badge[2] },
+              features: k.strip.map(([icon, title, text]) => ({ icon, title, text })),
+            }, { layout: "split", padding: "m" }),
+            perks4(ctx, k.whyTitle, k.whySub, k.why),
+            withContent(make("featured", ctx), { eyebrow: k.story[0], title: k.story[1], text: k.story[2], button: { text: k.cta, link: "#order" }, image: I("story") }, { imageSide: "left" }),
+            shopOf(ctx, { ...k, wishlist: false }, { eyebrow: "অর্ডার করুন", title: k.pickTitle, subtitle: k.pickSub, count: 4, showFilters: false, viewAll: { text: "", link: "" } }),
+            reviews(ctx, k.reviewTitle, k.reviews),
+            faqs(ctx, k.faq),
+            withContent(make("banner", ctx), { image: I(k.bannerImg || "promo"), title: k.banner[0], text: k.banner[1], button: { text: k.cta, link: "#order" } }),
+          ];
+        },
+        reviews: (ctx) => [reviews(ctx, k.reviewTitle, [...k.reviews, ...k.moreReviews])],
+        contact: (ctx) => [make("contact", ctx), faqs(ctx, k.faq)],
+      },
+    };
+  };
+
+  const STORES = {
+    "saas-landing": storeStarter({
+      folder: "electronics", font: "bangla", radius: "soft",
+      headline: "প্রতিদিনের জীবনে স্মার্ট গ্যাজেট", eyebrow: "অরিজিনাল প্রোডাক্ট · অফিসিয়াল ওয়ারেন্টি", title: "স্মার্ট গ্যাজেট,\nস্মার্ট দামে", accent: "ঘরে বসেই",
+      sub: "ইয়ারবাড, স্মার্টওয়াচ, ফোন আর ল্যাপটপ — ১০০% অরিজিনাল, ওয়ারেন্টিসহ। ঢাকায় পরদিন, সারাদেশে ২–৩ দিনে ডেলিভারি।",
+      cta: "এখনই কিনুন", cta2: "আজকের অফার", badge: ["সর্বোচ্চ", "৩০%", "ছাড়"],
+      announce: "⚡ ফ্ল্যাশ সেল চলছে — সব ইয়ারবাডে ৩০% পর্যন্ত ছাড়, ক্যাশ অন ডেলিভারি", search: "ফোন, ইয়ারবাড, স্মার্টওয়াচ খুঁজুন...",
+      strip: [["shield", "অফিসিয়াল ওয়ারেন্টি", "৬ মাস থেকে ২ বছর"], ["truck", "দ্রুত ডেলিভারি", "ঢাকায় পরদিন"], ["return", "৭ দিনে রিপ্লেস", "সমস্যা হলে বদলে দিই"], ["headset", "এক্সপার্ট সাপোর্ট", "কেনার আগে ও পরে"]],
+      catTitle: "ক্যাটাগরি অনুযায়ী কিনুন", catSub: "আপনার প্রয়োজনের গ্যাজেট এক জায়গায়",
+      cats: [["স্মার্টফোন", "phones"], ["হেডফোন ও ইয়ারবাড", "audio"], ["স্মার্টওয়াচ", "watch"], ["ল্যাপটপ", "laptop"], ["এক্সেসরিজ", "accessories"]],
+      popTitle: "জনপ্রিয় গ্যাজেট", popSub: "এই মাসে সবচেয়ে বেশি বিক্রি হওয়া প্রোডাক্ট",
+      promo: ["সীমিত সময়ের অফার", "নতুন ল্যাপটপে ফ্রি ব্যাগ ও মাউস", "স্টুডেন্ট আর অফিসের কাজের জন্য সেরা ল্যাপটপ, সাথে উপহার।", "অফার দেখুন"],
+      whySub: "হাজারো কাস্টমার আমাদের উপর ভরসা করেন",
+      why: [["shield", "১০০% অরিজিনাল", "প্রতিটি প্রোডাক্ট যাচাই করা"], ["tag", "সেরা দাম", "দাম মিলিয়ে দেখুন"], ["clock", "EMI সুবিধা", "৩–১২ মাসের কিস্তি"], ["headset", "সাপোর্ট টিম", "সকাল ১০টা – রাত ১০টা"]],
+      reviews: [["ইয়ারবাডের সাউন্ড অসাধারণ, আর পরদিনই হাতে পেয়েছি। প্যাকেজিংও খুব ভালো ছিল।", "রাকিব হাসান", "ঢাকা"], ["অরিজিনাল প্রোডাক্ট, ওয়ারেন্টি কার্ডসহ পেয়েছি। দামও অন্য জায়গার চেয়ে কম।", "তানজিলা আক্তার", "চট্টগ্রাম"], ["কেনার আগে সাপোর্ট টিম খুব সুন্দর করে বুঝিয়ে দিয়েছে। ধন্যবাদ!", "মেহেদী হাসান", "সিলেট"]],
+      news: "নতুন গ্যাজেট আর ফ্ল্যাশ সেলের খবর সবার আগে পেতে সাবস্ক্রাইব করুন",
+      about: "আমরা অরিজিনাল ফোন, গ্যাজেট আর এক্সেসরিজ বিক্রি করি, অফিসিয়াল ওয়ারেন্টিসহ। প্রতিটি প্রোডাক্ট পাঠানোর আগে যাচাই করা হয়।",
+      footer: "অরিজিনাল গ্যাজেট, অফিসিয়াল ওয়ারেন্টি আর দ্রুত ডেলিভারি — সারা বাংলাদেশে।",
+      faq: [["প্রোডাক্ট কি অরিজিনাল?", "হ্যাঁ, প্রতিটি প্রোডাক্ট ১০০% অরিজিনাল এবং অফিসিয়াল ওয়ারেন্টিসহ।"], ["ডেলিভারিতে কতদিন লাগে?", "ঢাকায় পরদিন, ঢাকার বাইরে ২–৩ দিনে।"], ["ওয়ারেন্টি ক্লেইম কীভাবে করব?", "আমাদের হোয়াটসঅ্যাপে মেসেজ দিন, আমরা পুরো কাজটা করে দেব।"], ["ক্যাশ অন ডেলিভারি আছে?", "হ্যাঁ, প্রোডাক্ট হাতে পেয়ে টাকা দিতে পারবেন।"]],
+    }),
+    "mia-personal": storeStarter({
+      folder: "beauty", font: "serifbn", radius: "round",
+      headline: "আপনার ত্বকের যত্নে প্রকৃতির ছোঁয়া", eyebrow: "ডার্মাটোলজিস্ট টেস্টেড · ১০০% অথেনটিক", title: "আপনার ত্বকের যত্নে", accent: "প্রকৃতির ছোঁয়া",
+      sub: "বাংলাদেশের আবহাওয়া আর ত্বকের জন্য বাছাই করা স্কিনকেয়ার, মেকআপ আর হেয়ার কেয়ার। সব প্রোডাক্ট অথেনটিক, মেয়াদসহ।",
+      cta: "এখনই কিনুন", cta2: "বিউটি অফার", badge: ["নতুন কাস্টমার", "১৫%", "ছাড়"],
+      announce: "🌸 প্রথম অর্ডারে ১৫% ছাড় — কোড: GLOW15 · ১,৫০০ টাকার বেশি অর্ডারে ফ্রি ডেলিভারি", search: "সিরাম, ময়েশ্চারাইজার, লিপস্টিক খুঁজুন...",
+      strip: [["leaf", "প্রাকৃতিক উপাদান", "ক্ষতিকর কেমিক্যাল নেই"], ["shield", "১০০% অথেনটিক", "মেয়াদসহ প্রোডাক্ট"], ["truck", "ফ্রি ডেলিভারি", "১,৫০০ টাকার বেশি অর্ডারে"], ["gift", "সুন্দর প্যাকেজিং", "উপহার দেওয়ার মতো"]],
+      catTitle: "আপনার যা দরকার", catSub: "ত্বক, চুল আর সৌন্দর্যের যত্নে সব কিছু",
+      cats: [["স্কিনকেয়ার", "skincare"], ["মেকআপ", "makeup"], ["হেয়ার কেয়ার", "hair"], ["বডি কেয়ার", "body"], ["বিউটি টুলস", "tools"]],
+      popTitle: "সবার পছন্দের", popSub: "আমাদের কাস্টমারদের সবচেয়ে প্রিয় প্রোডাক্টগুলো",
+      promo: ["বিউটি কম্বো", "সিরাম + ময়েশ্চারাইজার কম্বোতে ২০% ছাড়", "সকাল-রাতের পুরো স্কিনকেয়ার রুটিন, এক প্যাকেজে।", "কম্বো দেখুন"],
+      whySub: "আপনার ত্বকের জন্য আমরা সবচেয়ে যত্নশীল",
+      why: [["leaf", "ক্লিন বিউটি", "প্যারাবেন ও সালফেট মুক্ত"], ["shield", "অথেনটিক প্রোডাক্ট", "সরাসরি ব্র্যান্ড থেকে"], ["heart", "স্কিন কনসালটেশন", "ফ্রিতে পরামর্শ নিন"], ["return", "সহজ রিটার্ন", "সিল না খুললে ৭ দিনে"]],
+      reviews: [["সিরামটা দুই সপ্তাহ ব্যবহার করেই ত্বক অনেক উজ্জ্বল লাগছে। প্যাকেজিংও খুব সুন্দর!", "নুসরাত জাহান", "ঢাকা"], ["অথেনটিক প্রোডাক্ট পেয়েছি, মেয়াদও অনেক দিন আছে। আবার অর্ডার করব।", "সাদিয়া ইসলাম", "খুলনা"], ["কোনটা আমার ত্বকের জন্য ভালো, সাপোর্ট টিম খুব সুন্দর করে বলে দিয়েছে।", "ফারহানা রহমান", "রাজশাহী"]],
+      news: "স্কিনকেয়ার টিপস আর এক্সক্লুসিভ অফার পেতে আমাদের সাথে থাকুন",
+      about: "আমরা বিশ্বাস করি সৌন্দর্যের যত্ন হওয়া উচিত সহজ আর নিরাপদ। তাই প্রতিটি প্রোডাক্ট আমরা নিজেরা যাচাই করে বেছে নিই।",
+      footer: "অথেনটিক স্কিনকেয়ার আর বিউটি প্রোডাক্ট, যত্ন করে প্যাক করা — সারা বাংলাদেশে।",
+      faq: [["প্রোডাক্ট কি অথেনটিক?", "হ্যাঁ, সব প্রোডাক্ট সরাসরি ব্র্যান্ড বা অনুমোদিত ডিস্ট্রিবিউটর থেকে আনা।"], ["আমার ত্বকের জন্য কোনটা ভালো?", "হোয়াটসঅ্যাপে আপনার ত্বকের ধরন জানান, আমরা ফ্রিতে পরামর্শ দেব।"], ["রিটার্ন করা যাবে?", "সিল না খোলা থাকলে ৭ দিনের মধ্যে রিটার্ন করতে পারবেন।"], ["ডেলিভারি চার্জ কত?", "ঢাকায় ৬০ টাকা, বাইরে ১২০ টাকা। ১,৫০০ টাকার বেশি অর্ডারে ফ্রি।"]],
+    }),
+    "bistro-restaurant": storeStarter({
+      folder: "grocery", font: "roundbn", radius: "round", wishlist: false, columns: 4,
+      headline: "তাজা বাজার, আপনার দরজায়", eyebrow: "আজকের তাজা বাজার", title: "তাজা বাজার,", accent: "আপনার দরজায়",
+      sub: "সবজি, ফল, চাল, ডাল, মাছ আর নিত্যপ্রয়োজনীয় সব কিছু — সকালে অর্ডার করলে বিকেলেই ডেলিভারি।",
+      cta: "বাজার শুরু করুন", cta2: "আজকের অফার", badge: ["প্রথম অর্ডারে", "১০০৳", "ছাড়"],
+      announce: "🥬 একই দিনে ডেলিভারি · ৯৯৯ টাকার বেশি অর্ডারে ডেলিভারি ফ্রি", search: "চাল, ডাল, সবজি, ফল খুঁজুন...",
+      strip: [["clock", "একই দিনে ডেলিভারি", "দুপুর ১২টার আগে অর্ডারে"], ["leaf", "তাজা ও বাছাই করা", "প্রতিদিন সকালের বাজার"], ["tag", "বাজারের চেয়ে কম দাম", "প্রতিদিনের অফার"], ["return", "পছন্দ না হলে ফেরত", "ডেলিভারির সময়ই"]],
+      catTitle: "ক্যাটাগরি", catSub: "যা দরকার, এক ক্লিকে",
+      cats: [["তাজা সবজি", "veg"], ["ফলমূল", "fruits"], ["চাল ও ডাল", "rice"], ["মসলা", "spices"], ["দুধ ও ডেইরি", "dairy"], ["বেকারি", "bakery"]],
+      popTitle: "আজকের সেরা কেনাকাটা", popSub: "সবচেয়ে বেশি অর্ডার হওয়া পণ্য",
+      promo: ["মাসের বাজার", "পুরো মাসের বাজারে ১২% পর্যন্ত সাশ্রয়", "চাল, ডাল, তেল, মসলা — মাসের বাজার এক অর্ডারে, ঘরে পৌঁছে দেব।", "প্যাকেজ দেখুন"],
+      whySub: "প্রতিদিনের বাজারে সময় আর টাকা দুটোই বাঁচান",
+      why: [["leaf", "প্রতিদিন তাজা", "সরাসরি কৃষক ও আড়ত থেকে"], ["clock", "দ্রুত ডেলিভারি", "২–৪ ঘণ্টার মধ্যে"], ["tag", "ন্যায্য দাম", "লুকানো খরচ নেই"], ["shield", "নিরাপদ খাবার", "পরিষ্কার প্যাকেজিং"]],
+      reviews: [["সবজিগুলো একদম তাজা ছিল, আর দুপুরে অর্ডার করে বিকেলেই পেয়ে গেছি।", "শারমিন সুলতানা", "মিরপুর, ঢাকা"], ["প্রতি মাসে এখান থেকেই মাসের বাজার করি। দামও কম, ঝামেলাও নেই।", "আরিফ হোসেন", "উত্তরা, ঢাকা"], ["আম আর ফলগুলো খুব মিষ্টি ছিল। ডেলিভারি ভাইয়েরাও খুব ভদ্র।", "মাহমুদা খাতুন", "ধানমন্ডি, ঢাকা"]],
+      news: "প্রতিদিনের অফার আর নতুন পণ্যের খবর পেতে সাবস্ক্রাইব করুন",
+      about: "আমরা প্রতিদিন সকালে বাজার থেকে তাজা পণ্য বাছাই করে আপনার ঘরে পৌঁছে দিই, যাতে আপনার সময় বাঁচে আর পরিবার পায় ভালো খাবার।",
+      footer: "তাজা বাজার আর নিত্যপ্রয়োজনীয় পণ্য, একই দিনে আপনার দরজায়।",
+      faq: [["কখন ডেলিভারি পাব?", "দুপুর ১২টার আগে অর্ডার করলে একই দিনে, পরে করলে পরদিন সকালে।"], ["সবজি পছন্দ না হলে?", "ডেলিভারির সময়ই ফেরত দিতে পারবেন, টাকা কাটা হবে না।"], ["ন্যূনতম অর্ডার কত?", "যেকোনো পরিমাণ অর্ডার করতে পারবেন। ৯৯৯ টাকার বেশি হলে ডেলিভারি ফ্রি।"], ["কোন এলাকায় ডেলিভারি দেন?", "ঢাকা শহরের সব এলাকায়। শীঘ্রই চট্টগ্রামেও।"]],
+    }),
+    "growify-agency": storeStarter({
+      folder: "home", font: "bangla", radius: "sharp", columns: 4,
+      headline: "আপনার ঘর, আপনার গল্প", eyebrow: "নতুন কালেকশন ২০২৬", title: "আপনার ঘর,", accent: "আপনার গল্প",
+      sub: "আরামদায়ক সোফা, চেয়ার, বেড আর লাইটিং — মানসম্মত কাঠ আর ফেব্রিকে তৈরি। ঢাকায় ফ্রি ডেলিভারি ও ফিটিং।",
+      cta: "কালেকশন দেখুন", cta2: "সেল দেখুন", badge: ["সীজন সেল", "২৫%", "পর্যন্ত ছাড়"],
+      announce: "🛋️ ঢাকায় ফ্রি ডেলিভারি ও ফিটিং · ০% কিস্তিতে কেনার সুযোগ", search: "সোফা, চেয়ার, ল্যাম্প খুঁজুন...",
+      strip: [["truck", "ফ্রি ডেলিভারি ও ফিটিং", "ঢাকা শহরে"], ["shield", "৫ বছরের ওয়ারেন্টি", "কাঠের ফ্রেমে"], ["clock", "০% কিস্তি", "৩–১২ মাস"], ["headset", "ফ্রি ডিজাইন পরামর্শ", "আপনার ঘর অনুযায়ী"]],
+      catTitle: "ঘরের প্রতিটি কোণের জন্য", catSub: "রুম অনুযায়ী বেছে নিন",
+      cats: [["সোফা", "sofa"], ["চেয়ার", "chair"], ["বেডরুম", "bedroom"], ["লাইটিং", "lighting"], ["ডেকোর", "decor"]],
+      popTitle: "বেস্ট সেলার", popSub: "যেগুলো সবচেয়ে বেশি ঘরে জায়গা পেয়েছে",
+      promo: ["নতুন কালেকশন", "স্ক্যান্ডিনেভিয়ান লিভিং রুম", "হালকা রঙ, প্রাকৃতিক কাঠ আর আরাম — আপনার ঘরের নতুন রূপ।", "দেখে নিন"],
+      whySub: "দীর্ঘদিন ব্যবহারের জন্য তৈরি",
+      why: [["diamond", "প্রিমিয়াম কাঠ", "সেগুন ও মেহগনি"], ["shield", "৫ বছরের ওয়ারেন্টি", "নিশ্চিন্তে কিনুন"], ["truck", "ফ্রি ফিটিং", "আমাদের টিম সেট করে দেবে"], ["clock", "কিস্তিতে কেনা", "০% সুদে"]],
+      reviews: [["সোফাটা ছবির চেয়েও সুন্দর, আর বসতে খুবই আরামদায়ক। ফিটিং টিম খুব যত্ন করে কাজ করেছে।", "সাবরিনা আহমেদ", "গুলশান, ঢাকা"], ["কিস্তিতে ডাইনিং চেয়ার কিনেছি, কোয়ালিটি দারুণ। একদম সময়মতো ডেলিভারি।", "ইমরান খান", "বনানী, ঢাকা"], ["রুমের মাপ বলে পরামর্শ নিয়েছিলাম, ঘরটা এখন অনেক সুন্দর লাগে।", "রুমানা পারভীন", "চট্টগ্রাম"]],
+      news: "নতুন কালেকশন আর সীজন সেলের খবর পেতে সাবস্ক্রাইব করুন",
+      about: "আমরা এমন ফার্নিচার বানাই যা দেখতে সুন্দর, ব্যবহারে আরামদায়ক আর বছরের পর বছর টিকে থাকে।",
+      footer: "আধুনিক ফার্নিচার আর হোম ডেকোর — ফ্রি ডেলিভারি, ফিটিং আর ৫ বছরের ওয়ারেন্টি।",
+      faq: [["ডেলিভারিতে কতদিন লাগে?", "স্টকে থাকলে ঢাকায় ৩–৫ দিন, অর্ডারে বানানো হলে ১৫–২০ দিন।"], ["কিস্তিতে কেনা যাবে?", "হ্যাঁ, অংশীদার ব্যাংকের কার্ডে ০% সুদে ৩–১২ মাসের কিস্তি।"], ["মাপ বা রঙ বদলানো যাবে?", "হ্যাঁ, বেশিরভাগ প্রোডাক্ট আপনার পছন্দের মাপ আর ফেব্রিকে বানিয়ে দিই।"], ["ওয়ারেন্টি কী কী ঢাকে?", "কাঠের ফ্রেমে ৫ বছর, ফেব্রিক ও ফোমে ১ বছর।"]],
+    }),
+    "nova-portfolio": storeStarter({
+      folder: "jewelry", font: "serifbn", radius: "sharp", columns: 4,
+      headline: "প্রতিটি মুহূর্ত হোক স্মরণীয়", eyebrow: "হাতে তৈরি · BIS হলমার্ক গোল্ড", title: "প্রতিটি মুহূর্ত", accent: "হোক স্মরণীয়",
+      sub: "বিয়ে, উৎসব আর প্রতিদিনের জন্য সোনা, রুপা আর মুক্তার গহনা — সার্টিফিকেটসহ, উপহারের বাক্সে।",
+      cta: "কালেকশন দেখুন", cta2: "উপহার খুঁজুন", badge: ["মজুরিতে", "৫০%", "ছাড়"],
+      announce: "✨ ব্রাইডাল কালেকশনে মজুরিতে ৫০% ছাড় · সব গহনায় ফ্রি গিফট বক্স", search: "নেকলেস, আংটি, কানের দুল খুঁজুন...",
+      strip: [["diamond", "সার্টিফাইড গহনা", "হলমার্ক ও সার্টিফিকেটসহ"], ["shield", "লাইফটাইম পলিশ", "ফ্রিতে নতুনের মতো"], ["gift", "ফ্রি গিফট বক্স", "প্রতিটি অর্ডারে"], ["truck", "ইনস্যুরড ডেলিভারি", "নিরাপদে আপনার হাতে"]],
+      catTitle: "কালেকশন", catSub: "প্রতিটি উপলক্ষের জন্য",
+      cats: [["নেকলেস", "necklace"], ["কানের দুল", "earrings"], ["আংটি", "rings"], ["ব্রেসলেট", "bracelet"], ["ঘড়ি", "watch"]],
+      popTitle: "সবচেয়ে প্রিয় গহনা", popSub: "আমাদের কাস্টমারদের বাছাই",
+      promo: ["ব্রাইডাল কালেকশন", "আপনার বিশেষ দিনের জন্য", "ঐতিহ্য আর আধুনিকতার মেলবন্ধনে তৈরি ব্রাইডাল সেট, মাপমতো বানিয়ে দেওয়া হয়।", "ব্রাইডাল দেখুন"],
+      whySub: "প্রজন্ম থেকে প্রজন্মে বিশ্বাসের নাম",
+      why: [["diamond", "খাঁটি সোনা ও রুপা", "হলমার্ক করা"], ["heart", "হাতে তৈরি", "দক্ষ কারিগরের কাজ"], ["return", "এক্সচেঞ্জ সুবিধা", "পুরনো গহনা বদলে নিন"], ["shield", "নিরাপদ ডেলিভারি", "ইনস্যুরেন্সসহ"]],
+      reviews: [["বিয়ের সেটটা ঠিক যেমন চেয়েছিলাম তেমন হয়েছে। সবাই প্রশংসা করেছে।", "তাসনিম চৌধুরী", "ঢাকা"], ["মায়ের জন্মদিনে মুক্তার মালা দিয়েছি, গিফট বক্সটাও অসাধারণ ছিল।", "শাহরিয়ার কবির", "সিলেট"], ["সার্টিফিকেটসহ খাঁটি সোনা পেয়েছি, দামও ন্যায্য। পুরো ভরসা করা যায়।", "নাজনীন সুলতানা", "চট্টগ্রাম"]],
+      news: "নতুন কালেকশন আর এক্সক্লুসিভ অফারের খবর পেতে সাবস্ক্রাইব করুন",
+      about: "তিন প্রজন্ম ধরে আমরা গহনা বানাই। প্রতিটি গহনা দক্ষ কারিগরের হাতে যত্ন করে তৈরি, খাঁটি সোনা আর রুপায়।",
+      footer: "হাতে তৈরি সোনা, রুপা আর মুক্তার গহনা — সার্টিফিকেট আর গিফট বক্সসহ।",
+      faq: [["গহনা কি খাঁটি?", "হ্যাঁ, প্রতিটি সোনার গহনা হলমার্ক করা এবং সার্টিফিকেটসহ দেওয়া হয়।"], ["মাপমতো বানানো যাবে?", "হ্যাঁ, আংটি আর ব্রাইডাল সেট আপনার মাপে বানিয়ে দিই (৭–১০ দিন)।"], ["পুরনো গহনা বদলানো যাবে?", "হ্যাঁ, বর্তমান বাজারদরে পুরনো গহনা বদলে নতুন নিতে পারবেন।"], ["ডেলিভারি কি নিরাপদ?", "সব গহনা ইনস্যুরেন্সসহ সিলড প্যাকেটে পাঠানো হয়।"]],
+    }),
+    "writely-blog": singleStarter({
+      folder: "backpack", font: "bangla", radius: "soft",
+      headline: "এক ব্যাগেই সব অ্যাডভেঞ্চার", eyebrow: "ট্রেইলো ৪০ লিটার · ওয়াটারপ্রুফ", title: "এক ব্যাগেই", accent: "সব অ্যাডভেঞ্চার",
+      sub: "বান্দরবান থেকে সাজেক — বৃষ্টিতেও ভিজবে না, কাঁধেও লাগবে না। ১৪টি পকেট, ল্যাপটপ স্লিভ আর ২ বছরের ওয়ারেন্টি।",
+      cta: "এখনই অর্ডার করুন", badge: ["আজকের দাম", "৩,৪৯০৳", "৪,৯৯০৳ নয়"],
+      announce: "🎒 প্রি-অর্ডারে ৩০% ছাড় · ক্যাশ অন ডেলিভারি · ৭ দিনের রিপ্লেসমেন্ট",
+      strip: [["shield", "২ বছরের ওয়ারেন্টি", "সেলাই আর চেইনে"], ["truck", "ফ্রি ডেলিভারি", "সারা বাংলাদেশে"], ["return", "৭ দিনে রিপ্লেস", "পছন্দ না হলে"]],
+      whyTitle: "কেন ট্রেইলো ব্যাগ?", whySub: "ট্রাভেলারদের জন্য, ট্রাভেলারদের বানানো",
+      why: [["leaf", "ওয়াটারপ্রুফ ফেব্রিক", "ভারী বৃষ্টিতেও শুকনো"], ["heart", "আরামদায়ক স্ট্র্যাপ", "লম্বা হাঁটায়ও ব্যথা নেই"], ["diamond", "১৪টি স্মার্ট পকেট", "সব কিছু গুছিয়ে রাখুন"], ["shield", "YKK চেইন", "বছরের পর বছর টেকে"]],
+      story: ["আমাদের গল্প", "পাহাড়ে ঘুরতে গিয়ে বানানো", "ভেজা ব্যাগ আর ছেঁড়া স্ট্র্যাপে বিরক্ত হয়ে আমরা নিজেরাই বানালাম ট্রেইলো। ৫০টিরও বেশি ট্রেইলে টেস্ট করা।"],
+      pickTitle: "আপনার রঙ বেছে নিন", pickSub: "চারটি রঙ, একই মান — স্টক সীমিত",
+      reviewTitle: "যারা ব্যবহার করছেন", reviews: [["কেওক্রাডং ট্রেকে নিয়ে গিয়েছিলাম, বৃষ্টিতেও ভেতরের কিছু ভেজেনি। দারুণ ব্যাগ!", "সাকিব আহমেদ", "ট্রাভেলার, ঢাকা"], ["অফিসে ল্যাপটপসহ রোজ ব্যবহার করি, কাঁধে একদম চাপ লাগে না।", "নাফিসা তাবাসসুম", "চট্টগ্রাম"], ["পকেটগুলো এত সুন্দর করে সাজানো যে সব কিছু হাতের কাছে পাই।", "জুবায়ের হোসেন", "সিলেট"]],
+      moreReviews: [["দাম অনুযায়ী মান অনেক ভালো। দুই বন্ধুকেও কিনতে বলেছি।", "তানভীর রহমান", "রাজশাহী"], ["সাজেক ট্রিপে পুরো কাপড়চোপড় এক ব্যাগে এঁটে গেছে।", "ফাহিম মুনতাসির", "খুলনা"]],
+      faq: [["ব্যাগে কত লিটার জায়গা?", "৪০ লিটার — ৩–৫ দিনের ট্রিপের জন্য যথেষ্ট।"], ["ল্যাপটপ রাখা যাবে?", "হ্যাঁ, ১৬ ইঞ্চি পর্যন্ত ল্যাপটপের জন্য প্যাডেড স্লিভ আছে।"], ["সত্যিই ওয়াটারপ্রুফ?", "হ্যাঁ, ফেব্রিক আর চেইন দুটোই ওয়াটার রেজিস্ট্যান্ট, সাথে রেইন কভারও আছে।"], ["পছন্দ না হলে?", "৭ দিনের মধ্যে বদলে নিতে পারবেন, কোনো প্রশ্ন ছাড়াই।"]],
+      banner: ["আপনার পরের ট্রিপের জন্য তৈরি তো?", "আজ অর্ডার করলে ২–৩ দিনে ঘরে পৌঁছে যাবে।"], bannerImg: "trail",
+      about: "ট্রেইলো বাংলাদেশের ট্রাভেলারদের জন্য বানানো ব্যাগ — টেকসই, ওয়াটারপ্রুফ আর আরামদায়ক।",
+      footer: "ট্রেইলো — বাংলাদেশের ট্রাভেলারদের জন্য বানানো ব্যাকপ্যাক।",
+    }),
+    "fixly-services": singleStarter({
+      folder: "toolkit", font: "bangla", radius: "soft",
+      headline: "ঘরের সব মেরামত, এক বাক্সে", eyebrow: "ফিক্সকিট ১০৮ পিস টুল সেট", title: "ঘরের সব মেরামত,", accent: "এক বাক্সে",
+      sub: "স্ক্রু ড্রাইভার, প্লাস, হাতুড়ি, রেঞ্চ, টেপ — ১০৮টি দরকারি টুল শক্ত কেসে। মিস্ত্রি ডাকার দিন শেষ।",
+      cta: "এখনই অর্ডার করুন", badge: ["আজকের দাম", "২,৪৯০৳", "৩,৯৯০৳ নয়"],
+      announce: "🧰 অফার শেষ হচ্ছে — ৩৮% ছাড় · ক্যাশ অন ডেলিভারি · লাইফটাইম ওয়ারেন্টি",
+      strip: [["shield", "লাইফটাইম ওয়ারেন্টি", "ভাঙলে বদলে দেব"], ["truck", "ফ্রি ডেলিভারি", "সারা বাংলাদেশে"], ["star", "১০,০০০+ কাস্টমার", "৪.৯ রেটিং"]],
+      whyTitle: "বাক্সের ভেতরে যা আছে", whySub: "প্রতিদিনের ছোট-বড় সব কাজের জন্য",
+      why: [["star", "৪৬টি বিট ও সকেট", "সব মাপের স্ক্রুর জন্য"], ["shield", "ক্রোম-ভ্যানাডিয়াম স্টিল", "মরিচা ধরে না"], ["diamond", "শক্ত ক্যারি কেস", "সব কিছু জায়গামতো"], ["heart", "আরামদায়ক হাতল", "হাতে চাপ লাগে না"]],
+      story: ["যাদের জন্য", "বাসা, অফিস আর গাড়ির জন্য", "পর্দা লাগানো, ফ্যান খোলা, ফার্নিচার জোড়া, গাড়ির ছোটখাটো কাজ — সব নিজেই করুন, মিনিটেই।"],
+      pickTitle: "আপনার সেট বেছে নিন", pickSub: "সাথে কিনলে আরও সাশ্রয়",
+      reviewTitle: "কাস্টমারদের অভিজ্ঞতা", reviews: [["বাসার সব ছোটখাটো কাজ এখন নিজেই করি। টুলগুলো খুব মজবুত।", "আশরাফুল আলম", "মোহাম্মদপুর, ঢাকা"], ["বাবাকে উপহার দিয়েছিলাম, উনি খুব খুশি। কেসটাও সুন্দর।", "রিফাত হোসেন", "কুমিল্লা"], ["দামের তুলনায় অনেক বেশি টুল। গাড়িতে সবসময় রাখি।", "মাসুদ রানা", "গাজীপুর"]],
+      moreReviews: [["স্ক্রু ড্রাইভারের বিটগুলো একদম পারফেক্ট মাপের।", "শফিকুল ইসলাম", "চট্টগ্রাম"], ["ক্যাশ অন ডেলিভারিতে পেয়েছি, দুই দিনেই।", "নাঈম উদ্দিন", "বগুড়া"]],
+      faq: [["বাক্সে কী কী আছে?", "স্ক্রু ড্রাইভার, ৪৬টি বিট ও সকেট, প্লাস, হাতুড়ি, রেঞ্চ, মাপার টেপ, লেভেল আর ছুরি — মোট ১০৮টি।"], ["ওয়ারেন্টি কেমন?", "যেকোনো টুল ভাঙলে আজীবন বিনা খরচে বদলে দেব।"], ["ডেলিভারিতে কতদিন?", "ঢাকায় ১–২ দিন, ঢাকার বাইরে ২–৩ দিন।"], ["টাকা কীভাবে দেব?", "ক্যাশ অন ডেলিভারি, বিকাশ বা নগদ — যেভাবে সুবিধা।"]],
+      banner: ["মিস্ত্রির অপেক্ষা আর নয়", "আজই অর্ডার করুন, সাথে লাইফটাইম ওয়ারেন্টি।"], bannerImg: "wall",
+      about: "ফিক্সকিট — প্রতিটি ঘরের জন্য দরকারি, মজবুত আর সাশ্রয়ী টুল সেট।",
+      footer: "ফিক্সকিট — ঘরের সব মেরামত, এক বাক্সে। লাইফটাইম ওয়ারেন্টি।",
+    }),
+    "launchly-landing": singleStarter({
+      folder: "earbuds", font: "bangla", radius: "round",
+      headline: "শব্দের নতুন অভিজ্ঞতা", eyebrow: "নোভা বাডস প্রো · নতুন লঞ্চ", title: "শব্দের নতুন", accent: "অভিজ্ঞতা",
+      sub: "অ্যাক্টিভ নয়েজ ক্যান্সেলেশন, ৩০ ঘণ্টা ব্যাটারি আর ক্রিস্টাল-ক্লিয়ার কল। ২ বছরের ওয়ারেন্টি।",
+      cta: "প্রি-অর্ডার করুন", badge: ["লঞ্চ অফার", "২,৯৯০৳", "৪,৫০০৳ নয়"],
+      announce: "🚀 লঞ্চ অফার — প্রথম ৫০০ জনের জন্য ৩৪% ছাড় · ফ্রি ডেলিভারি",
+      strip: [["clock", "৩০ ঘণ্টা ব্যাটারি", "কেসসহ"], ["shield", "২ বছরের ওয়ারেন্টি", "রিপ্লেসমেন্ট গ্যারান্টি"], ["truck", "ফ্রি ডেলিভারি", "সারা বাংলাদেশে"]],
+      whyTitle: "ছোট, কিন্তু শক্তিশালী", whySub: "আপনার প্রতিদিনের সঙ্গী",
+      why: [["headset", "নয়েজ ক্যান্সেলেশন", "বাইরের শব্দ বন্ধ"], ["clock", "১০ মিনিটে ২ ঘণ্টা", "ফাস্ট চার্জিং"], ["leaf", "IPX5 ওয়াটারপ্রুফ", "ঘাম আর বৃষ্টিতে নিশ্চিন্ত"], ["star", "৬টি মাইক", "পরিষ্কার কল"]],
+      story: ["ডিজাইন", "সারাদিন পরলেও কানে লাগে না", "মাত্র ৪.৮ গ্রাম ওজন আর তিন মাপের ইয়ার টিপ — যেকোনো কানে পারফেক্ট ফিট।"],
+      pickTitle: "আপনার নোভা বাডস", pickSub: "লঞ্চ অফার সীমিত সময়ের জন্য",
+      reviewTitle: "প্রথম কাস্টমারদের কথা", reviews: [["বাসে বসেও নয়েজ ক্যান্সেলেশন অন করলে একদম শান্ত। এই দামে অবিশ্বাস্য!", "আদনান সামি", "ঢাকা"], ["ব্যাটারি সত্যিই অনেকক্ষণ চলে। জিমেও ব্যবহার করি।", "ইশরাত জাহান", "চট্টগ্রাম"], ["কলে আমার কথা সবাই পরিষ্কার শুনতে পায়। অফিসের মিটিংয়ে দারুণ।", "রাফসান চৌধুরী", "সিলেট"]],
+      moreReviews: [["কেসটা পকেটে সহজেই এঁটে যায়।", "মুনিয়া আক্তার", "খুলনা"], ["ডেলিভারি পেয়েছি দুই দিনে, প্যাকেজিং প্রিমিয়াম।", "তাহমিদ হাসান", "রাজশাহী"]],
+      faq: [["আমার ফোনে চলবে?", "হ্যাঁ, ব্লুটুথ ৫.৩ — অ্যান্ড্রয়েড আর আইফোন দুটোতেই চলে।"], ["প্রি-অর্ডার কবে পাব?", "অর্ডারের ৩–৫ দিনের মধ্যে ডেলিভারি।"], ["ওয়ারেন্টি কেমন?", "২ বছর — কোনো সমস্যা হলে নতুন দিয়ে দেব।"], ["টাকা কখন দেব?", "ক্যাশ অন ডেলিভারি, অথবা বিকাশ/নগদে আগে দিতে পারেন।"]],
+      banner: ["লঞ্চ অফার শেষ হওয়ার আগেই", "প্রথম ৫০০ জন পাবেন ৩৪% ছাড়।"], bannerImg: "promo",
+      about: "নোভা — সবার জন্য প্রিমিয়াম সাউন্ড, সাশ্রয়ী দামে।",
+      footer: "নোভা বাডস — প্রিমিয়াম সাউন্ড, ২ বছরের ওয়ারেন্টি।",
+    }),
+  };
+  Object.assign(STARTERS, STORES);
   // The pages a new store on this template starts with, or null to use the usual Home, Shop, About and Contact
   const starterPages = (templateId) => {
     const st = STARTERS[templateId];
@@ -369,6 +621,80 @@ export const SiteKit = (() => {
       description: "১০০% কটন, আরামদায়ক ফিট। মেশিনে ধোয়া যায়, রং ওঠে না।", options: [{ name: "সাইজ", values: ["S", "M", "L", "XL", "XXL"] }],
     })),
   };
+  // Sample products for the other templates: [name, price, price before sale, label, category, photo, stock, description, options]
+  const sampleSet = (folder, rows) => rows.map(([name, price, compare, badge, category, img, stock, description, options]) => ({
+    name, price, compare, badge, category, stock, color: "#eef0f2", image: IMG(folder)("p-" + img), images: [IMG(folder)("p-" + img)], description, options: options || [],
+  }));
+  const COLORS = (v) => [{ name: "রঙ", values: v }];
+  Object.assign(SAMPLE_PRODUCTS, {
+    "saas-landing": sampleSet("electronics", [
+      ["প্রো ওয়্যারলেস ইয়ারবাড", 2990, 4290, "best", "হেডফোন ও ইয়ারবাড", "earbuds", 42, "নয়েজ ক্যান্সেলেশন, ২৮ ঘণ্টা ব্যাটারি, ১ বছরের ওয়ারেন্টি।", COLORS(["সাদা", "কালো"])],
+      ["স্টুডিও হেডফোন", 3490, 0, "new", "হেডফোন ও ইয়ারবাড", "headphones", 18, "গভীর বেস আর আরামদায়ক কুশন। ৩.৫মিমি ও ব্লুটুথ।"],
+      ["ANC ওভার-ইয়ার হেডফোন", 6990, 8990, "sale", "হেডফোন ও ইয়ারবাড", "anc", 12, "অ্যাক্টিভ নয়েজ ক্যান্সেলেশন, ৪০ ঘণ্টা ব্যাটারি।"],
+      ["স্মার্টওয়াচ সিরিজ ৮", 4500, 5990, "best", "স্মার্টওয়াচ", "watch", 25, "হার্ট রেট, SpO2, ১০০+ স্পোর্টস মোড, ১০ দিন ব্যাটারি।", COLORS(["কালো", "সিলভার"])],
+      ["স্মার্টফোন X (৮/২৫৬)", 32990, 35990, "new", "স্মার্টফোন", "phone", 9, "৬.৭ ইঞ্চি AMOLED, ৫০MP ক্যামেরা, ৫০০০mAh ব্যাটারি।", [{ name: "স্টোরেজ", values: ["১২৮GB", "২৫৬GB"] }]],
+      ["আল্ট্রাবুক ১৪", 74990, 82990, "sale", "ল্যাপটপ", "laptop", 6, "Core i5, ১৬GB RAM, ৫১২GB SSD, ১.৩ কেজি।"],
+      ["ওয়্যারলেস কীবোর্ড", 1890, 0, "", "এক্সেসরিজ", "keyboard", 30, "নিঃশব্দ বাটন, রিচার্জেবল, ৩টি ডিভাইসে কানেক্ট।"],
+      ["১১ ইঞ্চি ট্যাবলেট", 24990, 27990, "new", "ল্যাপটপ", "tablet", 11, "পড়াশোনা আর বিনোদনের জন্য, স্টাইলাস সাপোর্ট।"],
+    ]),
+    "mia-personal": sampleSet("beauty", [
+      ["ভিটামিন সি ব্রাইটেনিং সিরাম", 1290, 1690, "best", "স্কিনকেয়ার", "serum", 40, "১৫% ভিটামিন সি — দাগ হালকা করে, ত্বক উজ্জ্বল করে। ৩০ মিলি।"],
+      ["রোজহিপ ফেস অয়েল", 1490, 0, "new", "স্কিনকেয়ার", "face-oil", 22, "কোল্ড-প্রেসড রোজহিপ অয়েল, শুষ্ক ত্বকের জন্য। ৩০ মিলি।"],
+      ["হাইড্রেটিং ময়েশ্চারাইজার", 990, 1350, "sale", "স্কিনকেয়ার", "cream", 35, "হায়ালুরোনিক অ্যাসিড, হালকা জেল টেক্সচার। ৫০ গ্রাম।"],
+      ["লিপ স্ক্রাব ও বাম", 590, 0, "", "মেকআপ", "lip", 50, "চিনি আর শিয়া বাটারে নরম ঠোঁট।"],
+      ["শিয়া বডি লোশন", 850, 1100, "sale", "বডি কেয়ার", "lotion", 28, "সারাদিন আর্দ্রতা, হালকা সুগন্ধ। ২০০ মিলি।"],
+      ["রিপেয়ার শ্যাম্পু ও কন্ডিশনার", 1190, 0, "best", "হেয়ার কেয়ার", "shampoo", 30, "ক্ষতিগ্রস্ত চুলের জন্য সালফেট-মুক্ত সেট।"],
+      ["প্রো মেকআপ ব্রাশ", 690, 0, "new", "বিউটি টুলস", "brush", 45, "নরম সিনথেটিক ব্রিসল, ফাউন্ডেশন ও পাউডারের জন্য।"],
+      ["নিউড মেকআপ কিট", 2490, 3290, "best", "মেকআপ", "makeup", 14, "আইশ্যাডো, ব্লাশ, লিপস্টিক আর ব্রাশ — সম্পূর্ণ সেট।"],
+    ]),
+    "bistro-restaurant": sampleSet("grocery", [
+      ["মিনিকেট চাল (৫ কেজি)", 420, 450, "best", "চাল ও ডাল", "rice", 80, "পরিষ্কার, ঝরঝরে মিনিকেট চাল।", [{ name: "ওজন", values: ["৫ কেজি", "১০ কেজি", "২৫ কেজি"] }]],
+      ["আলু (১ কেজি)", 45, 0, "", "তাজা সবজি", "potato", 120, "দেশি আলু, প্রতিদিন সকালের বাজার থেকে।"],
+      ["রাজশাহীর হিমসাগর আম (১ কেজি)", 140, 160, "new", "ফলমূল", "mango", 60, "কার্বাইড-মুক্ত, গাছপাকা হিমসাগর।"],
+      ["খাঁটি সরিষার তেল (১ লিটার)", 260, 290, "sale", "মসলা", "oil", 45, "ঘানি ভাঙা খাঁটি সরিষার তেল।"],
+      ["মসলা প্যাক", 320, 380, "sale", "মসলা", "spices", 30, "হলুদ, মরিচ, ধনিয়া, জিরা — ৪টি ১০০ গ্রাম প্যাক।"],
+      ["পাস্তুরিত দুধ (১ লিটার)", 95, 0, "best", "দুধ ও ডেইরি", "milk", 70, "খামার থেকে সরাসরি, ঠাণ্ডা রেখে ডেলিভারি।"],
+      ["লাল আপেল (১ কেজি)", 260, 290, "", "ফলমূল", "apple", 40, "মিষ্টি আর রসালো আপেল।"],
+      ["তরমুজ (১টি, ৩–৪ কেজি)", 180, 0, "new", "ফলমূল", "watermelon", 25, "লাল টকটকে, মিষ্টি তরমুজ।"],
+    ]),
+    "growify-agency": sampleSet("home", [
+      ["ভেলভেট ৩-সিটার সোফা", 48500, 58000, "best", "সোফা", "velvet-sofa", 5, "সেগুন কাঠের ফ্রেম, ভেলভেট ফেব্রিক, হাই-ডেনসিটি ফোম।", COLORS(["সবুজ", "নীল", "ধূসর"])],
+      ["লেদার সোফা", 72000, 0, "new", "সোফা", "leather-sofa", 3, "প্রিমিয়াম আর্টিফিশিয়াল লেদার, ৫ বছরের ফ্রেম ওয়ারেন্টি।"],
+      ["টাফটেড আর্মচেয়ার", 16500, 19500, "sale", "চেয়ার", "armchair", 8, "পড়ার কোণ বা বেডরুমের জন্য আরামদায়ক চেয়ার।"],
+      ["উডেন ডাইনিং চেয়ার", 7900, 0, "best", "চেয়ার", "dining-chair", 24, "কাঠের পা, নরম কুশন সিট। ২টির সেটে বিশেষ দাম।"],
+      ["মডার্ন অ্যাকসেন্ট চেয়ার", 6500, 7900, "sale", "চেয়ার", "accent-chair", 15, "হালকা, সহজে সরানো যায়, যেকোনো ঘরে মানানসই।"],
+      ["ইন্ডাস্ট্রিয়াল ফ্লোর ল্যাম্প", 5900, 0, "new", "লাইটিং", "lamp", 12, "অ্যাডজাস্টেবল মাথা, LED বাল্বসহ।"],
+      ["কাঠের বার স্টুল", 3900, 4500, "", "চেয়ার", "stool", 20, "নরডিক ডিজাইনের মজবুত স্টুল।"],
+      ["শেল লাউঞ্জ চেয়ার", 12900, 0, "new", "চেয়ার", "shell-chair", 7, "বাঁকানো কাঠ আর নরম কুশনের অনন্য ডিজাইন।"],
+    ]),
+    "nova-portfolio": sampleSet("jewelry", [
+      ["ব্রাইডাল গোল্ড নেকলেস সেট", 185000, 0, "best", "নেকলেস", "bridal", 2, "২২ ক্যারেট সোনা, রুবি পাথর, কানের দুলসহ সেট। হলমার্ক করা।"],
+      ["মুক্তার মালা", 8900, 10900, "sale", "নেকলেস", "pearl", 10, "প্রাকৃতিক মিঠা পানির মুক্তা, রুপার ক্ল্যাস্প।"],
+      ["হার্ট ডায়মন্ড পেনডেন্ট", 24500, 0, "new", "নেকলেস", "heart", 6, "১৮ ক্যারেট হোয়াইট গোল্ড, আসল ডায়মন্ড।"],
+      ["সলিটেয়ার ডায়মন্ড আংটি", 68000, 0, "best", "আংটি", "diamond-ring", 4, "০.৫ ক্যারেট ডায়মন্ড, সার্টিফিকেটসহ।", [{ name: "সাইজ", values: ["১২", "১৪", "১৬", "১৮"] }]],
+      ["কাপল গোল্ড ব্যান্ড", 42000, 46000, "sale", "আংটি", "gold-bands", 8, "দুটি ২১ ক্যারেট সোনার ব্যান্ড, নাম খোদাই ফ্রি।"],
+      ["গোল্ড চেইন ব্রেসলেট", 32000, 0, "new", "ব্রেসলেট", "chain", 5, "২২ ক্যারেট সোনা, কিউবান লিংক ডিজাইন।"],
+      ["গোল্ড হুপ ইয়াররিং", 14500, 16500, "sale", "কানের দুল", "hoops", 12, "প্রতিদিন পরার মতো হালকা সোনার হুপ।"],
+      ["ক্লাসিক লেদার ঘড়ি", 9500, 0, "", "ঘড়ি", "watch", 15, "রোজ গোল্ড কেস, আসল চামড়ার বেল্ট।"],
+    ]),
+    "writely-blog": sampleSet("backpack", [
+      ["ট্রেইলো ৪০ লিটার — স্টোন গ্রে", 3490, 4990, "best", "ব্যাকপ্যাক", "grey", 35, "ওয়াটারপ্রুফ, ১৪টি পকেট, ১৬\" ল্যাপটপ স্লিভ, রেইন কভারসহ।"],
+      ["ট্রেইলো ৪০ লিটার — মিডনাইট নেভি", 3490, 4990, "sale", "ব্যাকপ্যাক", "navy", 28, "ওয়াটারপ্রুফ, ১৪টি পকেট, ১৬\" ল্যাপটপ স্লিভ, রেইন কভারসহ।"],
+      ["ট্রেইলো ৪০ লিটার — অনিক্স ব্ল্যাক", 3490, 4990, "new", "ব্যাকপ্যাক", "black", 20, "ওয়াটারপ্রুফ, ১৪টি পকেট, ১৬\" ল্যাপটপ স্লিভ, রেইন কভারসহ।"],
+      ["ট্রেইলো ৪০ লিটার — ফরেস্ট গ্রিন", 3490, 4990, "", "ব্যাকপ্যাক", "green", 15, "ওয়াটারপ্রুফ, ১৪টি পকেট, ১৬\" ল্যাপটপ স্লিভ, রেইন কভারসহ।"],
+    ]),
+    "fixly-services": sampleSet("toolkit", [
+      ["ফিক্সকিট ১০৮ পিস টুল সেট", 2490, 3990, "best", "টুল সেট", "kit", 60, "১০৮টি টুল শক্ত কেসে, লাইফটাইম ওয়ারেন্টি।"],
+      ["ফিক্সকিট প্রো ১৮০ পিস", 3990, 5990, "new", "টুল সেট", "pro", 25, "প্রফেশনাল কাজের জন্য আরও বেশি টুল ও সকেট।"],
+      ["কর্ডলেস ড্রিল (১২V)", 3490, 4500, "sale", "অ্যাড-অন", "drill", 18, "২টি ব্যাটারি, ২০টি বিট, এক চার্জে ঘণ্টাখানেক কাজ।"],
+      ["ক্ল হ্যামার", 450, 0, "", "অ্যাড-অন", "hammer", 50, "ফাইবারগ্লাস হাতল, শক না লাগা গ্রিপ।"],
+    ]),
+    "launchly-landing": sampleSet("earbuds", [
+      ["নোভা বাডস প্রো — মিডনাইট", 2990, 4500, "best", "ইয়ারবাড", "buds", 120, "ANC, ৩০ ঘণ্টা ব্যাটারি, IPX5, ২ বছরের ওয়ারেন্টি।"],
+      ["নোভা বাডস প্রো — পার্ল হোয়াইট", 2990, 4500, "new", "ইয়ারবাড", "white", 90, "ANC, ৩০ ঘণ্টা ব্যাটারি, IPX5, ২ বছরের ওয়ারেন্টি।"],
+      ["নোভা বাডস লাইট", 1790, 2490, "sale", "ইয়ারবাড", "case", 150, "২০ ঘণ্টা ব্যাটারি, পরিষ্কার কল, পকেট সাইজ কেস।"],
+    ]),
+  });
   const sampleProducts = (templateId) => (SAMPLE_PRODUCTS[templateId] || []).map((p, i) => ({ id: "sample" + (i + 1), status: "active", images: [], image: "", ...JSON.parse(JSON.stringify(p)) }));
 
   // A whole sample store for a template (the Templates page preview)
@@ -950,7 +1276,7 @@ export const SiteKit = (() => {
     var draw = function () {
       var count = cart.reduce(function (a, it) { return a + it.qty; }, 0);
       // Themes that always show the count keep a "0" badge; the others show it once something is in the cart
-      document.querySelectorAll('.tools a[href="/checkout"]').forEach(function (a) { if (count || a.closest(".theme-fashion")) a.setAttribute("data-count", num(count)); else a.removeAttribute("data-count"); });
+      document.querySelectorAll('.tools a[href="/checkout"]').forEach(function (a) { if (count || a.closest(".theme-store")) a.setAttribute("data-count", num(count)); else a.removeAttribute("data-count"); });
       document.querySelectorAll(".s-mbar .mb-cart").forEach(function (a) { if (count) a.setAttribute("data-count", num(count)); else a.removeAttribute("data-count"); });
       document.querySelectorAll(".checkout").forEach(function (root) {
         var box = root.querySelector("[data-items]"), sub = subtotal(), d = root.querySelector('input[name="delivery"]:checked');
@@ -1095,7 +1421,7 @@ export const SiteKit = (() => {
     // opts.start: the page to open first (default: the home page)
     const first = Math.max(0, pages.findIndex((p) => p.id === opts.start));
     const all = pages.map((p, i) => `<div data-slug="${esc(p.slug || "")}"${i === first ? "" : " hidden"}>${renderBody(site, pages, { ...opts, page: p })}</div>`).join("");
-    const nav = `<script>document.addEventListener("click",function(e){var m=e.target.closest(".burger");if(m){m.closest(".s-header").classList.toggle("m-open");return}document.querySelectorAll(".m-open").forEach(function(h){h.classList.remove("m-open")});var a=e.target.closest("a[href^='/']");if(!a)return;var slug=a.getAttribute("href").slice(1),pg=document.querySelector('[data-slug="'+slug+'"]');e.preventDefault();if(!pg)return;document.querySelectorAll("[data-slug]").forEach(function(d){d.hidden=d!==pg});scrollTo(0,0)});<\/script>`;
+    const nav = `<script>document.addEventListener("click",function(e){var m=e.target.closest(".burger");if(m){m.closest(".s-header").classList.toggle("m-open");return}document.querySelectorAll(".m-open").forEach(function(h){h.classList.remove("m-open")});var o=e.target.closest("a[href='#order']");if(o){e.preventDefault();var pg0=document.querySelector("[data-slug]:not([hidden])")||document,t=pg0.querySelector(".s-products");if(!t){var h0=document.querySelector('[data-slug=""]');if(h0){document.querySelectorAll("[data-slug]").forEach(function(d){d.hidden=d!==h0});t=h0.querySelector(".s-products")}}if(t)t.scrollIntoView({behavior:"smooth",block:"start"});return}var a=e.target.closest("a[href^='/']");if(!a)return;var slug=a.getAttribute("href").slice(1),pg=document.querySelector('[data-slug="'+slug+'"]');e.preventDefault();if(!pg)return;document.querySelectorAll("[data-slug]").forEach(function(d){d.hidden=d!==pg});scrollTo(0,0)});<\/script>`;
     // What the shop script needs: products that are for sale and the discount codes that work
     const shop = {
       t: STRINGS[site.lang] || null, bn: site.lang === "bn", orderUrl: opts.orderUrl || "",

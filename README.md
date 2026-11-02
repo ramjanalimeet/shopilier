@@ -58,6 +58,18 @@ Sale buttons, a promo card, "Why us" cards and a newsletter bar. New stores on t
 "Reset page" in the editor goes back to it. Its look lives in `public/assets/site.css` under `.theme-fashion`, and empty
 photos show the size to upload (1920 × 800, 400 × 400, 600 × 600) in the editor and previews.
 
+**Every other template has its own starter website too**, all in Bangla, with sample products and free stock photos
+in `public/assets/templates/<folder>/` (about 3 MB in all, Unsplash licence, free for commercial use):
+Electronics & Gadgets (`saas-landing`), Beauty & Cosmetics (`mia-personal`), Grocery & Food (`bistro-restaurant`),
+Home & Furniture (`growify-agency`) and Jewelry & Accessories (`nova-portfolio`) are full stores (Home with a hero,
+an offer badge, collections, products, an offer card, why us, reviews and newsletter, plus Shop, New, Offers and Contact).
+The three Single Product templates (`writely-blog` backpack, `fixly-services` tool kit, `launchly-landing` earbuds) are
+one-page shops: the product big at the top, why it's worth it, its story, the versions to pick, reviews, FAQ and a final
+banner; their "অর্ডার করুন" buttons link to `#order`, which scrolls to the products. All templates share the store
+design in `site.css` (`.theme-store`) and add their own look (`.theme-tech`, `.theme-beauty`, `.theme-grocery`,
+`.theme-home`, `.theme-jewel`, `.theme-single` with `.theme-trail`, `.theme-kit`, `.theme-launch`). Two Bangla fonts
+give some of them character: Tiro Bangla (beauty, jewelry) and Baloo Da 2 (grocery).
+
 Store owners change all of it from the dashboard: every text, photo, slide, button and label in the website editor,
 the layout from each section's Layout menu, product labels on the product form, and the website's own words (Add to
 cart, the cart, prices) with **Website language** in Preferences. `/templates/preview/<id>` serves the real storefront
