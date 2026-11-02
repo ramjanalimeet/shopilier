@@ -995,7 +995,7 @@ export const start = async () => {
       <td class="muted">${day(o.date)}</td>
       ${compact ? "" : `<td>${tag(o.payment, PAY_COLOR[o.payment] || "gray")}</td>`}
       <td class="t-right" style="font-weight:600;color:var(--ink)">${taka(o.total)}</td>
-      <td>${compact ? statusTag(o.status) : `<select class="select" style="height:32px;width:auto;font-size:13px" data-action="order-status" data-id="${o.id}" aria-label="Order status">${Object.keys(ORDER_STATUS).map((s) => `<option${s === o.status ? " selected" : ""}>${s}</option>`).join("")}</select>`}</td>
+      <td>${compact ? statusTag(o.status) : `<select class="select" style="height:32px;width:auto;font-size:13px" data-action="order-status" data-id="${o.id}" data-status="${esc(o.status)}" aria-label="Order status">${Object.keys(ORDER_STATUS).map((s) => `<option${s === o.status ? " selected" : ""}>${s}</option>`).join("")}</select>`}</td>
       ${compact ? "" : `<td class="t-actions">${o.shipment ? "" : `<button class="icon-btn" data-action="ship-order" data-id="${o.id}" aria-label="Send to courier" title="Send to courier">${icon("truck")}</button>`}<button class="icon-btn" data-action="view-order" data-id="${o.id}" aria-label="View order">${icon("eye")}</button><button class="icon-btn danger" data-action="delete-order" data-id="${o.id}" aria-label="Delete order">${icon("trash")}</button></td>`}
     </tr>`).join("") : `<tr><td colspan="7" class="table-empty">No orders yet. They'll appear here as soon as customers buy.</td></tr>`;
   const orderTable = (orders, compact = false) => `<div class="table-wrap"><table class="table${compact ? "" : " t-orders"}">
@@ -1243,6 +1243,7 @@ export const start = async () => {
               <div class="g-card">
                 <div class="g-cover" style="background:${esc(p.color)}">${SiteKit.safeImg(p.image) ? `<img src="${esc(p.image)}" alt="">` : ""}${p.status === "draft" ? '<span class="tag gray">Draft</span>' : p.compare > p.price ? `<span class="g-badge sale">${Math.round((1 - p.price / p.compare) * 100)}% OFF</span>` : p.badge ? `<span class="g-badge">${p.badge === "new" ? "New" : p.badge === "best" ? "Best seller" : "Sale"}</span>` : ""}</div>
                 <button class="g-fab" type="button" data-action="edit-product" data-id="${p.id}" aria-label="Edit ${esc(p.name)}">${icon("edit")}</button>
+                <button class="g-del" type="button" data-action="delete-product" data-id="${p.id}" aria-label="Delete ${esc(p.name)}">${icon("trash")}</button>
                 <div class="g-body"><div class="g-title">${esc(p.name)}</div><div class="g-meta"><b style="color:var(--ink)">${taka(p.price)}</b>${p.category ? tag(p.category, "brown") : ""}<span class="muted small">${p.stock} in stock</span></div>
                 <div class="g-actions"><button class="btn btn-sm" data-action="edit-product" data-id="${p.id}">${icon("edit")}Edit</button><button class="icon-btn danger" data-action="delete-product" data-id="${p.id}" aria-label="Delete ${esc(p.name)}">${icon("trash")}</button></div></div>
               </div>`).join("") || '<p class="muted">No products yet.</p>'}</div></div>`}
@@ -3181,6 +3182,13 @@ export const start = async () => {
     if (!el || el.tagName === "SELECT" || el.tagName === "INPUT") return;
     const fn = actions[el.dataset.action];
     if (fn) { e.preventDefault(); fn(el); }
+  });
+  // Phones: a tap anywhere on an order card opens the order, and on a product card edits the product
+  view.addEventListener("click", (e) => {
+    if (!matchMedia("(max-width: 760px)").matches || e.target.closest("button, a, select, input, textarea, label, [data-action]")) return;
+    const card = e.target.closest(".t-orders tbody tr, .g-card");
+    const b = card && card.querySelector('[data-action="view-order"], [data-action="edit-product"]');
+    if (b) actions[b.dataset.action](b);
   });
   // Copy a discount code
   view.addEventListener("click", (e) => {
