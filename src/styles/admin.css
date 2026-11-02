@@ -2078,7 +2078,7 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 .wh-screen { height: auto; aspect-ratio: 9 / 17; max-height: calc(100dvh - 220px); background: #fff; }
 .wh-screen .ws-inner { background: #fff; }
 /* Each part of the website, outlined when its button is pointed at; tapping it opens its screen */
-.wh-hot { position: absolute; left: 4px; right: 4px; border: 1.5px dashed transparent; border-radius: 14px; transition: border-color .2s, background .2s; }
+.wh-hot { position: absolute; left: 4px; right: 4px; pointer-events: none; border: 1.5px dashed transparent; border-radius: 14px; transition: border-color .2s, background .2s; }
 .wh-hot.glow { border-color: var(--accent); background: rgba(14, 122, 75, .06); }
 /* The buttons: icon on top, then the name and what it changes, joined to their part by a line and a dot */
 .wh-pill { position: absolute; left: 0; right: 0; z-index: 2; display: grid; justify-items: center; gap: 5px; padding: 8px 3px 7px; border: 1px solid #e6e9ed; border-radius: 15px;
@@ -2129,3 +2129,6 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
   .g-del .i { width: 15px; height: 15px; }
   .g-del:active { background: #fef3f2; }
 }
+/* Edit Website: the website preview is the live website (scroll, tap, add to cart, open pages) */
+.wh-screen.ws-site { touch-action: pan-y; }
+.wh-screen.ws-site .ws-frame { pointer-events: auto; }

@@ -631,7 +631,7 @@ export const start = async () => {
   let wsRO = null;
   const wsWatch = (sc) => {
     const f = sc.querySelector("iframe");
-    f.addEventListener("load", () => { wsFit(sc); wsGuard(f); if (sc.onFit) sc.onFit(); });
+    f.addEventListener("load", () => { wsFit(sc); if (!sc.classList.contains("ws-site")) wsGuard(f); if (sc.onFit) sc.onFit(); });
     wsFit(sc); wsRO.observe(sc);
   };
   const wsMount = (view) => {
@@ -651,7 +651,7 @@ export const start = async () => {
     next.addEventListener("load", () => {
       if (!next.isConnected || next !== [...sc.querySelectorAll("iframe")].pop()) return;
       sc.querySelectorAll("iframe").forEach((x) => { if (x !== next) x.remove(); });
-      wsFit(sc); wsGuard(next);
+      wsFit(sc); if (!sc.classList.contains("ws-site")) wsGuard(next);
       if (y && next.contentWindow) next.contentWindow.scrollTo(0, y);
       next.style.visibility = "";
       if (sc.onFit) sc.onFit();
@@ -1790,7 +1790,7 @@ export const start = async () => {
           <div class="wh-stage">
             <div class="wh-side">${calls.map(([id, href, ic, label, sub]) => `<a class="wh-pill" data-wh="${id}" href="${href}"><span class="wh-pill-ico">${icon(ic)}</span><span class="wh-pill-t"><b>Edit ${label}</b><small>${esc(sub)}</small></span>${arrow}</a>`).join("")}</div>
             <div class="wh-card">
-              ${wsScreen(pageDoc(store.pages[0]), 360, "wh-screen")}
+              ${wsScreen(SiteKit.storeHTML(store.site, store.pages, { products: store.products, discounts: discountsForSite() }), 360, "wh-screen ws-site")}
               ${calls.map(([id, href, , label]) => `<a class="wh-hot" data-hot="${id}" href="${href}" tabindex="-1" aria-hidden="true" title="Edit ${label}"></a>`).join("")}
             </div>
           </div>
@@ -1810,7 +1810,9 @@ export const start = async () => {
           const d = sc.querySelector("iframe").contentDocument;
           const k = sc.clientWidth / 360, H = sc.clientHeight;
           if (!d || !d.body || !k) return;
-          const head = d.querySelector(".s-header"), bar = d.querySelector(".s-mbar");
+          // The live website holds every page; the one on show is the one not hidden
+          const shown = d.querySelector("[data-slug]:not([hidden])") || d;
+          const head = shown.querySelector(".s-header"), bar = shown.querySelector(".s-mbar");
           const barOn = bar && getComputedStyle(bar).display !== "none";
           const headBot = head ? Math.min(H * 0.3, head.getBoundingClientRect().bottom * k) : H * 0.1;
           const barTop = barOn ? Math.min(H - 24, bar.getBoundingClientRect().top * k) : H - 34;
