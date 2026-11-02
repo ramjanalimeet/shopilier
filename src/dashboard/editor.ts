@@ -123,6 +123,8 @@ export const SiteEditor = (() => {
     // #/website?page=<id> opens that page (from the Pages list)
     // #/website?page=<id>&section=<id> also opens that section (from Website → Edit Pages)
     const asked = new URLSearchParams(location.hash.split("?")[1] || ""), askedPage = asked.get("page");
+    // d.split (phones, from Website → Edit Pages): the website on the left, what you can edit on the right
+    const split = !!d.split;
     const state = { mode: "sections", selected: null, pageId: store.pages.some((p) => p.id === askedPage) ? askedPage : store.pages[0].id, device: innerWidth < 900 ? "mobile" : "desktop", panelOpen: innerWidth >= 900 };
     const page = () => store.pages.find((p) => p.id === state.pageId) || store.pages[0];
     const sectionById = (id) => page().sections.find((s) => s.id === id);
@@ -191,7 +193,8 @@ export const SiteEditor = (() => {
       <header class="ed-top">
         <div class="ed-group">
           <button class="ed-btn ed-icon" type="button" id="ed-side" aria-controls="dashboard-nav">${icon("sidebar")}</button>
-          <button class="ed-btn ed-icon ed-m-back" type="button" id="ed-back" aria-label="Back to Themes" title="Back">${icon("arrowLeft")}</button>
+          <button class="ed-btn ed-icon ed-m-back" type="button" id="ed-back" aria-label="${split ? "Back to pages" : "Back to Themes"}" title="Back">${icon("arrowLeft")}</button>
+          <b class="ed-split-title" id="ed-split-title"></b>
         </div>
         <div class="ed-devices" role="group" aria-label="Preview size">${Object.entries(DEVICES).map(([k, v]) => `<button type="button" data-device="${k}">${icon(v.icon)}<span class="ed-label">${v.label}</span></button>`).join("")}</div>
         <div class="ed-group">
@@ -215,6 +218,15 @@ export const SiteEditor = (() => {
     </div>`;
     const $ = (sel) => root.querySelector(sel);
     const frame = $(".ed-frame"), panel = $("#ed-panel");
+    if (split) {
+      $(".ed").classList.add("ed-split");
+      state.device = "mobile"; state.panelOpen = true;
+      // The phone-wide website, scaled down to fit the left column
+      const canvas = $(".ed-canvas"), wrap = $(".ed-frame-wrap");
+      const fit = () => { const k = canvas.clientWidth / 390; if (!k) return; wrap.style.transform = `scale(${k})`; wrap.style.setProperty("--split-h", canvas.clientHeight / k + "px"); };
+      new ResizeObserver(fit).observe(canvas);
+      fit();
+    }
     // Phones: a floating button opens the sections panel as a bottom sheet
     $(".ed-m-pages").addEventListener("click", (e) => {
       const b = e.target.closest("button");
@@ -233,7 +245,7 @@ export const SiteEditor = (() => {
     {
       let y0 = null, dy = 0;
       panel.addEventListener("touchstart", (e) => {
-        if (innerWidth > 899) return;
+        if (innerWidth > 899 || split) return;
         const body = panel.querySelector(".ed-panel-body"), top = e.touches[0].clientY - panel.getBoundingClientRect().top;
         if (top > 90 && body && body.scrollTop > 0) return;
         if (e.target.closest("input, textarea, select")) return;
@@ -263,6 +275,8 @@ export const SiteEditor = (() => {
       $(".ed-frame-wrap").style.width = DEVICES[state.device].width;
       $(".ed-frame-wrap").dataset.device = state.device;
       $("#ed-page-name").textContent = "Pages · " + page().title;
+      $("#ed-split-title").textContent = page().title;
+      if (split) state.panelOpen = true;
       $("#ed-undo").disabled = !undoStack.length && !recordTimer;
       $("#ed-redo").disabled = !redoStack.length;
       $("#ed-publish-label").textContent = d.publishLabel ? d.publishLabel() : store.published ? "Publish changes" : "Publish website";
@@ -369,7 +383,7 @@ export const SiteEditor = (() => {
         <span class="ed-row-ico">${icon(ico)}</span><span class="ed-row-label">${esc(label)}</span>
         ${s && s.type !== "checkout" ? `<span class="ed-row-tools"><button type="button" class="ed-sm" data-row="up" data-id="${s.id}" aria-label="Move up" title="Move up">${icon("up")}</button><button type="button" class="ed-sm" data-row="down" data-id="${s.id}" aria-label="Move down" title="Move down">${icon("down")}</button><button type="button" data-row="hide" data-id="${s.id}" aria-label="${s.hidden ? "Show" : "Hide"} section" title="${s.hidden ? "Show" : "Hide"}">${icon(s.hidden ? "eyeOff" : "eye")}</button></span>` : ""}
       </div>`;
-      return `<div class="ed-sub">Sections on ${esc(p.title)}</div>
+      return `<div class="ed-sub">${split ? "Tap a part to edit it" : `Sections on ${esc(p.title)}`}</div>
         <div class="ed-outline">${row("header", "Header", "layout")}${p.sections.map((s) => row(s.id, (K.TYPES[s.type] || {}).label || s.type, (K.TYPES[s.type] || {}).icon || "layout", s)).join("")}${row("footer", "Footer", "layout")}${row("mbar", "Sticky bar", "phone")}</div>
         <button type="button" class="btn ed-add ed-add-section ed-sm" data-add-section>${icon("plus")}Add a section</button>
         <p class="ed-note ed-lg">Drag sections in this list to change their order. To add a section, point at the line between two sections on your website and click the green <b>+</b>.</p>
@@ -572,6 +586,7 @@ export const SiteEditor = (() => {
     panel.addEventListener("click", async (e) => {
       const b = e.target.closest("button, [data-select], [data-page]");
       if (!b) return;
+      if (b.hasAttribute("data-close") && split) { select(null, false); return; }
       if (b.hasAttribute("data-close")) { if (state.mode !== "sections" && innerWidth >= 900) state.mode = "sections"; else state.panelOpen = false; paintPanel(); return; }
       if (b.hasAttribute("data-deselect")) { select(null, false); return; }
       if (b.dataset.qa) {
@@ -632,7 +647,7 @@ export const SiteEditor = (() => {
       if (!b) return;
       // Stop here: a click reaching the page area would close the phone menu again
       if (b.id === "ed-side") { e.stopPropagation(); toggleSide(); return; }
-      if (b.id === "ed-back") { location.hash = "#/themes"; return; }
+      if (b.id === "ed-back") { location.hash = split ? "#/site-pages" : "#/themes"; return; }
       if (b.dataset.device) { state.device = b.dataset.device; paintTop(); return; }
       if (b.dataset.mode) {
         const same = state.mode === b.dataset.mode && state.panelOpen;

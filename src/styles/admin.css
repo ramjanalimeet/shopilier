@@ -1948,19 +1948,98 @@ body.editor-open .ed-row-tools .ed-sm, body.editor-open .ed-add-section.ed-sm, b
   .wp-title { gap: 10px; }
   .wp-name h2 { display: none; }
 
-  /* Edit Sticky: a short preview, looks in a row you swipe, small button tiles */
-  .wsk-screen { height: 330px; }
-  .wsk-looks { display: flex; gap: 10px; margin: 0 -14px; padding: 2px 14px 6px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 14px; scrollbar-width: none; }
-  .wsk-looks::-webkit-scrollbar { display: none; }
-  .wsk-look { flex: 0 0 74%; scroll-snap-align: start; }
-  .wsk-shot { height: 80px; }
-  .wsk-btns { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .wsk-btns .hb-tile { gap: 6px; padding: 12px 4px 10px; border-radius: 12px; }
-  .wsk-btns .hb-tile.on { padding: 11px 3px 9px; }
-  .wsk-btns .hb-ico { width: 34px; height: 34px; border-radius: 10px; }
-  .wsk-btns .hb-tile b { font-size: 12.5px; line-height: 1.25; }
-  .wsk-btns .hb-check { top: 6px; right: 6px; width: 16px; height: 16px; }
-  .wsk-btns .hb-check .i { width: 10px; height: 10px; }
-  .wsk .hb-cta { grid-template-columns: 1fr; gap: 0; }
   .wsk-seg button { padding: 0 6px; font-size: 13px; white-space: nowrap; }
 }
+
+/* Website → Edit Pages on phones: the editor split in two — the website on the left, its parts on the right */
+.ed-split-title { display: none; }
+body.editor-open .ed.ed-split .ed-devices, body.editor-open .ed.ed-split #ed-side, body.editor-open .ed.ed-split [data-mode="pages"], body.editor-open .ed.ed-split #ed-reset,
+body.editor-open .ed.ed-split .ed-m-pages, body.editor-open .ed.ed-split .ed-m-bar, body.editor-open .ed.ed-split .ed-tabs, body.editor-open .ed.ed-split .ed-panel::before,
+body.editor-open .ed.ed-split .ed-grip, body.editor-open .ed.ed-split .ed-row-tools [data-row="up"], body.editor-open .ed.ed-split .ed-row-tools [data-row="down"],
+body.editor-open .ed.ed-split .ed-add-section, body.editor-open .ed.ed-split .ed-panel-body > .ed-note { display: none !important; }
+body.editor-open .ed.ed-split .ed-top { gap: 8px; height: 56px; padding: 0 8px 0 6px; }
+body.editor-open .ed.ed-split .ed-group:first-child { flex: 1; min-width: 0; gap: 4px; }
+body.editor-open .ed.ed-split .ed-m-back { border: 0; }
+body.editor-open .ed.ed-split .ed-split-title { display: block; min-width: 0; overflow: hidden; color: var(--ink); font-size: 16px; white-space: nowrap; text-overflow: ellipsis; }
+body.editor-open .ed.ed-split .ed-publish { padding: 0 14px; border-radius: 999px; }
+body.editor-open .ed.ed-split .ed-publish .ed-label { display: inline; }
+body.editor-open .ed.ed-split .ed-body { display: flex; }
+body.editor-open .ed.ed-split .ed-canvas { flex: 0 0 40%; display: block; padding: 0; overflow: hidden; background: #fff; border-right: 1px solid var(--border); }
+body.editor-open .ed.ed-split .ed-frame-wrap { width: 390px !important; height: var(--split-h, 100%) !important; max-width: none !important; transform-origin: top left; transition: none; }
+/* The panel stays open here: no close button, and no title row over the list of parts */
+body.editor-open .ed.ed-split .ed-panel-head .ed-only-sm[data-close] { display: none !important; }
+body.editor-open .ed.ed-split .ed-panel-head:not(:has([data-deselect])) { display: none; }
+body.editor-open .ed.ed-split .ed-panel-body > .ed-sub:first-child { margin-top: 12px; }
+body.editor-open .ed.ed-split .ed-panel { position: static; flex: 1; width: auto; min-width: 0; height: auto; padding: 0; border: 0; border-radius: 0; box-shadow: none; transform: none; }
+body.editor-open .ed.ed-split .ed-panel-head { padding: 12px 12px 6px; }
+body.editor-open .ed.ed-split .ed-panel-head b { font-size: 15px; }
+body.editor-open .ed.ed-split .ed-panel-body { padding: 4px 10px 16px; scrollbar-gutter: auto; }
+body.editor-open .ed.ed-split .ed-sub { margin: 4px 2px 8px; color: var(--muted); font-size: 12px; font-weight: 600; }
+body.editor-open .ed.ed-split .ed-outline { gap: 6px; }
+body.editor-open .ed.ed-split .ed-row { gap: 8px; min-height: 46px; padding: 6px 4px 6px 8px; border-radius: 12px; font-size: 13.5px; }
+body.editor-open .ed.ed-split .ed-row-ico { width: 28px; height: 28px; }
+body.editor-open .ed.ed-split .ed-row-label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+body.editor-open .ed.ed-split .ed-row-tools button { width: 30px; height: 30px; }
+body.editor-open .ed.ed-split .ed-qa { grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 0 10px 10px; }
+body.editor-open .ed.ed-split .ed-qa button { padding: 8px 0; }
+body.editor-open .ed.ed-split .ed-qa button span { display: none; }
+body.editor-open .ed.ed-split .ed-link { grid-template-columns: 1fr; }
+body.editor-open .ed.ed-split .ed-show { grid-template-columns: 1fr; }
+body.editor-open .ed.ed-split .ed-image { gap: 8px; }
+body.editor-open .ed.ed-split .ed-thumb { width: 100%; height: 90px; }
+body.editor-open .ed.ed-split .ed-done { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
+body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
+
+/* Edit Pages (phones): every page as a card with a little picture of it */
+.wpc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 2px 0 12px; color: var(--muted); font-size: 13px; }
+.wpc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.wpc { display: grid; min-width: 0; border: 1px solid var(--border); border-radius: 18px; background: #fff; overflow: hidden; box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 22px -14px rgba(16, 24, 40, .18); }
+.wpc-open { display: block; }
+.wpc-shot { height: 190px; pointer-events: none; border-bottom: 1px solid var(--border); }
+.wpc-foot { display: flex; align-items: center; gap: 4px; padding: 8px 4px 8px 12px; }
+.wpc-name { flex: 1; min-width: 0; display: grid; gap: 1px; color: var(--ink); text-decoration: none; }
+.wpc-name b, .wpc-name small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.wpc-name b { font-size: 14px; }
+.wpc-name small { color: var(--muted); font-size: 11.5px; }
+.wpc-more { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; }
+.wpc-more:active { background: var(--hover); }
+.wpc-more .i { width: 18px; height: 18px; }
+.wpc-new { place-content: center; justify-items: center; gap: 8px; min-height: 240px; border: 1.5px dashed #cfd5dc; background: none; box-shadow: none; color: var(--accent); font: inherit; cursor: pointer; }
+.wpc-new span { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: #e8f5ee; }
+.wpc-new .i { width: 22px; height: 22px; }
+.wpc-new b { font-size: 14px; }
+/* Page settings window */
+.wpd-opts { display: grid; margin: 4px 0 8px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.wpd-opt { display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; }
+.wpd-opt + .wpd-opt { border-top: 1px solid var(--border); }
+.wpd-opt > span:first-child { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.wpd-opt b { color: var(--ink); font-size: 14.5px; }
+.wpd-opt small { color: var(--muted); font-size: 12.5px; }
+.wpd-del { width: 100%; justify-content: center; margin-top: 8px; }
+
+/* Edit Sticky (phones): the bars to choose from, one under another */
+.wsk-looks-card h3, .wsk-rest h3 { margin: 0 0 12px; }
+.wsk .wsk-looks { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 0; padding: 0; overflow: visible; }
+.wsk .wsk-look { display: grid; grid-template-columns: none; border-radius: 16px; }
+.wsk .wsk-shot { height: 92px; }
+.wsk .wsk-look-name { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-top: 1px solid var(--border); border-left: 0; }
+.wsk-look-name > span { display: grid; gap: 1px; min-width: 0; }
+.wsk-look-name small { -webkit-line-clamp: 1; }
+.wsk-radio { flex: none; width: 20px; height: 20px; border: 2px solid #c5cbd3; border-radius: 50%; background: #fff; }
+.wsk-look.on .wsk-radio { border: 6px solid var(--accent); }
+.wsk-look .ms-on { display: none; }
+.wsk-rest .wp-card > .wp-opt { padding: 0; border: 0; }
+.wsk .wsk-btns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+.wsk-btn { position: relative; display: grid; justify-items: center; gap: 6px; padding: 12px 4px 10px; border: 1.5px solid var(--border); border-radius: 14px; background: #fff; text-align: center; cursor: pointer; }
+.wsk-btn input { position: absolute; opacity: 0; pointer-events: none; }
+.wsk-btn-ico { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: #f3f4f6; color: var(--muted); }
+.wsk-btn-ico .i, .wsk-btn-ico svg { width: 18px; height: 18px; }
+.wsk-btn b { color: var(--muted); font-size: 12.5px; }
+.wsk-btn small { color: #b45309; font-size: 10.5px; line-height: 1.25; }
+.wsk-btn.on { border-color: var(--accent); background: #f3faf6; }
+.wsk-btn.on .wsk-btn-ico { background: #e1f3e8; color: var(--accent); }
+.wsk-btn.on b { color: var(--ink); }
+.wsk-btn:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wsk .wsk-page { justify-content: space-between; padding: 10px 2px; border-radius: 0; }
+.wsk .wsk-page + .wsk-page { border-top: 1px solid var(--border); }
+.wsk .wsk-page span:first-child { display: grid; font-size: 14px; font-weight: 600; }
