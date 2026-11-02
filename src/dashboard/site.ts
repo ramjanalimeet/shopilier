@@ -393,7 +393,7 @@ export const SiteKit = (() => {
     site.header.mbar ||= { show: true, cta: site.lang === "bn" ? "অর্ডার করুন" : "Order now", link: "/shop", chat: true };
     const mb = site.header.mbar;
     ["home", "shop", "cart", "chat"].forEach((k) => { if (mb[k] === undefined) mb[k] = true; });
-    mb.where ||= "phone"; mb.shape ||= "flat";
+    mb.where ||= "phone"; mb.shape ||= "flat"; mb.style ||= "classic";
     pages.forEach((p) => { if (!Array.isArray(p.sections)) p.sections = pageSections(p, ctx); });
     // Every store has a Checkout page: it can be edited or reset, but not deleted, and its link stays /checkout
     if (!pages.some((p) => p.system === "checkout")) {
@@ -746,6 +746,15 @@ export const SiteKit = (() => {
       </div>
     </header>`;
   };
+  // Sticky bar looks, picked on Website → Edit Sticky (b.style)
+  const MBAR_STYLES = [
+    { id: "classic", name: "Classic", text: "Icons with names and the main button in the middle" },
+    { id: "center", name: "Center button", text: "A big round main button that sits above the bar" },
+    { id: "pill", name: "Soft pill", text: "The page you're on sits in a soft coloured pill" },
+    { id: "icons", name: "Icons only", text: "Clean and small: just the icons" },
+    { id: "buy", name: "Buy bar", text: "A wide Order button with a few icons beside it" },
+    { id: "dark", name: "Dark glass", text: "A dark bar with light icons, great on photos" },
+  ];
   // The sticky bottom bar: Home, Shop, the main button, Cart, WhatsApp/Call and Account, each can be turned off.
   // b.where: "phone" (default), "tablet" (phones and tablets) or "all" (also a floating bar on computers)
   // b.shape: "flat" (on the bottom edge) or "float" (rounded, with a gap); b.bg / b.text / b.ctaBg: colours
@@ -756,12 +765,13 @@ export const SiteKit = (() => {
     const shop = pages.find((p) => p.slug === "shop") ? "/shop" : "/";
     // The page you're on is highlighted (Home on the home page, Shop on the shop page)
     const here = page ? "/" + (page.slug || "") : "";
-    const item = (href, ico, label, extra = "") => `<a href="${esc(href)}"${extra}${href === here ? ' aria-current="page"' : ""}>${ico}<span>${esc(label)}</span></a>`;
+    const item = (href, ico, label, extra = "") => `<a href="${esc(href)}" title="${esc(label)}"${extra}${href === here ? ' aria-current="page"' : ""}>${ico}<span>${esc(label)}</span></a>`;
     const chat = on("chat") && wa ? item(wa, socialIcon("whatsapp"), "WhatsApp", ' target="_blank" rel="noopener" class="mb-wa"') : on("chat") && tel ? item("tel:" + tel, svg("phone"), T("Call")) : "";
     const left = [on("home") ? item("/", svg("home"), T("Home")) : "", on("shop") ? item(shop, svg("bag"), T("Shop")) : ""].join("");
     const right = [on("cart") ? item("/checkout", svg("cart"), T("Cart"), ' class="mb-cart"') : "", chat, b.account ? `<span class="mb-acc">${svg("user")}<span>${esc(T("Account"))}</span></span>` : ""].join("");
     const css = [b.bg && `--mb-bg:${b.bg}`, b.text && `--mb-text:${b.text}`, b.ctaBg && `--mb-cta:${b.ctaBg};--mb-on-cta:${isDark(b.ctaBg) ? "#fff" : "#111"}`].filter(Boolean).join(";");
-    return `<nav class="s-mbar mb-${esc(b.where || "phone")} mb-${esc(b.shape || "flat")}" data-sid="mbar" aria-label="${esc(T("Menu"))}"${css ? ` style="${esc(css)}"` : ""}>
+    const look = MBAR_STYLES.some((x) => x.id === b.style) ? b.style : "classic";
+    return `<nav class="s-mbar mb-${esc(b.where || "phone")} mb-${esc(b.shape || "flat")} mbs-${look}" data-sid="mbar" aria-label="${esc(T("Menu"))}"${css ? ` style="${esc(css)}"` : ""}>
       ${left}${b.cta ? `<a class="mb-cta" href="${esc(safeLink(b.link) || shop)}">${svg("bag")}<span>${esc(b.cta)}</span></a>` : ""}${right}
     </nav>`;
   };
@@ -789,14 +799,19 @@ export const SiteKit = (() => {
     const sel = (id) => (ed && opts.selected === id ? " is-selected" : "");
     // Just the header (live menu bar preview on the Navigation page)
     // ddOpenFirst shows the first dropdown open (with room for it); ddStyle previews a dropdown style
-    if (opts.headerOnly) return `<div class="site${themeOf(site).cls ? " " + themeOf(site).cls : ""}${opts.ddOpenFirst ? " dd-preview" : ""}" style="${esc(rootStyle(site))};min-height:0">${renderHeader(site, pages, { page, products: opts.products, ddOpenFirst: opts.ddOpenFirst, ddStyle: opts.ddStyle })}</div>`;
+    // menuOpen: phones and tablets show the menu opened under the header (Website → Edit Nav)
+    if (opts.headerOnly) return `<div class="site${themeOf(site).cls ? " " + themeOf(site).cls : ""}${opts.ddOpenFirst ? " dd-preview" : ""}${opts.menuOpen ? " m-preview" : ""}" style="${esc(rootStyle(site))};min-height:0">${renderHeader(site, pages, { page, products: opts.products, ddOpenFirst: opts.ddOpenFirst, ddStyle: opts.ddStyle }).replace('class="s-header', opts.menuOpen ? 'class="s-header m-open' : 'class="s-header')}</div>`;
+    // Just the sticky bar on a plain background (the style cards on Website → Edit Sticky)
+    if (opts.mbarOnly) return `<div class="site mbar-preview${themeOf(site).cls ? " " + themeOf(site).cls : ""}" style="${esc(rootStyle(site))}">${renderMobileBar(site, pages, page)}</div>`;
+    // A page can leave out the header or the sticky bar (Website → Edit Pages); the editor shows them faded
+    const noHeader = !!page.hideHeader, noBar = !!page.hideMbar;
     // Editor: a "+" on each gap between sections opens the section library (index = where it goes)
     const insert = (i) => ed && !opts.bare ? `<div class="ed-insert" data-insert="${i}"><button type="button" data-ed-add="${i}" title="Add a section here" aria-label="Add a section here">+</button></div>` : "";
     const fixedLabel = (id, name) => ed && opts.selected === id ? `<div class="ed-chip"><div class="ed-chip-in"><b>${name}</b></div></div>` : "";
     const theme = themeOf(site);
     const T = (s, v) => tr(site, s, v), m = (n) => money(site, n);
     return `<div class="site${theme.cls ? " " + theme.cls : ""}" style="${esc(rootStyle(site))}">
-      ${opts.bare ? "" : renderHeader(site, pages, { page, products: opts.products }).replace('class="s-header', `class="s-header${sel("header")}`).replace(/(<header[^>]*>)/, `$1${fixedLabel("header", "Header")}`)}
+      ${opts.bare || (noHeader && !ed) ? "" : renderHeader(site, pages, { page, products: opts.products }).replace('class="s-header', `class="s-header${sel("header")}${noHeader ? " pg-off" : ""}`).replace(/(<header[^>]*>)/, `$1${fixedLabel("header", "Header")}`)}
       <main>${insert(0)}${sections.map((s, i) => {
         const R = RENDER[s.type];
         if (!R) return "";
@@ -805,7 +820,7 @@ export const SiteKit = (() => {
         return `<section class="s s-${esc(s.type)} pad-${esc(st.padding || "m")} align-${esc(st.align || "left")}${hide}${s.hidden ? " is-hidden" : ""}${sel(s.id)}" data-sid="${esc(s.id)}" style="${sectionStyle(st)}">${label(s)}${R(s.content || {}, st, { products: opts.products, ed, blocks: renderBlocks(s.blocks, ed), site, theme, hints: !!opts.hints, T, money: m })}</section>${insert(i + 1)}`;
       }).join("") || (ed ? '<section class="s pad-l align-center"><div class="wrap"><p class="empty">This page has no sections yet. Click + to add one.</p></div></section>' : "")}</main>
       ${opts.bare ? "" : renderFooter(site, pages).replace('class="s-footer', `class="s-footer${sel("footer")}`).replace(/(<footer[^>]*>)/, `$1${fixedLabel("footer", "Footer")}`)}
-      ${opts.bare || page.system === "checkout" ? "" : renderMobileBar(site, pages, page).replace('class="s-mbar', `class="s-mbar${sel("mbar")}`)}
+      ${opts.bare || page.system === "checkout" || (noBar && !ed) ? "" : renderMobileBar(site, pages, page).replace('class="s-mbar', `class="s-mbar${sel("mbar")}${noBar ? " pg-off" : ""}`)}
     </div>`;
   };
 
@@ -1100,5 +1115,5 @@ export const SiteKit = (() => {
       .replace(/<body([^>]*)>[\s\S]*<\/body>/, (m, attrs) => `<body${attrs}>${all}${nav}${shopJs}${t.body || ""}</body>`);
   };
 
-  return { tr, LANGS, LABELS, labelOf, money, STARTERS, starterPages, applyStarter, sampleProducts, previewStore, PAYMENTS_BN, CHECKOUT_BN, THEMES, discountFor, discountProblem, ANNOUNCE_COLORS, announceStyle, HEADER_BUTTONS, DROPDOWNS, CHECKOUT, PAYMENTS, SOCIALS, socialIcon, LIBRARY, fromLibrary, storeHTML, TEMPLATE_FONTS, esc, uid, FONTS, TYPES, BLOCKS, FEATURE_ICONS, make, makeBlock, pageSections, ensure, applyTemplate, renderBody, documentHTML, safeImg, isDark };
+  return { tr, LANGS, LABELS, labelOf, money, STARTERS, starterPages, applyStarter, sampleProducts, previewStore, PAYMENTS_BN, CHECKOUT_BN, THEMES, discountFor, discountProblem, ANNOUNCE_COLORS, announceStyle, HEADER_BUTTONS, DROPDOWNS, MBAR_STYLES, CHECKOUT, PAYMENTS, SOCIALS, socialIcon, LIBRARY, fromLibrary, storeHTML, TEMPLATE_FONTS, esc, uid, FONTS, TYPES, BLOCKS, FEATURE_ICONS, make, makeBlock, pageSections, ensure, applyTemplate, renderBody, documentHTML, safeImg, isDark };
 })();
