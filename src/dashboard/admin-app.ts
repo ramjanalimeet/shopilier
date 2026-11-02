@@ -2203,7 +2203,12 @@ export const start = async () => {
     const name = location.hash.replace(/^#\/?/, "").split("?")[0], route = routes[name];
     // Redrawing the same page keeps where you were scrolled to (only moving to another page starts at the top)
     const sc = document.querySelector(".scroll"), y = sc ? sc.scrollTop : 0;
-    if (!(route && route.update && route.update(document.getElementById("view")))) { rerender(); if (sc) sc.scrollTop = y; }
+    // Rows of chips that scroll sideways (order filters, tabs) keep their place too, so the chip you tapped doesn't jump
+    const ROWS = "#view .seg, #view .mn-tabs", xs = [...document.querySelectorAll(ROWS)].map((e) => e.scrollLeft);
+    if (!(route && route.update && route.update(document.getElementById("view")))) {
+      rerender(); if (sc) sc.scrollTop = y;
+      document.querySelectorAll(ROWS).forEach((e, i) => { if (xs[i]) e.scrollLeft = xs[i]; });
+    }
     if (settingsEl) settingsEl.refresh();
   };
   let rerender;
