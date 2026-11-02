@@ -1082,7 +1082,9 @@ export const SiteKit = (() => {
           .catch(function () { if (btn) btn.disabled = false; note(tr("Couldn't place your order. Please check your connection and try again.")); });
         return;
       }
-      if (window.opener) { try { window.opener.postMessage({ type: "shopilier-order", order: order }, location.origin === "null" ? "*" : location.origin); } catch (err) {} }
+      // The dashboard that opened this preview: a new tab (opener) or the live preview on Edit Website (parent)
+      var host = window.opener || (window.parent !== window ? window.parent : null);
+      if (host) { try { host.postMessage({ type: "shopilier-order", order: order }, location.origin === "null" ? "*" : location.origin); } catch (err) {} }
       done();
     });
     draw();

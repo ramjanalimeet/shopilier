@@ -2078,14 +2078,14 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 .wh-screen { height: auto; aspect-ratio: 9 / 17; max-height: calc(100dvh - 220px); background: #fff; }
 .wh-screen .ws-inner { background: #fff; }
 /* Each part of the website, outlined when its button is pointed at; tapping it opens its screen */
-.wh-hot { position: absolute; left: 4px; right: 4px; border: 1.5px dashed transparent; border-radius: 14px; transition: border-color .2s, background .2s; }
+.wh-hot { position: absolute; left: 4px; right: 4px; pointer-events: none; border: 1.5px dashed transparent; border-radius: 14px; transition: border-color .2s, background .2s; }
 .wh-hot.glow { border-color: var(--accent); background: rgba(14, 122, 75, .06); }
 /* The buttons: icon on top, then the name and what it changes, joined to their part by a line and a dot */
 .wh-pill { position: absolute; left: 0; right: 0; z-index: 2; display: grid; justify-items: center; gap: 5px; padding: 8px 3px 7px; border: 1px solid #e6e9ed; border-radius: 15px;
   background: #fff; color: var(--ink); text-align: center; text-decoration: none; box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 10px 22px -14px rgba(16, 24, 40, .35);
-  transition: transform .15s, box-shadow .15s, border-color .15s, top .3s; }
+  transition: box-shadow .15s, border-color .15s, background .15s; }
 .wh-stage:not(.placed) .wh-pill { opacity: 0; }
-.wh-pill:active { transform: scale(.96); }
+.wh-pill:active { background: #f3faf6; border-color: #cfe9da; }
 .wh-pill.glow { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14, 122, 75, .12), 0 10px 22px -14px rgba(16, 24, 40, .35); }
 .wh-pill-ico { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: #e6f4ec; color: var(--accent); }
 .wh-pill-ico .i { width: 15px; height: 15px; }
@@ -2094,3 +2094,112 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 .wh-pill-t small { color: var(--muted); font-size: 9.5px; line-height: 1.25; }
 .wh-line { position: absolute; left: 100%; top: 50%; width: 16px; height: 2px; margin-top: -1px; background: var(--accent); pointer-events: none; }
 .wh-line::after { content: ""; position: absolute; right: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px #f4f5f7; }
+
+/* Phones: buttons answer a tap with a soft colour, not by shrinking (shrinking made the screen look shaky) */
+@media (max-width: 760px) {
+  .m-quick > *:active, .m-empty-row:active, .m-visit:active, body.editor-open .ed-qa button:active { transform: none; }
+  .m-empty-row:active, .m-visit:active { background: #f6f7f9; }
+  body.editor-open .ed-qa button:active { background: #e9ecef; }
+  .tab:active .i { transform: none; }
+}
+
+/* ---------- Phones: Orders and Products buttons ---------- */
+.g-del { display: none; }
+@media (max-width: 760px) {
+  /* Orders: the whole card opens the order */
+  body:not(.master-admin) #view .t-orders tbody tr:not(:has(.table-empty)) { cursor: pointer; }
+  body:not(.master-admin) #view .t-orders tbody tr:not(:has(.table-empty)):active { background: #fafbfc; }
+  body:not(.master-admin) #view .t-orders td:nth-child(1) .t-title { min-height: 32px; }
+  /* The bottom line: date, payment and the buttons share the width; a long payment name ends in "…" */
+  body:not(.master-admin) #view .t-orders tbody tr { grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 8px; }
+  body:not(.master-admin) #view .t-orders td:nth-child(4) { overflow: hidden; }
+  body:not(.master-admin) #view .t-orders td:nth-child(4) .tag { display: inline-block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; vertical-align: middle; }
+  body:not(.master-admin) #view .t-orders td.t-actions { display: flex; gap: 4px; }
+  body:not(.master-admin) #view .t-orders td.t-actions .icon-btn { width: 34px; height: 34px; }
+  /* Each status in its own colour */
+  body:not(.master-admin) #view .t-orders td:nth-child(6) select[data-status="Pending"] { background-color: #fff4e5; color: #b45309; }
+  body:not(.master-admin) #view .t-orders td:nth-child(6) select[data-status="Paid"] { background-color: #e0f2fe; color: #0369a1; }
+  body:not(.master-admin) #view .t-orders td:nth-child(6) select[data-status="Shipped"] { background-color: #ede9fe; color: #5b21b6; }
+  body:not(.master-admin) #view .t-orders td:nth-child(6) select[data-status="Delivered"] { background-color: #e6f4ec; color: #0e7a4b; }
+  body:not(.master-admin) #view .t-orders td:nth-child(6) select[data-status="Cancelled"] { background-color: #fef2f2; color: #b42318; }
+  /* Products: tap the card to edit; a small delete button on the photo */
+  body:not(.master-admin) .g-card { cursor: pointer; }
+  .g-del { display: grid; place-items: center; position: absolute; top: 14px; right: 14px; z-index: 2; width: 32px; height: 32px; border: 0; border-radius: 50%;
+    background: rgba(255, 255, 255, .92); color: #d92d20; box-shadow: 0 4px 12px -4px rgba(16, 24, 40, .35); cursor: pointer; }
+  .g-del .i { width: 15px; height: 15px; }
+  .g-del:active { background: #fef3f2; }
+}
+/* Edit Website: the website preview is the live website (scroll, tap, add to cart, open pages) */
+.wh-screen.ws-site { touch-action: pan-y; }
+.wh-screen.ws-site .ws-frame { pointer-events: auto; }
+
+/* Edit Nav (phones): a tab for each part of the top of the website */
+.mn-tabs { display: flex; gap: 6px; margin: 0 -16px 12px; padding: 2px 16px 4px; overflow-x: auto; scrollbar-width: none; }
+.mn-tabs::-webkit-scrollbar { display: none; }
+.mn-tabs button { display: inline-flex; flex: none; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border: 1px solid #e3e6ea; border-radius: 999px;
+  background: #fff; color: #475467; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.mn-tabs button .i { width: 16px; height: 16px; }
+.mn-tabs button.on { border-color: var(--accent); background: var(--accent); color: #fff; }
+.mn-live .ws-screen { cursor: pointer; }
+.mn-logo { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.mn-logo-img { display: grid; place-items: center; flex: none; width: 64px; height: 64px; border-radius: 16px; background: #f1f3f5; overflow: hidden; border: 1px solid var(--border); }
+.mn-logo-img img { width: 100%; height: 100%; object-fit: cover; }
+.mn-logo-img b { color: var(--muted); font-size: 24px; }
+.mn-logo-t { display: grid; gap: 2px; min-width: 0; }
+.mn-logo-t > b { color: var(--ink); font-size: 15px; }
+.mn-logo-t > small { color: var(--muted); font-size: 12px; }
+.mn-logo-btns { display: flex; gap: 8px; margin-top: 8px; }
+.mn-upload { cursor: pointer; }
+.mn-upload.busy { opacity: .6; pointer-events: none; }
+.mn-card .nv-row + .nv-row { padding-top: 12px; border-top: 1px solid var(--border); }
+.mn-card .nv-row:last-child { padding-bottom: 0; }
+.mn-icons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+.mn-icons:last-child { margin-bottom: 0; }
+
+/* Edit Pages (phones): a tab per page, the page live, its parts */
+.wp-tabs button .i { width: 15px; height: 15px; }
+.wp-tabs button.k-landing:not(.on) .i { color: #4f46e5; }
+.wp-tabs button.k-checkout:not(.on) .i { color: #b45309; }
+.wp-tabs .wp-tab-add { border-style: dashed; color: var(--accent); }
+.wp-live { margin-bottom: 12px; }
+.wp-live .ws-screen { height: min(52dvh, 460px); }
+.wp-sel { border: 1.5px solid var(--accent); }
+.wp-go { width: 100%; justify-content: center; }
+.wp-acts4 { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, 44px); gap: 8px; }
+.wp-acts4 .btn { justify-content: center; height: 44px; padding: 0; }
+.wp-acts4 .btn-primary { padding: 0 14px; }
+.wp-acts4 .btn .i { width: 17px; height: 17px; }
+.wp-sum { display: flex; align-items: center; gap: 12px; }
+.wp-sum .wl-t { flex: 1; }
+.wp-shows { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.wp-show { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
+.wp-show b { font-size: 13.5px; color: var(--ink); }
+.wp-parts { display: grid; gap: 6px; }
+.wp-part { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 50px; padding: 6px 10px 6px 6px; border: 1px solid var(--border); border-radius: 14px; background: #fff;
+  color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.wp-part b { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600; }
+.wp-part i { padding: 1px 8px; border-radius: 999px; background: #f1f3f5; color: #667085; font-size: 11px; font-style: normal; font-weight: 600; }
+.wp-part > .i:last-child { width: 15px; height: 15px; color: #98a2b3; }
+.wp-part-ico { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 10px; background: #f1f3f5; color: #475467; }
+.wp-part-ico .i { width: 17px; height: 17px; }
+.wp-part.on { border-color: var(--accent); background: #f3faf6; }
+.wp-part.on .wp-part-ico { background: #e1f3e8; color: var(--accent); }
+.wp-part.off b { color: #98a2b3; }
+
+/* Edit Sticky (phones): the bar live at the top, then tabs */
+.wsk-live2 { margin-bottom: 12px; }
+.wsk-live2 .ws-screen { height: 112px; }
+.wsk-off { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: #fff7ed; color: #9a3412; font-size: 13px; }
+.wsk-off .i { flex: none; width: 16px; height: 16px; }
+.wsk-hint { margin: -6px 0 12px; color: var(--muted); font-size: 12.5px; }
+.mn-cards.wsk { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+
+/* Account sheet: the website's address (Domain) and View website, side by side */
+.m-site { display: none; }
+@media (max-width: 760px) {
+  .m-site { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .m-site .m-visit { flex-direction: column; align-items: flex-start; gap: 10px; margin: 0; padding: 14px; }
+  .m-site .m-visit-text { width: 100%; }
+  .m-site .m-domain { border-color: #e3e6ea; background: #fff; }
+  .m-site .m-domain .m-visit-ico { background: #eef2ff; color: #4f46e5; }
+}
