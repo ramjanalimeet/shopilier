@@ -2083,9 +2083,9 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 /* The buttons: icon on top, then the name and what it changes, joined to their part by a line and a dot */
 .wh-pill { position: absolute; left: 0; right: 0; z-index: 2; display: grid; justify-items: center; gap: 5px; padding: 8px 3px 7px; border: 1px solid #e6e9ed; border-radius: 15px;
   background: #fff; color: var(--ink); text-align: center; text-decoration: none; box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 10px 22px -14px rgba(16, 24, 40, .35);
-  transition: transform .15s, box-shadow .15s, border-color .15s, top .3s; }
+  transition: box-shadow .15s, border-color .15s, background .15s; }
 .wh-stage:not(.placed) .wh-pill { opacity: 0; }
-.wh-pill:active { transform: scale(.96); }
+.wh-pill:active { background: #f3faf6; border-color: #cfe9da; }
 .wh-pill.glow { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14, 122, 75, .12), 0 10px 22px -14px rgba(16, 24, 40, .35); }
 .wh-pill-ico { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: #e6f4ec; color: var(--accent); }
 .wh-pill-ico .i { width: 15px; height: 15px; }
@@ -2094,3 +2094,11 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 .wh-pill-t small { color: var(--muted); font-size: 9.5px; line-height: 1.25; }
 .wh-line { position: absolute; left: 100%; top: 50%; width: 16px; height: 2px; margin-top: -1px; background: var(--accent); pointer-events: none; }
 .wh-line::after { content: ""; position: absolute; right: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px #f4f5f7; }
+
+/* Phones: buttons answer a tap with a soft colour, not by shrinking (shrinking made the screen look shaky) */
+@media (max-width: 760px) {
+  .m-quick > *:active, .m-empty-row:active, .m-visit:active, body.editor-open .ed-qa button:active { transform: none; }
+  .m-empty-row:active, .m-visit:active { background: #f6f7f9; }
+  body.editor-open .ed-qa button:active { background: #e9ecef; }
+  .tab:active .i { transform: none; }
+}

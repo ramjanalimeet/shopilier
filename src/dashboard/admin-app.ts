@@ -618,11 +618,13 @@ export const start = async () => {
     let h = 0;
     sc.querySelectorAll("iframe").forEach((f) => {
       f.style.width = W + "px"; f.style.transform = `scale(${k})`;
-      if (content) { const d = f.contentDocument; h = d && d.body ? d.body.scrollHeight : 80; f.style.height = h + "px"; }
+      // The box takes the height of the preview on show; one still loading behind it doesn't count,
+      // so the box never shrinks for a moment and makes the screen jump
+      if (content) { const d = f.contentDocument, ht = d && d.body ? d.body.scrollHeight : 0; if (ht) f.style.height = ht + "px"; if (ht && f.style.visibility !== "hidden") h = ht; }
       else f.style.height = sc.clientHeight / k + "px";
     });
     inner.style.width = W * k + "px";
-    if (content) inner.style.height = Math.ceil(h * k) + "px";
+    if (content && h) inner.style.height = Math.ceil(h * k) + "px";
   };
   // Links and buttons in a preview don't go anywhere
   const wsGuard = (f) => { const d = f.contentDocument; if (d && !d.wsGuarded) { d.wsGuarded = true; d.addEventListener("click", (e) => { if (e.target.closest("a, button, form, input")) e.preventDefault(); }, true); } };
@@ -1792,6 +1794,12 @@ export const start = async () => {
             </div>
           </div>
         </div>`;
+      },
+      // Publishing or saving only updates the Publish dot; the screen stays as it is (no reload, no jump)
+      update: (view) => {
+        if (!view.querySelector(".wh-stage")) return false;
+        view.querySelector(".ws-publish").classList.toggle("has-changes", unpublished());
+        return true;
       },
       mount: (view) => {
         wsMount(view);
