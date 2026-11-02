@@ -2071,7 +2071,7 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 .wsk .wsk-look .mk { border-bottom: 1px solid var(--border); }
 
 /* ---------- Edit Website (phones): the website as it is, with the edit buttons beside it ---------- */
-.wh-stage { position: relative; display: grid; grid-template-columns: 66px minmax(0, 1fr); column-gap: 26px; padding: 10px 0 6px; }
+.wh-stage { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 52%; column-gap: 18px; padding: 10px 0 6px; }
 .wh-side { position: relative; }
 .wh-card { position: relative; border: 1px solid #e3e6ea; border-radius: 22px; background: #fff; overflow: hidden;
   box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 22px 40px -24px rgba(16, 24, 40, .4); }
@@ -2080,18 +2080,20 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 /* Each part of the website, outlined when its button is pointed at; tapping it opens its screen */
 .wh-hot { position: absolute; left: 4px; right: 4px; border: 1.5px dashed transparent; border-radius: 14px; transition: border-color .2s, background .2s; }
 .wh-hot.glow { border-color: var(--accent); background: rgba(14, 122, 75, .06); }
-/* The buttons, outside the website: a soft coloured icon and a short name, joined to their part by a line */
-.wh-pill { --tone: #0e7a4b; --soft: #e6f4ec; position: absolute; left: 0; right: 0; z-index: 2; display: grid; justify-items: center; gap: 6px; padding: 10px 0 9px;
-  border-radius: 20px; background: #fff; color: var(--ink); text-decoration: none; box-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 8px 20px -12px rgba(16, 24, 40, .3);
-  transition: transform .15s, box-shadow .15s, top .3s; }
-.wh-pill.pages { --tone: #4f5bd5; --soft: #ecedfc; }
-.wh-pill.sticky { --tone: #d9730d; --soft: #fdf0e3; }
+/* The buttons, outside the website: icon, name and what it changes, joined to their part by a line and a dot */
+.wh-pill { position: absolute; left: 0; right: 0; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 9px 8px 9px 9px; border: 1px solid #e6e9ed; border-radius: 14px;
+  background: #fff; color: var(--ink); text-decoration: none; box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 8px 18px -12px rgba(16, 24, 40, .3);
+  transition: transform .15s, box-shadow .15s, border-color .15s, top .3s; }
 .wh-stage:not(.placed) .wh-pill { opacity: 0; }
-.wh-pill:active { transform: scale(.95); }
-.wh-pill.glow { box-shadow: 0 0 0 2px var(--tone), 0 8px 20px -12px rgba(16, 24, 40, .3); }
-.wh-pill-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--soft); color: var(--tone); }
-.wh-pill-ico .i { width: 19px; height: 19px; stroke-width: 2.1; }
-.wh-pill b { font-size: 13px; font-weight: 600; letter-spacing: .005em; }
-/* The line ends in a dot on the edge of the website */
-.wh-line { position: absolute; left: 100%; top: 50%; width: 26px; height: 2px; margin-top: -1px; border-radius: 2px; background: var(--tone); opacity: .55; pointer-events: none; }
-.wh-line::after { content: ""; position: absolute; right: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--tone); box-shadow: 0 0 0 3px #f4f5f7; }
+.wh-pill:active { transform: scale(.97); }
+.wh-pill.glow { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14, 122, 75, .12), 0 8px 18px -12px rgba(16, 24, 40, .3); }
+.wh-pill-ico { display: grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: 10px; background: #e6f4ec; color: var(--accent); }
+.wh-pill-ico .i { width: 16px; height: 16px; }
+.wh-pill-t { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.wh-pill-t b, .wh-pill-t small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.wh-pill-t b { font-size: 13.5px; font-weight: 700; }
+.wh-pill-t small { color: var(--muted); font-size: 11px; }
+.wh-pill > .i { flex: none; width: 14px; height: 14px; color: #98a2b3; }
+.wh-line { position: absolute; left: 100%; top: 50%; width: 18px; height: 2px; margin-top: -1px; background: var(--accent); pointer-events: none; }
+.wh-line::after { content: ""; position: absolute; right: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px #f4f5f7; }
+@media (max-width: 420px) { .wh-pill > .i { display: none; } .wh-pill { gap: 8px; padding: 9px 6px 9px 8px; } .wh-pill-t b { font-size: 13px; } }
