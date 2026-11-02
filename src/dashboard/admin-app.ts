@@ -1779,20 +1779,17 @@ export const start = async () => {
     site: {
       title: "Website",
       render: () => {
-        const mb = store.site.header.mbar || {}, look = (SiteKit.MBAR_STYLES.find((x) => x.id === mb.style) || SiteKit.MBAR_STYLES[0]).name;
-        // [id, link, icon, name, side of the phone]
+        // [id, link, icon, name]
         const calls = [["nav", "#/site-nav", "edit", "Nav"], ["pages", "#/site-pages", "pages", "Pages"], ["sticky", "#/site-sticky", "layers", "Sticky"]];
-        const arrow = '<svg class="wh-arrow" viewBox="0 0 30 16" aria-hidden="true"><path d="M2 8h22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 4.5"/><path d="M20 3.5 25.5 8 20 12.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        const arrow = '<i class="wh-line" aria-hidden="true"></i>';
         return `${wsTop("Edit Website", "#/home")}
-          <p class="ws-intro wh-intro">Tap a part of your website to edit it</p>
           <div class="wh-stage">
-            <div class="wh-side">${calls.map(([id, href, ic, label]) => `<a class="wh-pill" data-wh="${id}" href="${href}"><span class="wh-pill-ico">${icon(ic)}</span><span class="wh-pill-t"><small>Edit</small><b>${label}</b></span>${arrow}</a>`).join("")}</div>
+            <div class="wh-side">${calls.map(([id, href, ic, label]) => `<a class="wh-pill ${id}" data-wh="${id}" href="${href}" aria-label="Edit ${label}"><span class="wh-pill-ico">${icon(ic)}</span><b>${label}</b>${arrow}</a>`).join("")}</div>
             <div class="wh-card">
               ${wsScreen(pageDoc(store.pages[0]), 390, "wh-screen")}
               ${calls.map(([id, href, , label]) => `<a class="wh-hot" data-hot="${id}" href="${href}" tabindex="-1" aria-hidden="true" title="Edit ${label}"></a>`).join("")}
             </div>
           </div>
-          <p class="wh-foot">${esc(store.pages.length)} pages · Sticky bar: ${esc(mb.show ? look : "off")}</p>
         </div>`;
       },
       mount: (view) => {

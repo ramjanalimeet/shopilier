@@ -2071,26 +2071,27 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 .wsk .wsk-look .mk { border-bottom: 1px solid var(--border); }
 
 /* ---------- Edit Website (phones): the website as it is, with the edit buttons beside it ---------- */
-.wh-intro { margin-bottom: 8px; text-align: center; }
-.wh-stage { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); column-gap: 26px; padding: 6px 0; }
+.wh-stage { position: relative; display: grid; grid-template-columns: 66px minmax(0, 1fr); column-gap: 26px; padding: 10px 0 6px; }
 .wh-side { position: relative; }
 .wh-card { position: relative; border: 1px solid #e3e6ea; border-radius: 22px; background: #fff; overflow: hidden;
   box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 22px 40px -24px rgba(16, 24, 40, .4); }
-.wh-screen { height: clamp(380px, calc(100dvh - 280px), 660px); background: #fff; }
+.wh-screen { height: clamp(380px, calc(100dvh - 240px), 680px); background: #fff; }
 .wh-screen .ws-inner { background: #fff; }
 /* Each part of the website, outlined when its button is pointed at; tapping it opens its screen */
 .wh-hot { position: absolute; left: 4px; right: 4px; border: 1.5px dashed transparent; border-radius: 14px; transition: border-color .2s, background .2s; }
 .wh-hot.glow { border-color: var(--accent); background: rgba(14, 122, 75, .06); }
-/* The buttons, outside the website, with an arrow to their part */
-.wh-pill { position: absolute; left: 0; right: 0; z-index: 2; display: grid; justify-items: center; gap: 5px; padding: 8px 2px 7px; border: 1px solid #e6e9ed; border-radius: 18px;
-  background: #fff; color: var(--ink); text-decoration: none; box-shadow: 0 10px 22px -14px rgba(16, 24, 40, .45); transition: transform .15s, box-shadow .15s, border-color .15s, top .3s; }
+/* The buttons, outside the website: a soft coloured icon and a short name, joined to their part by a line */
+.wh-pill { --tone: #0e7a4b; --soft: #e6f4ec; position: absolute; left: 0; right: 0; z-index: 2; display: grid; justify-items: center; gap: 6px; padding: 10px 0 9px;
+  border-radius: 20px; background: #fff; color: var(--ink); text-decoration: none; box-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 8px 20px -12px rgba(16, 24, 40, .3);
+  transition: transform .15s, box-shadow .15s, top .3s; }
+.wh-pill.pages { --tone: #4f5bd5; --soft: #ecedfc; }
+.wh-pill.sticky { --tone: #d9730d; --soft: #fdf0e3; }
 .wh-stage:not(.placed) .wh-pill { opacity: 0; }
 .wh-pill:active { transform: scale(.95); }
-.wh-pill.glow { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14, 122, 75, .15), 0 10px 22px -14px rgba(16, 24, 40, .45); }
-.wh-pill-ico { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: linear-gradient(135deg, #18a05f, #0e7a4b); color: #fff; box-shadow: 0 6px 12px -6px rgba(14, 122, 75, .8); }
-.wh-pill-ico .i { width: 17px; height: 17px; }
-.wh-pill-t { display: grid; justify-items: center; line-height: 1.1; }
-.wh-pill-t small { color: var(--muted); font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
-.wh-pill-t b { font-size: 13.5px; font-weight: 700; }
-.wh-arrow { position: absolute; left: calc(100% + 1px); top: 50%; width: 26px; height: 14px; margin-top: -7px; color: var(--accent); pointer-events: none; }
-.wh-foot { margin: 14px 0 0; color: var(--muted); font-size: 12.5px; text-align: center; }
+.wh-pill.glow { box-shadow: 0 0 0 2px var(--tone), 0 8px 20px -12px rgba(16, 24, 40, .3); }
+.wh-pill-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--soft); color: var(--tone); }
+.wh-pill-ico .i { width: 19px; height: 19px; stroke-width: 2.1; }
+.wh-pill b { font-size: 13px; font-weight: 600; letter-spacing: .005em; }
+/* The line ends in a dot on the edge of the website */
+.wh-line { position: absolute; left: 100%; top: 50%; width: 26px; height: 2px; margin-top: -1px; border-radius: 2px; background: var(--tone); opacity: .55; pointer-events: none; }
+.wh-line::after { content: ""; position: absolute; right: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--tone); box-shadow: 0 0 0 3px #f4f5f7; }
