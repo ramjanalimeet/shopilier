@@ -129,12 +129,17 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
           <button className="more-store" type="button" data-more="stores">
             <span className="top-store-ava" data-acct-ava /><span className="top-store-text"><b data-acct-name /><small data-acct-plan /></span><span className="more-switch">Switch<Icon name="chevronRight" /></span>
           </button>
-          {/* Your website, live in a new tab */}
-          <button className="m-visit" type="button" data-visit>
-            <span className="m-visit-ico"><Icon name="globe" /></span>
-            <span className="m-visit-text"><b>View your website</b><small data-visit-url>Opens in a new tab</small></span>
-            <Icon name="external" />
-          </button>
+          {/* Your website: its address (opens Settings → Domain to change it) and the website itself in a new tab */}
+          <div className="m-site">
+            <button className="m-visit m-domain" type="button" data-more="domain">
+              <span className="m-visit-ico"><Icon name="link" /></span>
+              <span className="m-visit-text"><b>Domain</b><small data-domain-url>Your address</small></span>
+            </button>
+            <button className="m-visit" type="button" data-visit>
+              <span className="m-visit-ico"><Icon name="globe" /></span>
+              <span className="m-visit-text"><b>View website</b><small data-visit-url>Opens in a new tab</small></span>
+            </button>
+          </div>
           <div className="more-grid">
             {MORE.map(([route, icon, label]) => (
               <a key={route} className="more-tile" data-route={route} href={`#/${route}`}><span className="more-ico"><Icon name={icon} /></span>{label}</a>

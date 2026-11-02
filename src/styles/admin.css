@@ -2193,3 +2193,13 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 .wsk-off .i { flex: none; width: 16px; height: 16px; }
 .wsk-hint { margin: -6px 0 12px; color: var(--muted); font-size: 12.5px; }
 .mn-cards.wsk { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+
+/* Account sheet: the website's address (Domain) and View website, side by side */
+.m-site { display: none; }
+@media (max-width: 760px) {
+  .m-site { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .m-site .m-visit { flex-direction: column; align-items: flex-start; gap: 10px; margin: 0; padding: 14px; }
+  .m-site .m-visit-text { width: 100%; }
+  .m-site .m-domain { border-color: #e3e6ea; background: #fff; }
+  .m-site .m-domain .m-visit-ico { background: #eef2ff; color: #4f46e5; }
+}

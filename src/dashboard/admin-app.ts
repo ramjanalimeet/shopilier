@@ -213,7 +213,8 @@ export const start = async () => {
     document.getElementById("me-avatar").innerHTML = avatar(account.name);
     document.getElementById("me-name").textContent = account.name.split(" ")[0];
     document.getElementById("me-store").textContent = siteUrl();
-    document.querySelectorAll("[data-visit-url]").forEach((el) => { el.textContent = store.published ? siteUrl() : "Not live yet · opens a preview"; });
+    document.querySelectorAll("[data-visit-url]").forEach((el) => { el.textContent = store.published ? "Opens in a new tab" : "Not live yet · a preview"; });
+    document.querySelectorAll("[data-domain-url]").forEach((el) => { el.textContent = siteUrl(); });
     document.getElementById("menu-name").textContent = account.name;
     document.getElementById("me-email").textContent = account.email;
     document.getElementById("me-plan").textContent = plan().name + " · " + (account.billing === "yearly" ? "Yearly" : "Monthly");
@@ -412,7 +413,7 @@ export const start = async () => {
       const k = b.dataset.more;
       if (k === "stores") storesDialog();
       else if (k === "chat") document.getElementById("chat-fab").click();
-      else if (k === "settings" || k === "billing") openSettings(k === "billing" ? "billing" : "general");
+      else if (k === "settings" || k === "billing" || k === "domain") openSettings(k === "settings" ? "general" : k);
       else if (k === "logout") document.getElementById("logout").click();
     });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !moreSheet.hidden) setMore(false); });
