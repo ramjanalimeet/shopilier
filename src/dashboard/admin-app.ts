@@ -603,8 +603,9 @@ export const start = async () => {
   const wsWidth = () => (WS_DEVICES.find((d) => d[0] === wsDevice) || WS_DEVICES[2])[3];
   const curRoute = () => location.hash.replace(/^#\/?/, "").split("?")[0];
   // The top of each screen: back, title and Publish
+  // back: an address, or "pages" for Edit Pages' own list (a page is open)
   const wsTop = (title, back = "#/site") => `<div class="page ws-page"><div class="ws-top">
-      <a class="ws-back" href="${back}" aria-label="Back" title="Back">${icon("arrowLeft")}</a><h1>${esc(title)}</h1>
+      ${back === "pages" ? `<button type="button" class="ws-back" data-wp-back aria-label="All pages" title="All pages">${icon("arrowLeft")}</button>` : `<a class="ws-back" href="${back}" aria-label="Back" title="Back">${icon("arrowLeft")}</a>`}<h1>${esc(title)}</h1>
       <button type="button" class="btn btn-primary ws-publish${unpublished() ? " has-changes" : ""}" data-action="publish" title="${unpublished() ? "You have changes that aren't live yet" : "Your website is up to date"}">${icon("send")}<span>Publish</span></button>
     </div>`;
   const wsDevs = () => `<div class="ws-devs" role="group" aria-label="Preview size">${WS_DEVICES.map(([id, ic, label]) => `<button type="button" data-ws-dev="${id}" class="${wsDevice === id ? "on" : ""}" aria-pressed="${wsDevice === id}" title="${label}">${icon(ic)}<span>${label}</span></button>`).join("")}</div>`;
@@ -674,7 +675,7 @@ export const start = async () => {
   const removeFromMenu = (pg) => { pg.inNav = false; delete pg.parent; store.pages.forEach((p) => { if (p.parent === pg.id) delete p.parent; }); };
   // Edit Pages: the page open on the right (none on phones until one is picked)
   let wsPage = null;
-  const wsSel = () => store.pages.find((p) => p.id === wsPage) || (innerWidth >= 900 ? store.pages[0] : null);
+  const wsSel = () => store.pages.find((p) => p.id === wsPage) || null;
   // Edit Nav: the header preview (on phones, with the menu opened under it)
   const navDocHTML = (o = {}) => {
     const lite = curRoute() === "site-nav", phone = lite && wsDevice === "mobile";
@@ -719,7 +720,7 @@ export const start = async () => {
       ["chat", "chat", waOk ? "WhatsApp / Call" : "WhatsApp", mb.chat !== false, waOk ? "" : "Add a number in Preferences"], ["account", "user", "Account", !!mb.account]];
     const color = (k, label, fb) => { const c = /^#[0-9a-f]{6}$/i.test(String(mb[k] || "")) ? mb[k] : ""; return `<div class="wsk-color"><label><input type="color" data-mb-color="${k}" value="${esc(c || fb)}" aria-label="${label}"><span><b>${label}</b><small>${c ? esc(c) : "Website colour"}</small></span></label>${c ? `<button type="button" class="btn btn-sm" data-mb-clear="${k}">Reset</button>` : ""}</div>`; };
     return `<div class="card wp-card wsk-looks-card">
-        <div class="wp-card-head"><h3>Choose a look</h3><span class="muted small">${SiteKit.MBAR_STYLES.length} looks</span></div>
+        <div class="wp-card-head"><h3>Choose a look</h3><span class="muted small">Swipe for more</span></div>
         <div class="wsk-looks">${SiteKit.MBAR_STYLES.map((x) => { const on = mb.show && (mb.style || "classic") === x.id; return `<button type="button" class="wsk-look${on ? " on" : ""}" data-mb-style="${x.id}" aria-pressed="${on}">
           ${wsScreen(SiteKit.documentHTML(site(x.id), store.pages, { thumb: true, mbarOnly: true, page: store.pages[0] }), 390, "wsk-shot")}
           <span class="wsk-look-name"><b>${esc(x.name)}</b><small>${esc(x.text)}</small></span>${on ? `<i class="ms-on">${icon("check")}</i>` : ""}
@@ -727,8 +728,8 @@ export const start = async () => {
       </div>
       <div class="wsk-rest">
         <div class="card wp-card">${wsSwitch('data-mb="show"', mb.show, "Show the sticky bar", "On every page that doesn't turn it off")}
-          <div class="field"><label>Show it on</label>${seg("where", [["phone", "Phones"], ["tablet", "+ Tablets"], ["all", "Every screen"]])}</div>
-          <div class="field"><label>Shape</label>${seg("shape", [["flat", "On the bottom edge"], ["float", "Floating"]])}</div>
+          <div class="field"><label>Show it on</label>${seg("where", [["phone", "Phones"], ["tablet", "+ Tablets"], ["all", "Everywhere"]])}</div>
+          <div class="field"><label>Shape</label>${seg("shape", [["flat", "Bottom edge"], ["float", "Floating"]])}</div>
         </div>
         <div class="card wp-card"><h3>Buttons</h3>
           <div class="hb-grid wsk-btns">${btns.map(([k, ic, name, on, warn]) => `<label class="hb-tile${on ? " on" : ""}"><input type="checkbox" data-mb="${k}" ${on ? "checked" : ""}><span class="hb-ico">${k === "chat" ? SiteKit.socialIcon("whatsapp") : icon(ic)}</span><b>${name}</b>${warn && on ? `<small>${warn}</small>` : ""}<i class="hb-check">${icon("check")}</i></label>`).join("")}</div>
@@ -1454,7 +1455,7 @@ export const start = async () => {
             </div>
           </div>` : ""}`;
         const W = lite ? wsWidth() : 1280;
-        return `${lite ? wsTop("Edit Nav") + `<p class="ws-intro">Change the promotional banner and the menu. Up to ${MENU_MAX} pages fit in the menu bar; put more in a dropdown.</p>` : head("Navigation", "The top bar of your website: its menu, a banner and buttons.")}
+        return `${lite ? wsTop("Edit Nav") + `<p class="ws-intro">Change the banner and the menu. Up to ${MENU_MAX} pages fit in the menu bar.</p>` : head("Navigation", "The top bar of your website: its menu, a banner and buttons.")}
           <div class="card nav-live${lite ? " ws-live" : ""}">
             <div class="nav-live-head"><span class="nav-live-dot">Live preview</span>${lite ? wsDevs() : ""}</div>
             <div class="nav-live-frame"><div class="nav-live-inner"><iframe class="nav-frame" data-w="${W}" style="width:${W}px" srcdoc="${doc()}" title="Menu preview" tabindex="-1" scrolling="no"></iframe></div></div>
@@ -1751,12 +1752,6 @@ export const start = async () => {
                 ${calls.map(([id, href, , label]) => `<a class="wh-hot" data-hot="${id}" href="${href}" tabindex="-1" aria-hidden="true" title="${label}"></a>`).join("")}
               </div>
             </div>
-            <div class="wh-more">
-              <a class="wh-link" href="#/themes">${icon("palette")}<span><b>Themes &amp; backups</b><small>Your theme, publishing and saved versions</small></span>${icon("chevronRight")}</a>
-              <a class="wh-link" href="#/website">${icon("brush")}<span><b>Full editor</b><small>Every section, text and photo</small></span>${icon("chevronRight")}</a>
-              <a class="wh-link" href="#/preferences">${icon("settings")}<span><b>Preferences</b><small>Logo, colours, fonts and contact details</small></span>${icon("chevronRight")}</a>
-              <button type="button" class="wh-link" data-action="view-store">${icon("external")}<span><b>View your store</b><small>${esc(siteUrl())}</small></span>${icon("chevronRight")}</button>
-            </div>
           </div>
         </div>`;
       },
@@ -1810,11 +1805,10 @@ export const start = async () => {
             <button type="button" class="wp-add" data-action="add-page" ${canAdd ? "" : "disabled"}>${icon("plus")}Add page</button>
             ${canAdd ? "" : `<p class="wp-empty">Your ${esc(plan().name)} plan allows ${plan().pages} pages.</p>`}
           </aside>`;
-        return `${wsTop("Edit Pages")}
-          <p class="ws-intro">Pick a page to edit it. Switch a page on to put it in the menu (up to ${MENU_MAX}).</p>
+        return `${sel ? wsTop(sel.title, "pages") : wsTop("Edit Pages") + `<p class="ws-intro">Tap a page to edit it. Switch a page on to put it in the menu (up to ${MENU_MAX}).</p>`}
           <div class="wp${sel ? " has-sel" : ""}">${list}
             <section class="wp-edit">${sel ? `
-              <div class="wp-title"><button type="button" class="wp-back" data-wp-back>${icon("arrowLeft")}All pages</button>${wsPageTitle(sel)}</div>
+              <div class="wp-title">${wsPageTitle(sel)}</div>
               <div class="card ws-live wp-preview" data-page="${sel.id}">
                 <div class="nav-live-head"><span class="nav-live-dot">Live preview</span>${wsDevs()}</div>
                 ${wsScreen(pageDoc(sel), wsWidth(), "wp-screen")}
@@ -1834,6 +1828,7 @@ export const start = async () => {
         view.querySelector(".ws-publish").replaceWith(tmp.querySelector(".ws-publish"));
         if (sel) {
           view.querySelector(".wp-title").innerHTML = tmp.querySelector(".wp-title").innerHTML;
+          view.querySelector(".ws-top h1").textContent = sel.title;
           view.querySelector(".wp-side").innerHTML = tmp.querySelector(".wp-side").innerHTML;
           view.querySelector(".wp-preview .nav-live-head").innerHTML = tmp.querySelector(".wp-preview .nav-live-head").innerHTML;
           wsSwap(view.querySelector(".wp-screen"), pageDoc(sel), wsWidth());
@@ -1849,7 +1844,7 @@ export const start = async () => {
           if (!t) return;
           if (t.dataset.wsDev) { wsDevice = t.dataset.wsDev; go(); return; }
           if (t.hasAttribute("data-wp-back")) { wsPage = null; rerender(); return; }
-          if (t.dataset.wpPick) { wsPage = t.dataset.wpPick; rerender(); return; }
+          if (t.dataset.wpPick) { wsPage = t.dataset.wpPick; rerender(); document.querySelector(".scroll").scrollTop = 0; return; }
           if (t.dataset.wpSec) {
             const s = (wsSel().sections || []).find((x) => x.id === t.dataset.wpSec);
             if (!s || s.type === "checkout") return;
@@ -1890,6 +1885,7 @@ export const start = async () => {
             const tmp = document.createElement("div"); tmp.innerHTML = routes["site-pages"].render();
             view.querySelector(".wp-list").innerHTML = tmp.querySelector(".wp-list").innerHTML;
             view.querySelector(".wp-title").innerHTML = tmp.querySelector(".wp-title").innerHTML;
+            view.querySelector(".ws-top h1").textContent = pg.title;
             view.querySelector(".ws-publish").replaceWith(tmp.querySelector(".ws-publish"));
             wsSwap(view.querySelector(".wp-screen"), pageDoc(pg), wsWidth());
           }, 400);
@@ -1904,7 +1900,7 @@ export const start = async () => {
         const mb = store.site.header.mbar;
         const shown = { mobile: true, tablet: mb.where !== "phone", desktop: mb.where === "all" }[wsDevice];
         return `${wsTop("Edit Sticky")}
-          <p class="ws-intro">The bar that stays at the bottom of the screen while customers scroll. Pick a look, then make it yours.</p>
+          <p class="ws-intro">The bar at the bottom of the screen. Pick a look, then make it yours.</p>
           <div class="wsk">
             <div class="card ws-live wsk-live">
               <div class="nav-live-head"><span class="nav-live-dot">Live preview</span>${wsDevs()}</div>
@@ -3330,6 +3326,8 @@ export const start = async () => {
     // Edit Nav, Edit Pages and Edit Sticky belong to Edit website
     if (route.startsWith("site-")) document.querySelectorAll('[data-route="site"]').forEach((a) => a.classList.add("on"));
     paintTabs();
+    // Website screens on phones: their own top bar takes the place of the dashboard's
+    document.body.classList.toggle("ws-mode", route === "site" || route.startsWith("site-"));
     // On phones table rows show as cards, with each value labelled by its column
     document.querySelectorAll("#view .table").forEach((t) => {
       const heads = [...t.querySelectorAll("thead th")].map((th) => th.textContent.trim());
@@ -3348,6 +3346,18 @@ export const start = async () => {
   refreshChrome();
   const startHash = /^#\/(settings|billing|help|messages)$/.exec(location.hash);
   if (startHash) history.replaceState(null, "", "#/home");
+  // Edit Website and its three screens are for phones only. On tablets and computers their links open the
+  // pages that do the same job there (Themes, Navigation, Pages, the editor's sticky bar).
+  const PHONE_ONLY = { site: "#/themes", "site-nav": "#/navigation", "site-pages": "#/pages", "site-sticky": "#/website?section=mbar" };
+  const isPhone = () => matchMedia("(max-width: 760px)").matches;
+  const offPhone = () => { const to = PHONE_ONLY[curRoute()]; if (!to || isPhone()) return false; history.replaceState(null, "", to); setTimeout(() => rerender()); return true; };
+  Object.keys(PHONE_ONLY).forEach((k) => {
+    const r = routes[k], render = r.render, mount = r.mount, update = r.update;
+    r.render = () => (offPhone() ? "" : render());
+    r.mount = (view) => { if (view.querySelector(".ws-page")) mount(view); };
+    if (update) r.update = (view) => (offPhone() ? true : update(view));
+  });
+  matchMedia("(max-width: 760px)").addEventListener("change", offPhone);
   rerender = router(routes, "home", afterRender);
   if (startHash) { if (startHash[1] === "messages") openChat(); else openSettings(startHash[1] === "settings" ? "general" : startHash[1]); }
 };

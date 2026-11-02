@@ -39,7 +39,6 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
             <div className="side-head">Sales channel</div>
             <button className="nav-item store-toggle" type="button" id="store-toggle" aria-expanded="false" aria-controls="store-sub"><Icon name="store" />Online Store<Icon name="chevronDown" /></button>
             <div className="store-sub" id="store-sub" hidden>
-              <a className="nav-item sub" data-route="site" href="#/site">Edit website</a>
               <a className="nav-item sub" data-route="themes" href="#/themes">Themes</a>
               <a className="nav-item sub" data-route="pages" href="#/pages">Pages</a>
               <a className="nav-item sub" data-route="navigation" href="#/navigation">Navigation</a>

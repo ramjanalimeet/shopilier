@@ -1871,7 +1871,7 @@ body.editor-open .ed-row-tools .ed-sm, body.editor-open .ed-add-section.ed-sm, b
 .wsk-live { position: sticky; top: 0; }
 .wsk-screen { height: 560px; }
 .wsk-note { margin: 0; padding: 10px 16px; border-top: 1px solid var(--border); background: #fffbeb; color: #92400e; font-size: 13px; }
-.wsk-side, .wsk-rest { display: grid; gap: 14px; min-width: 0; }
+.wsk-side, .wsk-rest { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
 .wsk-looks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .wsk-look { position: relative; display: grid; padding: 0; border: 1.5px solid var(--border); border-radius: 14px; background: #fff; color: var(--ink); font: inherit; text-align: left; overflow: hidden; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
 .wsk-look:hover { border-color: #b9c2cc; }
@@ -1899,14 +1899,68 @@ body.editor-open .ed-row-tools .ed-sm, body.editor-open .ed-add-section.ed-sm, b
 .wsk-page span { display: grid; font-size: 14px; font-weight: 600; }
 .wsk-page small { color: var(--muted); font-size: 12px; font-weight: 400; }
 .wsk-page.off { opacity: .6; cursor: default; }
-@media (max-width: 560px) {
-  .wsk-looks { grid-template-columns: 1fr; }
-  .wsk-look { grid-template-columns: 58% minmax(0, 1fr); align-items: center; }
-  .wsk-shot { height: 84px; }
-  .wsk-look-name { border-top: 0; border-left: 1px solid var(--border); height: 100%; align-content: center; }
-}
 @media (max-width: 1100px) {
-  .wsk { grid-template-columns: 1fr; }
+  .wsk { grid-template-columns: minmax(0, 1fr); }
   .wsk-live { position: static; }
   .wsk-screen { height: 440px; }
+}
+
+/* ---------- Website screens on phones (Edit Website, Edit Nav, Edit Pages, Edit Sticky) ----------
+   These screens exist on phones only. Their own bar (back, title, Publish) replaces the dashboard's top bar. */
+@media (max-width: 760px) {
+  body.ws-mode:not(.master-admin) .topbar { display: none; }
+  body.ws-mode:not(.master-admin) .page.ws-page { padding-top: 0; }
+  .ws-top { position: sticky; top: 0; z-index: 30; margin: 0 -16px 4px; padding: 10px 16px; background: color-mix(in srgb, #f4f5f7 92%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(14px); backdrop-filter: saturate(180%) blur(14px); }
+}
+@media (max-width: 760px) {
+  .ws-top h1 { overflow: hidden; font-size: 20px; white-space: nowrap; text-overflow: ellipsis; }
+  .ws-back { width: 38px; height: 38px; }
+  .ws-publish { height: 38px; padding: 0 15px; border-radius: 999px; font-size: 14px; }
+  .ws-publish .i { width: 16px; height: 16px; }
+  .ws-intro { margin-bottom: 12px; font-size: 13px; }
+  .ws-live .nav-live-head { padding: 8px 8px 8px 14px; }
+  .ws-live .nav-live-dot { font-size: 12.5px; }
+  .ws-devs button { height: 30px; padding: 0 10px; }
+  .ws-page .card { border-radius: 16px; }
+
+  /* Edit Website: the phone fills the screen between the bar at the top and the tabs */
+  .wh-stage { padding-top: 4px; }
+  .wh-screen { aspect-ratio: auto; height: clamp(380px, calc(100dvh - 260px), 700px); }
+
+  /* Edit Nav: a slim switch between Menu and Banner, compact menu rows */
+  .ws-page .nv-tabs { margin-bottom: 12px; padding: 4px; border-radius: 12px; }
+  .ws-page .nv-tabs button { flex-direction: row; gap: 7px; min-height: 40px; padding: 0 10px; font-size: 14px; }
+  .ws-page .nv-tabs span { display: inline-block; }
+  .ws-page .nv-card { padding: 12px; }
+  .ws-page .nv-hint { align-items: flex-start; margin-bottom: 10px; font-size: 12.5px; line-height: 1.4; }
+  .ws-page .nv-hint .i { flex: none; margin-top: 1px; }
+  .ws-page .nav-list { gap: 6px; padding: 0; }
+  .ws-page .nav-row { gap: 8px; padding: 7px 8px 7px 2px; border-radius: 12px; }
+  .ws-page .nav-text b { font-size: 14.5px; }
+  .ws-page .nav-text span { max-width: none; font-size: 12px; }
+  .ws-page .nv-add { min-height: 44px; }
+
+  /* Edit Pages */
+  .wp-list { padding: 10px; }
+  .wp-screen { height: 360px; }
+  .wp-card { padding: 14px; }
+  .wp-title { gap: 10px; }
+  .wp-name h2 { display: none; }
+
+  /* Edit Sticky: a short preview, looks in a row you swipe, small button tiles */
+  .wsk-screen { height: 330px; }
+  .wsk-looks { display: flex; gap: 10px; margin: 0 -14px; padding: 2px 14px 6px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 14px; scrollbar-width: none; }
+  .wsk-looks::-webkit-scrollbar { display: none; }
+  .wsk-look { flex: 0 0 74%; scroll-snap-align: start; }
+  .wsk-shot { height: 80px; }
+  .wsk-btns { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .wsk-btns .hb-tile { gap: 6px; padding: 12px 4px 10px; border-radius: 12px; }
+  .wsk-btns .hb-tile.on { padding: 11px 3px 9px; }
+  .wsk-btns .hb-ico { width: 34px; height: 34px; border-radius: 10px; }
+  .wsk-btns .hb-tile b { font-size: 12.5px; line-height: 1.25; }
+  .wsk-btns .hb-check { top: 6px; right: 6px; width: 16px; height: 16px; }
+  .wsk-btns .hb-check .i { width: 10px; height: 10px; }
+  .wsk .hb-cta { grid-template-columns: 1fr; gap: 0; }
+  .wsk-seg button { padding: 0 6px; font-size: 13px; white-space: nowrap; }
 }
