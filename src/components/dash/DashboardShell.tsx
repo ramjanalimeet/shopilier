@@ -39,6 +39,7 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
             <div className="side-head">Sales channel</div>
             <button className="nav-item store-toggle" type="button" id="store-toggle" aria-expanded="false" aria-controls="store-sub"><Icon name="store" />Online Store<Icon name="chevronDown" /></button>
             <div className="store-sub" id="store-sub" hidden>
+              <a className="nav-item sub" data-route="site" href="#/site">Edit website</a>
               <a className="nav-item sub" data-route="themes" href="#/themes">Themes</a>
               <a className="nav-item sub" data-route="pages" href="#/pages">Pages</a>
               <a className="nav-item sub" data-route="navigation" href="#/navigation">Navigation</a>
@@ -120,7 +121,7 @@ export default function DashboardShell({ demo = false }: { demo?: boolean }) {
         <a className="tab" data-route="products" data-tab="products" href="#/products"><Icon name="products" /><span>Products</span></a>
         <a className="tab" data-route="orders" data-tab="orders" href="#/orders"><Icon name="orders" /><span>Orders</span><span className="tab-badge" data-badge /></a>
         <a className="tab tab-home" data-route="home" data-tab="home" href="#/home"><Icon name="home" /><span>Home</span></a>
-        <a className="tab" data-route="themes" data-tab="themes" href="#/themes"><Icon name="monitor" /><span>Website</span></a>
+        <a className="tab" data-route="site" data-tab="themes" href="#/site"><Icon name="monitor" /><span>Website</span></a>
         <button className="tab" type="button" id="more-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="more-sheet"><Icon name="user" /><span>Account</span></button>
       </nav>
       <div className="more-sheet" id="more-sheet" role="dialog" aria-modal="true" aria-label="More" hidden>

@@ -737,3 +737,39 @@ figcaption span { font-size: 14px; opacity: .7; }
 }
 /* The sticky bar sits flush on the bottom edge (no gap under it); the floating shape is only used when chosen */
 .s-mbar.mb-flat { bottom: 0; margin: 0; }
+
+/* ---------- Website → Edit Nav / Edit Pages / Edit Sticky ---------- */
+/* Live menu preview on phones: the opened menu sits in the page, so the preview grows to show all of it */
+.m-preview .nav { flex-wrap: wrap; }
+.m-preview .s-header.m-open .menu { position: static; order: 10; flex: 0 0 100%; width: 100%; padding: 0 0 6px; border-bottom: 0; box-shadow: none; }
+.m-preview .s-header { position: relative; }
+/* A page that leaves out its header or sticky bar: faded in the editor, gone on the website */
+.editing .pg-off { opacity: .35; }
+/* The sticky bar alone on a soft background (style cards) */
+.mbar-preview { min-height: 100vh; background: linear-gradient(180deg, #f7f8fa, #e9ecef); }
+
+/* Sticky bar looks (.mbs-*). Each one works with both shapes and with the bar's own colours. */
+.s-mbar.mbs-center { overflow: visible; }
+.s-mbar.mbs-center > a.mb-cta { flex: 0 0 auto; flex-direction: column; gap: 4px; height: auto; min-width: 64px; margin-top: -30px; padding: 0; border-radius: 0;
+  background: none; box-shadow: none; color: var(--mb-text); font-size: 11px; font-weight: 700; opacity: 1; }
+.s-mbar.mbs-center > a.mb-cta .ic { display: block; width: 58px; height: 58px; padding: 17px; border-radius: 50%; stroke-width: 2;
+  background: var(--mb-cta); color: var(--mb-on-cta); box-shadow: 0 0 0 5px var(--mb-bg), 0 12px 24px -10px var(--mb-cta); }
+.s-mbar.mbs-center > a.mb-cta span { max-width: 84px; overflow: hidden; text-overflow: ellipsis; }
+
+.s-mbar.mbs-pill > a[aria-current="page"] { background: color-mix(in srgb, var(--mb-cta) 14%, transparent); color: var(--mb-cta); opacity: 1; }
+.s-mbar.mbs-pill > a { padding: 6px 4px; border-radius: 14px; }
+.s-mbar.mbs-pill > a[aria-current="page"]::before { display: none; }
+.s-mbar.mbs-pill > a.mb-cta { border-radius: 999px; }
+
+.s-mbar.mbs-icons { padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+.s-mbar.mbs-icons > a:not(.mb-cta) > span, .s-mbar.mbs-icons > .mb-acc > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.s-mbar.mbs-icons > a:not(.mb-cta), .s-mbar.mbs-icons > .mb-acc { padding: 8px 0; }
+.s-mbar.mbs-icons > a.mb-cta { height: 44px; }
+
+.s-mbar.mbs-buy { gap: 6px; }
+.s-mbar.mbs-buy > a:not(.mb-cta), .s-mbar.mbs-buy > .mb-acc { flex: 0 0 52px; }
+.s-mbar.mbs-buy > a.mb-cta { flex: 1 1 auto; order: 10; height: 50px; border-radius: 14px; font-size: 15px; }
+
+.s-mbar.mbs-dark { --mb-bg: #15171c; --mb-text: #f3f4f6; border-color: rgba(255, 255, 255, .08); }
+.s-mbar.mbs-dark > a { opacity: .75; }
+.s-mbar.mbs-dark > a[aria-current="page"], .s-mbar.mbs-dark > a.mb-cta { opacity: 1; }

@@ -70,6 +70,7 @@ export const SiteEditor = (() => {
     mbar: [["toggle", "show", "Show the sticky bar"],
       ["select", "where", "Show it on", { when: "show", options: [["phone", "Phones"], ["tablet", "Phones and tablets"], ["all", "Every screen (a floating bar on computers too)"]] }],
       ["select", "shape", "Shape", { when: "show", options: [["flat", "Flat, on the bottom edge"], ["float", "Floating, with rounded corners"]] }],
+      ["select", "style", "Look", { when: "show", options: K.MBAR_STYLES.map((x) => [x.id, x.name]) }],
       ["note", "", "<b>Buttons</b>"],
       ["toggle", "home", "Home"], ["toggle", "shop", "Shop"], ["toggle", "cart", "Cart (shows how many items)"], ["toggle", "chat", "WhatsApp (or Call when there's no WhatsApp)"], ["toggle", "account", "Account"],
       ["text", "cta", "Main button text (empty: no main button)", { placeholder: "Order now" }], ["url", "link", "Main button link", { when: "cta" }],
@@ -120,7 +121,8 @@ export const SiteEditor = (() => {
     K.ensure(store.site, store.pages, ctx());
 
     // #/website?page=<id> opens that page (from the Pages list)
-    const askedPage = new URLSearchParams(location.hash.split("?")[1] || "").get("page");
+    // #/website?page=<id>&section=<id> also opens that section (from Website → Edit Pages)
+    const asked = new URLSearchParams(location.hash.split("?")[1] || ""), askedPage = asked.get("page");
     const state = { mode: "sections", selected: null, pageId: store.pages.some((p) => p.id === askedPage) ? askedPage : store.pages[0].id, device: innerWidth < 900 ? "mobile" : "desktop", panelOpen: innerWidth >= 900 };
     const page = () => store.pages.find((p) => p.id === state.pageId) || store.pages[0];
     const sectionById = (id) => page().sections.find((s) => s.id === id);
@@ -664,8 +666,11 @@ export const SiteEditor = (() => {
     };
     addEventListener("hashchange", cleanup);
 
+    const askedSection = asked.get("section");
+    if (askedSection && (["header", "footer", "mbar"].includes(askedSection) || sectionById(askedSection))) { state.selected = askedSection; state.panelOpen = true; if (askedSection === "mbar" && (store.site.header.mbar || {}).where !== "all") state.device = "mobile"; }
     paintAll();
     paintSide();
+    if (state.selected) frame.addEventListener("load", () => setTimeout(scrollToSelected, 60), { once: true });
   };
 
   return { mount, upload };
