@@ -2155,3 +2155,41 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
 .mn-card .nv-row:last-child { padding-bottom: 0; }
 .mn-icons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
 .mn-icons:last-child { margin-bottom: 0; }
+
+/* Edit Pages (phones): a tab per page, the page live, its parts */
+.wp-tabs button .i { width: 15px; height: 15px; }
+.wp-tabs button.k-landing:not(.on) .i { color: #4f46e5; }
+.wp-tabs button.k-checkout:not(.on) .i { color: #b45309; }
+.wp-tabs .wp-tab-add { border-style: dashed; color: var(--accent); }
+.wp-live { margin-bottom: 12px; }
+.wp-live .ws-screen { height: min(52dvh, 460px); }
+.wp-sel { border: 1.5px solid var(--accent); }
+.wp-go { width: 100%; justify-content: center; }
+.wp-acts4 { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, 44px); gap: 8px; }
+.wp-acts4 .btn { justify-content: center; height: 44px; padding: 0; }
+.wp-acts4 .btn-primary { padding: 0 14px; }
+.wp-acts4 .btn .i { width: 17px; height: 17px; }
+.wp-sum { display: flex; align-items: center; gap: 12px; }
+.wp-sum .wl-t { flex: 1; }
+.wp-shows { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.wp-show { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
+.wp-show b { font-size: 13.5px; color: var(--ink); }
+.wp-parts { display: grid; gap: 6px; }
+.wp-part { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 50px; padding: 6px 10px 6px 6px; border: 1px solid var(--border); border-radius: 14px; background: #fff;
+  color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.wp-part b { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600; }
+.wp-part i { padding: 1px 8px; border-radius: 999px; background: #f1f3f5; color: #667085; font-size: 11px; font-style: normal; font-weight: 600; }
+.wp-part > .i:last-child { width: 15px; height: 15px; color: #98a2b3; }
+.wp-part-ico { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 10px; background: #f1f3f5; color: #475467; }
+.wp-part-ico .i { width: 17px; height: 17px; }
+.wp-part.on { border-color: var(--accent); background: #f3faf6; }
+.wp-part.on .wp-part-ico { background: #e1f3e8; color: var(--accent); }
+.wp-part.off b { color: #98a2b3; }
+
+/* Edit Sticky (phones): the bar live at the top, then tabs */
+.wsk-live2 { margin-bottom: 12px; }
+.wsk-live2 .ws-screen { height: 112px; }
+.wsk-off { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: #fff7ed; color: #9a3412; font-size: 13px; }
+.wsk-off .i { flex: none; width: 16px; height: 16px; }
+.wsk-hint { margin: -6px 0 12px; color: var(--muted); font-size: 12.5px; }
+.mn-cards.wsk { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
