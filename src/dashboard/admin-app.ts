@@ -1910,7 +1910,7 @@ export const start = async () => {
     "site-nav": {
       title: "Edit Nav",
       render: () => `${wsTop("Edit Nav")}
-          <div class="card ws-live mn-live">${wsScreen(navPhoneDoc(), "auto", "mn-screen", "content")}</div>
+          <div class="card ws-live mn-live" data-live="Live preview">${wsScreen(navPhoneDoc(), "auto", "mn-screen", "content")}</div>
           <div class="mn-tabs" role="tablist">${MN_TABS.map(([id, ic, label]) => `<button type="button" role="tab" data-mn-tab="${id}" class="${mnTab === id ? "on" : ""}" aria-selected="${mnTab === id}">${icon(ic)}<span>${label}</span></button>`).join("")}</div>
           <div class="mn-cards">${wsNavCard()}</div>
         </div>`,
@@ -1993,12 +1993,13 @@ export const start = async () => {
       render: () => {
         const menuN = menuTopCount(), canAdd = withinLimit(plan().pages, pageCount());
         const menu = menuRows(), checkout = store.pages.filter((p) => p.system), landing = store.pages.filter((p) => !p.inNav && !p.system);
+        // Each page as a card: a small live picture of the page on top, then its name, Edit and settings
         const card = (p, kind, child) => {
           const chips = kind === "landing" ? [p.hideHeader && "No header", p.hideMbar && "No sticky bar"].filter(Boolean) : child ? ["In a dropdown"] : [];
           const n = (p.sections || []).filter((x) => !x.hidden).length;
           return `<article class="pc">
-            <a class="pc-top" href="#/website?page=${p.id}&split=1"><span class="wl-ico ${kind}">${icon(kind === "checkout" ? "cart" : kind === "landing" ? "rocket" : p.locked ? "home" : "pages")}</span>
-              <span class="wl-t"><b>${esc(p.title)}</b><small>/${esc(p.slug)} · ${n} ${n === 1 ? "part" : "parts"}</small>${chips.length ? `<span class="wl-chips">${chips.map((c) => `<i>${c}</i>`).join("")}</span>` : ""}</span></a>
+            <a class="pc-shot" href="#/website?page=${p.id}&split=1" tabindex="-1" aria-hidden="true">${wsScreen(pageDoc(p), 360, "pc-screen")}</a>
+            <a class="pc-top" href="#/website?page=${p.id}&split=1"><span class="wl-ico ${kind}">${icon(kind === "checkout" ? "cart" : kind === "landing" ? "rocket" : p.locked ? "home" : "pages")}</span><span class="wl-t"><b>${esc(p.title)}</b><small>/${esc(p.slug)} · ${n} ${n === 1 ? "part" : "parts"}</small>${chips.length ? `<span class="wl-chips">${chips.map((c) => `<i>${c}</i>`).join("")}</span>` : ""}</span></a>
             <div class="pc-acts">
               <a class="btn btn-primary pc-edit" href="#/website?page=${p.id}&split=1">${icon("edit")}Edit</a>
               <button type="button" class="btn pc-set" data-wp-set="${p.id}" aria-label="Settings for ${esc(p.title)}" title="Settings">${icon("settings")}</button>
@@ -2019,6 +2020,7 @@ export const start = async () => {
       mount: (view) => {
         // Listeners go on this screen (made anew with each draw), never on #view, so they never pile up
         const root = view.querySelector(".ws-page");
+        wsMount(view);
         root.addEventListener("click", (e) => {
           const b = e.target.closest("[data-wp-set], [data-wp-add]");
           if (!b) return;
@@ -2032,7 +2034,7 @@ export const start = async () => {
     "site-sticky": {
       title: "Edit Sticky",
       render: () => `${wsTop("Edit Sticky")}
-          <div class="card ws-live wsk-live2">${wsScreen(wskDoc(), "auto", "wsk-screen2")}</div>
+          <div class="card ws-live wsk-live2" data-live="Live preview">${wsScreen(wskDoc(), "auto", "wsk-screen2")}</div>
           <div class="mn-tabs" role="tablist">${WSK_TABS.map(([id, ic, label]) => `<button type="button" role="tab" data-wsk-tab="${id}" class="${wskTab === id ? "on" : ""}" aria-selected="${wskTab === id}">${icon(ic)}<span>${label}</span></button>`).join("")}</div>
           <div class="mn-cards wsk">${wskCard()}</div>
         </div>`,
