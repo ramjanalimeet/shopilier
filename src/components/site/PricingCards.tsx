@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { PLANS, type PlanId } from "@/lib/catalog";
 
@@ -27,23 +27,6 @@ const List = ({ lines }: { lines: Line[] }) => (
 // Pricing: monthly / yearly toggle and the plan cards
 export default function PricingCards() {
   const [yearly, setYearly] = useState(false);
-  // Phones: the plans scroll sideways; start on the popular one and show which card is in view
-  const row = useRef<HTMLDivElement>(null);
-  const [onCard, setOnCard] = useState(1);
-  useEffect(() => {
-    const el = row.current;
-    if (!el || el.scrollWidth <= el.clientWidth) return;
-    const pop = el.querySelector<HTMLElement>(".pcard-pop");
-    if (pop) el.scrollLeft = pop.offsetLeft - (el.clientWidth - pop.offsetWidth) / 2;
-    const onScroll = () => {
-      const mid = el.scrollLeft + el.clientWidth / 2;
-      const cards = [...el.children] as HTMLElement[];
-      setOnCard(cards.reduce((best, c, i) => (Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid) < Math.abs(cards[best].offsetLeft + cards[best].offsetWidth / 2 - mid) ? i : best), 0));
-    };
-    onScroll();
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, []);
   const billing = yearly ? "yearly" : "monthly";
   return (
     <>
@@ -55,7 +38,7 @@ export default function PricingCards() {
       </div>
       <section className={"cat-panel" + (yearly ? " is-yearly" : "")} id="panel-ecommerce" data-cat="ecommerce">
         <p className="cat-best">Every plan comes with a free website, a free sub-domain, CMS access and support. Pick the plan that fits your store today and change it any time.</p>
-        <div className="pcards" ref={row}>
+        <div className="pcards">
           {CARDS.map((card) => {
             const plan = PLANS.find((p) => p.id === card.id)!;
             const month = plan.price;
@@ -76,7 +59,6 @@ export default function PricingCards() {
             );
           })}
         </div>
-        <div className="pcards-hint" aria-hidden="true">{CARDS.map((c, i) => <i key={c.id} className={i === onCard ? "on" : undefined} />)}</div>
       </section>
     </>
   );
