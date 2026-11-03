@@ -1818,10 +1818,21 @@ export const start = async () => {
           saved.classList.add("saving"); saved.lastChild.textContent = "Saving…";
           touchSite(); persist();
           clearTimeout(t); t = setTimeout(() => { saved.classList.remove("saving"); saved.lastChild.textContent = "All changes saved"; }, 900);
-          if (rerender) { const y = document.querySelector(".scroll").scrollTop; go(); document.querySelector(".scroll").scrollTop = y; return; }
-          // Typing: refresh the live preview after a short pause
-          clearTimeout(pt); pt = setTimeout(() => { const fr = view.querySelector("#pf-frame"); if (fr) fr.srcdoc = SiteKit.documentHTML(store.site, store.pages, { thumb: true, page: store.pages[0], products: store.products }); }, 500);
+          if (rerender === true) { const y = document.querySelector(".scroll").scrollTop; go(); document.querySelector(".scroll").scrollTop = y; return; }
+          // Refresh the live preview (after a short pause while typing; at once for a tap). The new preview loads
+          // behind the old one and takes its place when ready, so it never flashes white.
+          clearTimeout(pt); pt = setTimeout(() => {
+            const fr = view.querySelector("#pf-frame");
+            if (!fr) return;
+            const next = fr.cloneNode(false);
+            next.style.visibility = "hidden";
+            next.addEventListener("load", () => { view.querySelectorAll("#pf-frame").forEach((x) => { if (x !== next) x.remove(); }); next.style.visibility = ""; }, { once: true });
+            next.srcdoc = SiteKit.documentHTML(store.site, store.pages, { thumb: true, page: store.pages[0], products: store.products });
+            fr.after(next);
+          }, rerender === "now" ? 0 : 500);
         };
+        // A tap on a choice marks it right where it is (the page isn't drawn again, so nothing jumps)
+        const mark = (b, group) => form.querySelectorAll(group).forEach((x) => x.classList.toggle("on", x === b));
         form.addEventListener("input", (e) => {
           const el = e.target, k = el.dataset.k;
           if (!k || el.type === "checkbox") return;
@@ -1835,8 +1846,12 @@ export const start = async () => {
         });
         form.addEventListener("change", async (e) => {
           const el = e.target;
-          if (el.type === "checkbox" && el.dataset.k) { set(store.site, el.dataset.k, el.checked); changed(true); }
-          if (el.type === "color") changed(true);
+          if (el.type === "checkbox" && el.dataset.k) {
+            set(store.site, el.dataset.k, el.checked);
+            if (el.dataset.k === "header.announcement.show") view.querySelector("#pf-announce-demo")?.classList.toggle("off", !el.checked);
+            changed("now");
+          }
+          if (el.type === "color") { mark(null, ".pf-palettes button"); changed("now"); }
           if (el.dataset.upload && el.files[0]) {
             const btn = el.closest(".btn"); btn.classList.add("busy");
             try { set(store.site, el.dataset.upload, await SiteEditor.upload(el.files[0])); changed(true); toast("Image uploaded"); }
@@ -1847,8 +1862,14 @@ export const start = async () => {
           const b = e.target.closest("button");
           if (!b) return;
           if (b.hasAttribute("data-edit-banner")) { navTab = "banner"; location.hash = "#/navigation"; return; }
-          if (b.dataset.set) { set(store.site, b.dataset.set, b.dataset.v); changed(true); }
-          else if (b.dataset.palette) { const [bg, tx, ac] = b.dataset.palette.split(","); Object.assign(store.site, { bg, text: tx, accent: ac }); changed(true); }
+          if (b.dataset.set) { set(store.site, b.dataset.set, b.dataset.v); mark(b, `[data-set="${b.dataset.set}"]`); changed("now"); }
+          else if (b.dataset.palette) {
+            const [bg, tx, ac] = b.dataset.palette.split(",");
+            Object.assign(store.site, { bg, text: tx, accent: ac });
+            mark(b, ".pf-palettes button");
+            [["bg", bg], ["text", tx], ["accent", ac]].forEach(([k, val]) => { const inp = form.querySelector(`input[type=color][data-k="${k}"]`); if (inp) { inp.value = val; inp.closest(".pf-color").querySelector("small").textContent = val; } });
+            changed("now");
+          }
           else if (b.dataset.clear) { set(store.site, b.dataset.clear, ""); changed(true); }
           else if (b.dataset.addSocial) {
             const k = b.dataset.addSocial;
@@ -3333,6 +3354,33 @@ export const start = async () => {
     return true;
   };
   window.addEventListener("hashchange", settingsFromHash);
+
+  // Phones and tablets: Back closes what's open on top (a window, Settings, the Account sheet, the chat) instead of
+  // leaving the page under it. Opening one adds a step to the history; closing it another way takes the step back.
+  if (matchMedia("(max-width: 1024px)").matches) {
+    const sheet = document.getElementById("more-sheet");
+    const top = () => [...document.querySelectorAll(".overlay")].pop() || (sheet && !sheet.hidden && "sheet") || (!chatPanel.hidden && "chat") || null;
+    let step = false;
+    const sync = () => {
+      const open = !!top();
+      if (open && !step) { history.pushState({ shLayer: 1 }, "", location.href); step = true; }
+      // Closed another way: take the step back, unless the tap also opened another page (a link in the sheet)
+      else if (!open && step) { step = false; setTimeout(() => { if (!top() && history.state && history.state.shLayer) history.back(); }, 60); }
+    };
+    addEventListener("popstate", () => {
+      if (!step) return;
+      step = false;
+      const t = top();
+      if (t === "sheet") setMore(false);
+      else if (t === "chat") closeChat();
+      else if (t) { const x = t.querySelector("[data-close]"); if (x) x.click(); else t.remove(); }
+      // Something still open under it (a window over Settings) gets its own step again
+      setTimeout(sync, 0);
+    });
+    const watch = new MutationObserver(sync);
+    watch.observe(document.body, { childList: true });
+    [sheet, chatPanel].forEach((el) => { if (el) watch.observe(el, { attributes: true, attributeFilter: ["hidden"] }); });
+  }
 
   // Send to courier / Update status from inside the order popup
   document.addEventListener("click", (e) => {

@@ -139,3 +139,6 @@
   .start-form, .ai-edit { padding: 20px; }
   .row2 { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* Touch screens: no lift when a choice is tapped (the picked one already shows its border) */
+@media (hover: none) { .choice:hover, .tpl-option:hover, .plan-option:hover { transform: none; } }

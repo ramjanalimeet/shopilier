@@ -332,3 +332,6 @@ body.no-scroll { overflow: hidden; }
 .tcard-foot p.bn { line-height: 1.65; }
 .btn.btn-use { background: var(--brand); border-color: var(--brand); color: #fff; }
 .btn.btn-use:hover { background: var(--brand-text); border-color: var(--brand-text); filter: none; }
+
+/* Touch screens: no lift when a card is tapped */
+@media (hover: none) { .tcard:hover { transform: none; } }
