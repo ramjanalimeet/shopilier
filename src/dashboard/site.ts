@@ -67,6 +67,13 @@ export const SiteKit = (() => {
     pin: '<path d="M12 21s-7-6-7-12a7 7 0 0 1 14 0c0 6-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',
     quote: '<path d="M7 7h4v6H5V9a2 2 0 0 1 2-2zm10 0h4v6h-6V9a2 2 0 0 1 2-2zM5 13c0 3 2 4 4 4m6-4c0 3 2 4 4 4"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
+    check: '<path d="M4 12.5l5 5L20 6.5"/>',
+    play: '<path d="M7 4.6v14.8a1.3 1.3 0 0 0 2 1.1l11.6-7.4a1.3 1.3 0 0 0 0-2.2L9 3.5a1.3 1.3 0 0 0-2 1.1z" fill="currentColor" stroke="none"/>',
+    pause: '<path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor" stroke="none"/>',
+    sound: '<path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z" fill="currentColor" stroke="none"/>',
+    muted: '<path d="M4 9v6h4l5 4V5L8 9H4zm16.6 3 2.1-2.1-1.4-1.4-2.1 2.1-2.1-2.1-1.4 1.4 2.1 2.1-2.1 2.1 1.4 1.4 2.1-2.1 2.1 2.1 1.4-1.4z" fill="currentColor" stroke="none"/>',
+    cash: '<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/>',
+    fire: '<path d="M12 21c-4 0-7-2.8-7-6.6 0-3.2 2.2-5.3 3.6-7 .4 1.8 1.4 3 2.6 3.6C11 7.8 12.6 5 15 3c.2 3 1.4 4.6 2.6 6.3A7.3 7.3 0 0 1 19 14.4C19 18.2 16 21 12 21z"/>',
     return: '<path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5"/><path d="M20 4v4.5h-4.5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15.5"/><path d="M4 20v-4.5h4.5"/>',
     diamond: '<path d="M6.5 4h11L21 9l-9 11L3 9z"/><path d="M3 9h18M12 20 8.5 9l2-5M12 20l3.5-11-2-5"/>',
     back: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
@@ -141,6 +148,9 @@ export const SiteKit = (() => {
     banner: { label: "Image banner", icon: "layout" },
     perks: { label: "Why us", icon: "shield" },
     custom: { label: "Custom", icon: "plus" },
+    // A landing page's product: photos, price, choices and an order button that leads to the order form below
+    offer: { label: "Product offer", icon: "bag" },
+    video: { label: "Video", icon: "play" },
     // Only on the Checkout page (not in the section library)
     checkout: { label: "Checkout", icon: "cart" },
   };
@@ -206,6 +216,16 @@ export const SiteKit = (() => {
         { icon: "heart", title: L("Loved by customers", "কাস্টমারদের পছন্দের"), text: L("Thousands of happy orders", "হাজারো সন্তুষ্ট কাস্টমার") },
       ] });
       case "checkout": return section("checkout", JSON.parse(JSON.stringify(bn ? CHECKOUT_BN : CHECKOUT)));
+      case "offer": {
+        const first = (ctx.products || []).find((p) => p.status !== "draft");
+        return section("offer", {
+          badge: L("Limited time offer", "সীমিত সময়ের অফার"), title: "", product: (ctx.product || first || {}).id || "", product2: "", product3: "",
+          rating: L("Loved by 500+ customers", "৫০০+ সন্তুষ্ট কাস্টমার"),
+          points: [{ text: L("Premium quality you can feel", "প্রিমিয়াম কোয়ালিটি, হাতে নিলেই বুঝবেন") }, { text: L("Delivery all over Bangladesh", "সারা বাংলাদেশে হোম ডেলিভারি") }, { text: L("Check the product, then pay", "প্রোডাক্ট দেখে তারপর টাকা দিন") }],
+          button: L("Order now", "অর্ডার করুন"), stock: L("Stock is limited, order today", "স্টক সীমিত, আজই অর্ডার করুন"), trust: true, showDesc: true, descTitle: L("Product details", "প্রোডাক্টের বিস্তারিত"),
+        });
+      }
+      case "video": return section("video", { eyebrow: L("Watch the video", "ভিডিওতে দেখুন"), title: L("See it for yourself", "নিজের চোখেই দেখে নিন"), text: "", url: "", image: "" }, { align: "center" });
       case "custom": {
         const s = section("custom", {});
         s.blocks = [makeBlock("heading", L("A new section", "নতুন সেকশন")), makeBlock("text", L("Add headings, text, buttons and images to build anything you like.", "শিরোনাম, লেখা, বাটন আর ছবি যোগ করে যা খুশি বানান।"))];
@@ -225,6 +245,7 @@ export const SiteKit = (() => {
     ["testimonials", "Review cards", {}], ["blog", "Latest posts", {}], ["newsletter", "Email sign-up", {}],
     ["perks", "Why choose us", {}], ["contact", "Details and form", {}], ["faq", "Questions and answers", {}],
     ["banner", "Medium height", { height: "m" }], ["banner", "Tall", { height: "l" }],
+    ["offer", "Product with an order button", {}], ["video", "Video", {}],
     ["custom", "Blank, add your own elements", {}],
   ].map(([type, name, style]) => ({ type, name, style }));
   const fromLibrary = (item, ctx) => { const sec = make(item.type, ctx); Object.assign(sec.style, item.style); return sec; };
@@ -292,6 +313,31 @@ export const SiteKit = (() => {
     const c = make("custom", ctx);
     c.blocks[0].text = page.title;
     return [c];
+  };
+
+  // A ready-made landing page that sells: the product with its order button, a video, why to buy,
+  // reviews, questions and the order form, all on one page. productId: the product it sells.
+  // checkout: the store's Checkout page content, so the form asks the same questions and charges the same delivery
+  const landingSections = (ctx, productId, checkout) => {
+    const bn = (ctx.site || {}).lang === "bn";
+    const L = (en, b) => (bn ? b : en);
+    const product = (ctx.products || []).find((p) => p.id === productId);
+    const offer = make("offer", { ...ctx, product });
+    const why = make("perks", ctx);
+    Object.assign(why.content, { title: L("Why customers choose it", "কেন এটি সবার পছন্দ"), subtitle: "" });
+    const reviews = make("testimonials", ctx), faq = make("faq", ctx), order = make("checkout", ctx);
+    if (checkout) order.content = JSON.parse(JSON.stringify(checkout));
+    Object.assign(order.content, {
+      title: L("Order now", "এখনই অর্ডার করুন"), subtitle: L("Fill in the form and we'll call you to confirm. Pay when it arrives.", "নিচের ফর্মটি পূরণ করুন, আমরা কল করে অর্ডার কনফার্ম করব। প্রোডাক্ট হাতে পেয়ে টাকা দিন।"),
+      showSteps: false, showCoupon: false,
+    });
+    return [offer, make("video", ctx), why, reviews, faq, order];
+  };
+
+  // A YouTube link's video id (youtu.be/…, watch?v=…, embed/…, shorts/…), or ""
+  const youtubeId = (url) => {
+    const m = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))([A-Za-z0-9_-]{11})/.exec(String(url || "").trim());
+    return m ? m[1] : /^[A-Za-z0-9_-]{11}$/.test(String(url || "").trim()) ? String(url).trim() : "";
   };
 
   // ---------- Starter websites ----------
@@ -990,6 +1036,60 @@ export const SiteKit = (() => {
       </div>`;
     },
     custom: (c, st, ctx) => `<div class="wrap narrow">${ctx.blocks || (ctx.ed ? '<p class="empty">Add elements to this section from the panel.</p>' : "")}</div>`,
+    // The landing page's product: photos, price, a few reasons, size/colour, quantity and the order button.
+    // Up to three products: the customer picks one (each has its own photos and price).
+    offer: (c, st, ctx) => {
+      const T = ctx.T, taka = ctx.money, bn = ctx.site && ctx.site.lang === "bn";
+      const all = (ctx.products || []).filter((p) => p.status !== "draft");
+      const picks = [c.product, c.product2, c.product3].map((id) => all.find((p) => p.id === id)).filter((p, i, a) => p && a.indexOf(p) === i);
+      if (!picks.length) return ctx.ed ? `<div class="wrap narrow"><p class="empty">${esc(bn ? "একটি প্রোডাক্ট বাছাই করুন" : "Pick a product for this section in the panel.")}</p></div>` : "";
+      const points = (Array.isArray(c.points) ? c.points : []).filter((x) => x && x.text);
+      const trust = [["cash", bn ? "ক্যাশ অন ডেলিভারি" : "Cash on delivery"], ["truck", bn ? "দ্রুত ডেলিভারি" : "Fast delivery"], ["return", bn ? "সহজ রিটার্ন" : "Easy returns"]];
+      const n = (x) => (bn ? String(x).replace(/[0-9]/g, (d) => String.fromCharCode(0x09e6 + Number(d))) : String(x));
+      return `<div class="wrap lp-offer" data-lp>${picks.map((p, i) => {
+        const imgs = [p.image, ...(p.images || [])].filter((u, k, a) => safeImg(u) && a.indexOf(u) === k).slice(0, 6);
+        const off = onSale(p) ? Math.round((1 - Number(p.price) / Number(p.compare)) * 100) : 0;
+        const opts = (p.options || []).filter((o) => o && o.name && (o.values || []).length).slice(0, 2);
+        return `<div class="lp-grid" data-lp-item="${esc(p.id)}"${i ? " hidden" : ""}>
+          <div class="lp-media">
+            <div class="lp-main" style="background:${esc(color(p.color) || "var(--soft)")}">${imgs[0] ? `<img src="${esc(imgs[0])}" alt="${esc(p.name)}">` : `<span>${esc(p.name.slice(0, 1))}</span>`}${off ? `<em class="lp-off">-${n(off)}%</em>` : ""}</div>
+            ${imgs.length > 1 ? `<div class="lp-thumbs">${imgs.map((u, k) => `<button type="button" data-lp-img="${esc(u)}"${k ? "" : ' class="on"'} aria-label="${esc(T("Next"))}"><img src="${esc(u)}" alt=""></button>`).join("")}</div>` : ""}
+          </div>
+          <div class="lp-info">
+            ${c.badge ? `<p class="lp-badge">${svg("fire")}${esc(c.badge)}</p>` : ""}
+            <h1>${esc((i === 0 && c.title) || p.name)}</h1>
+            ${c.rating ? `<p class="lp-rating">${stars(5)}<span>${esc(c.rating)}</span></p>` : ""}
+            <p class="lp-price"><b>${taka(p.price)}</b>${off ? `<s>${taka(p.compare)}</s><em>${esc(bn ? `${taka(Number(p.compare) - Number(p.price))} সাশ্রয়` : `Save ${taka(Number(p.compare) - Number(p.price))}`)}</em>` : ""}</p>
+            ${picks.length > 1 ? `<div class="lp-picks">${picks.map((q) => `<button type="button" data-lp-pick="${esc(q.id)}"${q === p ? ' class="on"' : ""}>${safeImg(q.image) ? `<img src="${esc(q.image)}" alt="">` : ""}<span><b>${esc(q.name)}</b><small>${taka(q.price)}</small></span></button>`).join("")}</div>` : ""}
+            ${points.length ? `<ul class="lp-points">${points.map((x) => `<li>${svg("check")}${esc(x.text)}</li>`).join("")}</ul>` : ""}
+            ${opts.map((o, k) => `<div class="lp-opt"><b>${esc(o.name)}</b><div>${o.values.slice(0, 20).map((v) => `<button type="button" data-lp-opt="${k}" data-val="${esc(v)}">${esc(v)}</button>`).join("")}</div></div>`).join("")}
+            <div class="lp-buy">
+              <span class="lp-qty"><button type="button" data-lp-q="-1" aria-label="${esc(T("One less"))}">\u2212</button><b>${n(1)}</b><button type="button" data-lp-q="1" aria-label="${esc(T("One more"))}">+</button></span>
+              <button type="button" class="btn lp-cta" data-lp-buy="${esc(p.id)}"${p.stock === 0 ? " disabled" : ""}>${svg("bag")}${esc(p.stock === 0 ? T("Sold out") : c.button || T("Add to cart"))}</button>
+            </div>
+            <p class="lp-msg" hidden></p>
+            ${c.stock ? `<p class="lp-stock">${svg("clock")}${esc(c.stock)}</p>` : ""}
+            ${c.trust ? `<div class="lp-trust">${trust.map(([ic, t]) => `<span>${svg(ic)}${esc(t)}</span>`).join("")}</div>` : ""}
+          </div>
+          ${c.showDesc && p.description ? `<div class="lp-desc">${c.descTitle ? `<h3>${esc(c.descTitle)}</h3>` : ""}<p>${lines(p.description)}</p></div>` : ""}
+        </div>`;
+      }).join("")}</div>`;
+    },
+    // A YouTube video in the website's own player: our cover and play button, and while it plays the
+    // video is cropped so YouTube's title, logo and suggestions stay out of view
+    video: (c, st, ctx) => {
+      const id = youtubeId(c.url);
+      if (!id && !ctx.ed) return "";
+      const cover = safeImg(c.image) ? c.image : id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : "";
+      return `<div class="wrap narrow lp-video-wrap">${head(c)}${c.text ? `<p class="lead">${lines(c.text)}</p>` : ""}
+        <div class="lp-video"${id ? ` data-yt="${esc(id)}"` : ""}>
+          <div class="lp-vframe"></div>
+          <button type="button" class="lp-vcover" data-lp-play aria-label="Play"${cover ? ` style="background-image:url('${esc(cover)}')"` : ""}><span class="lp-vplay">${svg("play")}</span>${!id ? `<small>${esc(ctx.site && ctx.site.lang === "bn" ? "প্যানেলে একটি YouTube লিংক দিন" : "Paste a YouTube link in the panel")}</small>` : ""}</button>
+          <button type="button" class="lp-vtap" data-lp-pause aria-label="Pause"></button>
+          <div class="lp-vbar"><button type="button" data-lp-toggle aria-label="Play or pause">${svg("play", "v-play")}${svg("pause", "v-pause")}</button><span class="lp-vtrack" data-lp-seek><i></i></span><button type="button" data-lp-mute aria-label="Sound on or off">${svg("sound", "v-sound")}${svg("muted", "v-muted")}</button></div>
+        </div>
+      </div>`;
+    },
   };
 
   // Menu items with no dropdown parent (a parent that's not in the menu doesn't count)
@@ -1307,6 +1407,109 @@ export const SiteKit = (() => {
       var c = box.querySelector(".hero-count b"); if (c) c.textContent = String(n + 1).padStart(2, "0");
     };
     setInterval(function () { document.querySelectorAll("[data-slider]").forEach(function (b) { if (b.offsetParent && !b.matches(":hover")) slide(b, 1); }); }, 6000);
+    // Landing pages: the product the customer picks, its photos, size/colour, quantity and the order button.
+    // The order button puts just that choice in the cart and goes to the order form on the same page.
+    var lpPick = {};
+    var lpState = function (g) { var k = g.getAttribute("data-lp-item"); return lpPick[k] || (lpPick[k] = { opts: {}, qty: 1 }); };
+    var lpClick = function (e) {
+      var t;
+      if ((t = e.target.closest("[data-lp-img]"))) {
+        var g0 = t.closest(".lp-grid"), im = g0.querySelector(".lp-main img");
+        if (im) im.src = t.getAttribute("data-lp-img");
+        g0.querySelectorAll("[data-lp-img]").forEach(function (b) { b.classList.toggle("on", b === t); });
+        return true;
+      }
+      if ((t = e.target.closest("[data-lp-pick]"))) {
+        var id = t.getAttribute("data-lp-pick");
+        t.closest("[data-lp]").querySelectorAll("[data-lp-item]").forEach(function (g) { g.hidden = g.getAttribute("data-lp-item") !== id; });
+        return true;
+      }
+      if ((t = e.target.closest("[data-lp-opt]"))) {
+        var g1 = t.closest(".lp-grid"), k = t.getAttribute("data-lp-opt");
+        lpState(g1).opts[k] = t.getAttribute("data-val");
+        g1.querySelectorAll('[data-lp-opt="' + k + '"]').forEach(function (b) { b.classList.toggle("on", b === t); });
+        g1.querySelector(".lp-msg").hidden = true;
+        return true;
+      }
+      if ((t = e.target.closest("[data-lp-q]"))) {
+        var g2 = t.closest(".lp-grid"), s2 = lpState(g2);
+        s2.qty = Math.max(1, Math.min(99, s2.qty + Number(t.getAttribute("data-lp-q"))));
+        g2.querySelector(".lp-qty b").textContent = num(s2.qty);
+        return true;
+      }
+      if ((t = e.target.closest("[data-lp-buy]"))) {
+        var g3 = t.closest(".lp-grid"), s3 = lpState(g3), p3 = byId(t.getAttribute("data-lp-buy"));
+        if (!p3) return true;
+        var miss = p3.options.filter(function (o, i) { return !s3.opts[i]; })[0];
+        if (miss) { var m3 = g3.querySelector(".lp-msg"); m3.hidden = false; m3.textContent = tr("Please choose a {opt}", { opt: miss.name.toLowerCase() }); return true; }
+        var v3 = p3.options.map(function (o, i) { return o.name + ": " + s3.opts[i]; }).join(" / ");
+        var keep = cart; cart = [];
+        if (!addToCart(p3, v3, s3.qty)) { cart = keep; save(); return true; }
+        var co = (t.closest("[data-slug]") || document).querySelector(".checkout");
+        if (co) { co.scrollIntoView({ behavior: "smooth", block: "start" }); return true; }
+        var ck = document.querySelector('[data-slug="checkout"]');
+        if (ck) { document.querySelectorAll("[data-slug]").forEach(function (d) { d.hidden = d !== ck; }); scrollTo(0, 0); }
+        else location.href = "/checkout";
+        return true;
+      }
+      if ((t = e.target.closest(".lp-video"))) { lpVideo(t, e); return true; }
+      return false;
+    };
+    // Landing page videos: YouTube's player loads (as the video comes near) behind the website's own cover and
+    // controls; it's cropped so YouTube's title, logo and suggestions stay out of view
+    var ytWait = null;
+    var ytApi = function (cb) {
+      if (window.YT && window.YT.Player) { cb(); return; }
+      if (!ytWait) {
+        ytWait = [];
+        var prev = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = function () { if (prev) prev(); var l = ytWait; ytWait = []; l.forEach(function (f) { f(); }); };
+        var sc = document.createElement("script"); sc.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(sc);
+      }
+      ytWait.push(cb);
+    };
+    var ytMake = function (box) {
+      if (box.yt || !box.getAttribute("data-yt")) return;
+      box.yt = "loading";
+      ytApi(function () {
+        var el = document.createElement("div"); box.querySelector(".lp-vframe").appendChild(el);
+        var pl = new window.YT.Player(el, {
+          videoId: box.getAttribute("data-yt"), host: "https://www.youtube-nocookie.com",
+          playerVars: { autoplay: 0, controls: 0, rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, disablekb: 1, fs: 0, cc_load_policy: 0 },
+          events: {
+            onReady: function () { box.yt = pl; if (box.want) { box.want = false; pl.playVideo(); } },
+            onStateChange: function (ev) {
+              var st = ev.data;
+              box.classList.toggle("playing", st === 1 || st === 3);
+              if (st === 1) box.classList.remove("loading");
+              if (st === 0) { box.classList.remove("playing"); pl.seekTo(0, false); pl.pauseVideo(); }
+            },
+          },
+        });
+        setInterval(function () {
+          if (box.yt === pl && pl.getDuration) { var d = pl.getDuration() || 0, c = pl.getCurrentTime() || 0, f = box.querySelector(".lp-vtrack i"); if (f) f.style.width = (d ? (c / d) * 100 : 0) + "%"; }
+        }, 400);
+      });
+    };
+    var lpVideo = function (box, e) {
+      if (!box.getAttribute("data-yt")) return;
+      var pl = box.yt && box.yt !== "loading" ? box.yt : null;
+      var play = function () {
+        box.classList.add("loading");
+        if (!pl) { box.want = true; ytMake(box); return; }
+        pl.playVideo();
+        // Phones that block sound without a direct tap: play muted and show the sound button
+        setTimeout(function () { if (pl.getPlayerState && pl.getPlayerState() !== 1 && pl.getPlayerState() !== 3) { pl.mute(); box.classList.add("muted"); pl.playVideo(); } }, 1200);
+      };
+      var on = box.classList.contains("playing");
+      if (e.target.closest("[data-lp-mute]")) { if (!pl) return; if (pl.isMuted()) { pl.unMute(); box.classList.remove("muted"); } else { pl.mute(); box.classList.add("muted"); } return; }
+      if (e.target.closest("[data-lp-seek]")) { if (!pl) return; var r = e.target.closest("[data-lp-seek]").getBoundingClientRect(); pl.seekTo(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * (pl.getDuration() || 0), true); return; }
+      if (e.target.closest("[data-lp-play], [data-lp-pause], [data-lp-toggle]")) { if (on) pl.pauseVideo(); else play(); }
+    };
+    if ("IntersectionObserver" in window) {
+      var near = new IntersectionObserver(function (es) { es.forEach(function (x) { if (x.isIntersecting) { near.unobserve(x.target); ytMake(x.target); } }); }, { rootMargin: "400px" });
+      document.querySelectorAll(".lp-video[data-yt]").forEach(function (b) { near.observe(b); });
+    }
     // Wishlist hearts, kept for this visit
     var wish = [];
     try { wish = JSON.parse(sessionStorage.getItem("shop-wish") || "[]"); } catch (e) {}
@@ -1331,6 +1534,7 @@ export const SiteKit = (() => {
         sec.querySelectorAll(".product[data-cat]").forEach(function (card) { card.hidden = !!cat && card.getAttribute("data-cat") !== cat; });
         return;
       }
+      if (lpClick(e)) return;
       var vw = e.target.closest("[data-view]");
       if (vw) { var vp = byId(vw.getAttribute("data-view")); if (vp) view(vp); return; }
       var add = e.target.closest("[data-add]");
@@ -1421,7 +1625,7 @@ export const SiteKit = (() => {
     // opts.start: the page to open first (default: the home page)
     const first = Math.max(0, pages.findIndex((p) => p.id === opts.start));
     const all = pages.map((p, i) => `<div data-slug="${esc(p.slug || "")}"${i === first ? "" : " hidden"}>${renderBody(site, pages, { ...opts, page: p })}</div>`).join("");
-    const nav = `<script>document.addEventListener("click",function(e){var m=e.target.closest(".burger");if(m){m.closest(".s-header").classList.toggle("m-open");return}document.querySelectorAll(".m-open").forEach(function(h){h.classList.remove("m-open")});var o=e.target.closest("a[href='#order']");if(o){e.preventDefault();var pg0=document.querySelector("[data-slug]:not([hidden])")||document,t=pg0.querySelector(".s-products");if(!t){var h0=document.querySelector('[data-slug=""]');if(h0){document.querySelectorAll("[data-slug]").forEach(function(d){d.hidden=d!==h0});t=h0.querySelector(".s-products")}}if(t)t.scrollIntoView({behavior:"smooth",block:"start"});return}var a=e.target.closest("a[href^='/']");if(!a)return;var slug=a.getAttribute("href").slice(1),pg=document.querySelector('[data-slug="'+slug+'"]');e.preventDefault();if(!pg)return;document.querySelectorAll("[data-slug]").forEach(function(d){d.hidden=d!==pg});scrollTo(0,0)});<\/script>`;
+    const nav = `<script>document.addEventListener("click",function(e){var m=e.target.closest(".burger");if(m){m.closest(".s-header").classList.toggle("m-open");return}document.querySelectorAll(".m-open").forEach(function(h){h.classList.remove("m-open")});var mc=e.target.closest(".s-mbar .mb-cta");if(mc){var pgx=document.querySelector("[data-slug]:not([hidden])")||document,ofx=pgx.querySelector(".s-offer");if(ofx){e.preventDefault();ofx.scrollIntoView({behavior:"smooth",block:"start"});return}}var o=e.target.closest("a[href='#order']");if(o){e.preventDefault();var pg0=document.querySelector("[data-slug]:not([hidden])")||document,t=pg0.querySelector(".s-offer")||pg0.querySelector(".s-products");if(!t){var h0=document.querySelector('[data-slug=""]');if(h0){document.querySelectorAll("[data-slug]").forEach(function(d){d.hidden=d!==h0});t=h0.querySelector(".s-products")}}if(t)t.scrollIntoView({behavior:"smooth",block:"start"});return}var a=e.target.closest("a[href^='/']");if(!a)return;var slug=a.getAttribute("href").slice(1),pg=document.querySelector('[data-slug="'+slug+'"]');e.preventDefault();if(!pg)return;document.querySelectorAll("[data-slug]").forEach(function(d){d.hidden=d!==pg});scrollTo(0,0)});<\/script>`;
     // What the shop script needs: products that are for sale and the discount codes that work
     const shop = {
       t: STRINGS[site.lang] || null, bn: site.lang === "bn", orderUrl: opts.orderUrl || "",
@@ -1443,5 +1647,5 @@ export const SiteKit = (() => {
       .replace(/<body([^>]*)>[\s\S]*<\/body>/, (m, attrs) => `<body${attrs}>${all}${nav}${shopJs}${t.body || ""}</body>`);
   };
 
-  return { tr, LANGS, LABELS, labelOf, money, STARTERS, starterPages, applyStarter, sampleProducts, previewStore, PAYMENTS_BN, CHECKOUT_BN, THEMES, discountFor, discountProblem, ANNOUNCE_COLORS, announceStyle, HEADER_BUTTONS, DROPDOWNS, MBAR_STYLES, CHECKOUT, PAYMENTS, SOCIALS, socialIcon, LIBRARY, fromLibrary, storeHTML, TEMPLATE_FONTS, esc, uid, FONTS, TYPES, BLOCKS, FEATURE_ICONS, make, makeBlock, pageSections, ensure, applyTemplate, renderBody, documentHTML, safeImg, isDark };
+  return { tr, LANGS, LABELS, labelOf, money, STARTERS, starterPages, applyStarter, sampleProducts, previewStore, PAYMENTS_BN, CHECKOUT_BN, THEMES, discountFor, discountProblem, ANNOUNCE_COLORS, announceStyle, HEADER_BUTTONS, DROPDOWNS, MBAR_STYLES, CHECKOUT, PAYMENTS, SOCIALS, socialIcon, LIBRARY, fromLibrary, storeHTML, TEMPLATE_FONTS, esc, uid, FONTS, TYPES, BLOCKS, FEATURE_ICONS, make, makeBlock, pageSections, landingSections, youtubeId, ensure, applyTemplate, renderBody, documentHTML, safeImg, isDark };
 })();

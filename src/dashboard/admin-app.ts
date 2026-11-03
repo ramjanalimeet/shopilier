@@ -719,6 +719,31 @@ export const start = async () => {
       },
     });
   };
+  // A new page is either a blank page or a landing page: a ready page that sells a product, with the product
+  // and its order button, a video, reasons to buy, reviews, questions and the order form, all on one page
+  const ptypeCards = (cur) => `<div class="wpd-kinds np-types">${[["page", "pages", "Page", "A blank page you build yourself"], ["landing", "rocket", "Landing page", "Product, video and order form, ready to sell"]]
+    .map(([k, ic, l, sub]) => `<label class="wpd-kind"><input type="radio" name="ptype" value="${k}" ${cur === k ? "checked" : ""}>${icon(ic)}<b>${l}</b><small>${sub}</small></label>`).join("")}</div>`;
+  const lpProductField = () => {
+    const list = store.products.filter((p) => p.status !== "draft");
+    return `<div class="field np-product" data-lp-only><label>Product to sell</label>${list.length
+      ? `<select class="select" name="product">${list.map((p) => `<option value="${esc(p.id)}">${esc(p.name)} · ${taka(p.price)}</option>`).join("")}</select><small class="np-hint">You can add up to 3 products, a video and reviews on the page after.</small>`
+      : `<p class="np-hint">You have no products yet. Add one in Products, then pick it on the page.</p>`}</div>`;
+  };
+  // The product picker (and the header and sticky bar switches) show only for a landing page
+  const ptypeSync = (form) => {
+    const sync = () => {
+      const lp = (form.querySelector('input[name="ptype"]:checked') || {}).value === "landing";
+      form.querySelectorAll("[data-lp-only]").forEach((el) => { el.hidden = !lp; });
+      const t = form.querySelector('input[name="title"]');
+      if (t) t.placeholder = lp ? "e.g. Eid offer" : "e.g. About us";
+    };
+    form.addEventListener("change", sync); sync();
+  };
+  // A landing page's sections; its order form asks the same questions and charges the same delivery as Checkout
+  const landingFor = (np, productId) => {
+    const co = store.pages.find((p) => p.system === "checkout"), sec = co && co.sections.find((x) => x.type === "checkout");
+    np.sections = SiteKit.landingSections({ site: store.site, products: store.products }, productId, sec && sec.content);
+  };
   // A new menu page or landing page, then straight into editing it
   const wsAddPage = (kind) => {
     if (!withinLimit(plan().pages, pageCount())) { toast(`Your ${plan().name} plan allows ${plan().pages} pages — upgrade to add more`); return; }
@@ -726,10 +751,12 @@ export const start = async () => {
     dialog({
       title: kind === "menu" ? "New menu page" : "New landing page",
       submit: "Create page",
-      body: `<div class="field"><label>Page name</label><input class="input" name="title" required maxlength="40" placeholder="${kind === "menu" ? "e.g. About us" : "e.g. Eid offer"}"></div>${kind === "landing" ? wsLandingOpts(null) : ""}`,
+      body: `${kind === "landing" ? ptypeCards("landing") : ""}<div class="field"><label>Page name</label><input class="input" name="title" required maxlength="40" placeholder="${kind === "menu" ? "e.g. About us" : "e.g. Eid offer"}"></div>${kind === "landing" ? lpProductField() + wsLandingOpts(null) : ""}`,
+      onOpen: (form) => { if (kind === "landing") ptypeSync(form); },
       onSubmit: (v) => {
         const np = { id: uid("pg"), title: v.title, slug: uniqueSlug(v.title), inNav: false };
-        np.sections = SiteKit.pageSections(np, { site: store.site, products: store.products });
+        if (kind === "landing" && v.ptype === "landing") landingFor(np, v.product);
+        else np.sections = SiteKit.pageSections(np, { site: store.site, products: store.products });
         store.pages.push(np);
         if (kind === "menu") addToMenu(np);
         else { np.hideHeader = !v.header; np.hideMbar = !v.mbar; }
@@ -1910,7 +1937,7 @@ export const start = async () => {
     "site-nav": {
       title: "Edit Nav",
       render: () => `${wsTop("Edit Nav")}
-          <div class="card ws-live mn-live">${wsScreen(navPhoneDoc(), "auto", "mn-screen", "content")}</div>
+          <div class="card ws-live mn-live" data-live="Live preview">${wsScreen(navPhoneDoc(), "auto", "mn-screen", "content")}</div>
           <div class="mn-tabs" role="tablist">${MN_TABS.map(([id, ic, label]) => `<button type="button" role="tab" data-mn-tab="${id}" class="${mnTab === id ? "on" : ""}" aria-selected="${mnTab === id}">${icon(ic)}<span>${label}</span></button>`).join("")}</div>
           <div class="mn-cards">${wsNavCard()}</div>
         </div>`,
@@ -1993,12 +2020,14 @@ export const start = async () => {
       render: () => {
         const menuN = menuTopCount(), canAdd = withinLimit(plan().pages, pageCount());
         const menu = menuRows(), checkout = store.pages.filter((p) => p.system), landing = store.pages.filter((p) => !p.inNav && !p.system);
+        // Each page as a card: a small live picture of the page on top (without the sticky bar, so the page shows),
+        // then its name, Edit and settings
         const card = (p, kind, child) => {
           const chips = kind === "landing" ? [p.hideHeader && "No header", p.hideMbar && "No sticky bar"].filter(Boolean) : child ? ["In a dropdown"] : [];
           const n = (p.sections || []).filter((x) => !x.hidden).length;
           return `<article class="pc">
-            <a class="pc-top" href="#/website?page=${p.id}&split=1"><span class="wl-ico ${kind}">${icon(kind === "checkout" ? "cart" : kind === "landing" ? "rocket" : p.locked ? "home" : "pages")}</span>
-              <span class="wl-t"><b>${esc(p.title)}</b><small>/${esc(p.slug)} · ${n} ${n === 1 ? "part" : "parts"}</small>${chips.length ? `<span class="wl-chips">${chips.map((c) => `<i>${c}</i>`).join("")}</span>` : ""}</span></a>
+            <a class="pc-shot" href="#/website?page=${p.id}&split=1" tabindex="-1" aria-hidden="true">${wsScreen(pageDoc({ ...p, hideMbar: true }), 360, "pc-screen")}</a>
+            <a class="pc-top" href="#/website?page=${p.id}&split=1"><span class="wl-ico ${kind}">${icon(kind === "checkout" ? "cart" : kind === "landing" ? "rocket" : p.locked ? "home" : "pages")}</span><span class="wl-t"><b>${esc(p.title)}</b><small>/${esc(p.slug)} · ${n} ${n === 1 ? "part" : "parts"}</small>${chips.length ? `<span class="wl-chips">${chips.map((c) => `<i>${c}</i>`).join("")}</span>` : ""}</span></a>
             <div class="pc-acts">
               <a class="btn btn-primary pc-edit" href="#/website?page=${p.id}&split=1">${icon("edit")}Edit</a>
               <button type="button" class="btn pc-set" data-wp-set="${p.id}" aria-label="Settings for ${esc(p.title)}" title="Settings">${icon("settings")}</button>
@@ -2019,6 +2048,7 @@ export const start = async () => {
       mount: (view) => {
         // Listeners go on this screen (made anew with each draw), never on #view, so they never pile up
         const root = view.querySelector(".ws-page");
+        wsMount(view);
         root.addEventListener("click", (e) => {
           const b = e.target.closest("[data-wp-set], [data-wp-add]");
           if (!b) return;
@@ -2032,7 +2062,7 @@ export const start = async () => {
     "site-sticky": {
       title: "Edit Sticky",
       render: () => `${wsTop("Edit Sticky")}
-          <div class="card ws-live wsk-live2">${wsScreen(wskDoc(), "auto", "wsk-screen2")}</div>
+          <div class="card ws-live wsk-live2" data-live="Live preview">${wsScreen(wskDoc(), "auto", "wsk-screen2")}</div>
           <div class="mn-tabs" role="tablist">${WSK_TABS.map(([id, ic, label]) => `<button type="button" role="tab" data-wsk-tab="${id}" class="${wskTab === id ? "on" : ""}" aria-selected="${wskTab === id}">${icon(ic)}<span>${label}</span></button>`).join("")}</div>
           <div class="mn-cards wsk">${wskCard()}</div>
         </div>`,
@@ -2095,6 +2125,8 @@ export const start = async () => {
         store, account, catalog, icon, toast, confirm, dialog, touchSite, persist, syncPayments,
         publish: () => actions.publish(),
         canAddPage: () => withinLimit(plan().pages, pageCount()),
+        // Add page in the editor: the same window as Pages (a page or a landing page)
+        newPage: (done) => pageDialog(null, done),
         // From Website → Edit Pages on a phone: the website and its parts side by side
         ...(/[?&]split=1/.test(location.hash) && matchMedia("(max-width: 760px)").matches ? { split: true, publishLabel: () => "Publish" } : {}),
       }),
@@ -2399,17 +2431,25 @@ export const start = async () => {
     });
   };
 
-  const pageDialog = (pg) => dialog({
+  // done(page): the website editor adds the page itself and opens it (instead of redrawing this screen)
+  const pageDialog = (pg, done) => dialog({
     title: pg ? "Rename page" : "New page",
-    body: `<div class="field"><label>Page title</label><input class="input" name="title" required maxlength="40" value="${esc(pg?.title)}" placeholder="e.g. FAQ"></div>`,
+    body: `${pg ? "" : ptypeCards("page")}<div class="field"><label>Page title</label><input class="input" name="title" required maxlength="40" value="${esc(pg?.title)}" placeholder="e.g. FAQ"></div>${pg ? "" : lpProductField()}`,
     submit: pg ? "Save" : "Add page",
+    onOpen: (form) => { if (!pg) ptypeSync(form); },
     onSubmit: (v) => {
       const slug = uniqueSlug(v.title, pg);
-      if (pg) { pg.title = v.title; if (!pg.locked) pg.slug = slug; }
-      // A new page joins the menu while there's room (5 pages fit in the menu bar)
-      let full = false;
-      if (!pg) { full = menuTopCount() >= MENU_MAX; const np = { id: uid("pg"), title: v.title, slug, inNav: !full }; np.sections = SiteKit.pageSections(np, { site: store.site, products: store.products }); store.pages.push(np); }
-      touchSite(); persist(); go(); toast(pg ? "Page renamed" : full ? `Page added. The menu already has ${MENU_MAX} pages, so it's not in the menu.` : "Page added");
+      if (pg) { pg.title = v.title; if (!pg.locked) pg.slug = slug; touchSite(); persist(); go(); toast("Page renamed"); return; }
+      // A landing page stays out of the menu and opens in the editor; a page joins the menu while there's room (5 fit)
+      const landing = v.ptype === "landing", full = !landing && menuTopCount() >= MENU_MAX;
+      const np = { id: uid("pg"), title: v.title, slug, inNav: !landing && !full };
+      if (landing) landingFor(np, v.product);
+      else np.sections = SiteKit.pageSections(np, { site: store.site, products: store.products });
+      store.pages.push(np);
+      if (done) { done(np); toast(landing ? "Landing page created" : "Page added"); return; }
+      touchSite(); persist();
+      toast(landing ? "Landing page created" : full ? `Page added. The menu already has ${MENU_MAX} pages, so it's not in the menu.` : "Page added");
+      if (landing) location.hash = `#/website?page=${np.id}`; else go();
     },
   });
 

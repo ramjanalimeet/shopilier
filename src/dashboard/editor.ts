@@ -47,6 +47,17 @@ export const SiteEditor = (() => {
     faq: [["text", "title", "Title"], L("items", "Questions", [["text", "q", "Question"], ["textarea", "a", "Answer"]], { max: 12, add: { q: "New question?", a: "The answer." }, name: "q" })],
     banner: [["image", "image", "Background image"], ["text", "title", "Title"], ["textarea", "text", "Text"], ["link", "button", "Button"]],
     custom: [],
+    // A landing page's product: photos, price, sizes and the description come from the product itself
+    offer: [["product", "product", "Product"], ["product", "product2", "Second choice (optional)"], ["product", "product3", "Third choice (optional)"],
+      ["note", "", 'With more than one product, customers pick one. Photos, price, sizes and the description come from <a href="#/products">Products</a>.'],
+      ["text", "badge", "Small line above the name", { placeholder: "Limited time offer" }], ["text", "title", "Title", { placeholder: "Empty: the product's name" }], ["text", "rating", "Line beside the stars", { placeholder: "Loved by 500+ customers" }],
+      L("points", "Reasons to buy", [["text", "text", "Text"]], { max: 6, add: { text: "Another reason to buy" }, name: "text" }),
+      ["text", "button", "Order button text", { placeholder: "Order now" }], ["text", "stock", "Line under the button", { placeholder: "Stock is limited, order today" }],
+      ["toggle", "trust", "Cash on delivery, fast delivery and easy returns"], ["toggle", "showDesc", "Product description"], ["text", "descTitle", "Description heading", { when: "showDesc" }],
+      ["note", "", "The order button puts the product in the cart and takes the customer to the order form on this page."]],
+    video: [["text", "eyebrow", "Small heading"], ["text", "title", "Title"], ["textarea", "text", "Text", { rows: 2 }], ["url", "url", "YouTube link", { placeholder: "https://youtu.be/…" }],
+      ["image", "image", "Cover picture (optional)", { hint: () => "1280 × 720" }],
+      ["note", "", "The video plays inside your website with its own play button. YouTube's logo, title and suggestions stay hidden."]],
     // Every part of the Checkout page; payment switches change Settings → Payments
     checkout: [["text", "title", "Title"], ["textarea", "subtitle", "Text"], ["toggle", "showSteps", "Step numbers (1, 2, 3)"],
       ["heading", "", "Customer details"], ["text", "detailsTitle", "Heading"],
@@ -335,6 +346,11 @@ export const SiteEditor = (() => {
         const c = /^#[0-9a-f]{6}$/i.test(String(val || "")) ? val : "";
         return `<div class="ed-field"><label for="${id}">${esc(label)}</label><div class="ed-color"><input type="color" id="${id}" ${bind} value="${esc(c || o.fallback || "#ffffff")}"><span>${esc(c || "Website default")}</span>${c ? `<button type="button" class="btn btn-sm" data-clear ${bind}>Reset</button>` : ""}</div></div>`;
       }
+      // A product from the store (the first product field must have one; the others can be empty)
+      if (type === "product") {
+        const list = store.products.filter((p) => p.status !== "draft");
+        return `<div class="ed-field"><label for="${id}">${esc(label)}</label><select class="select" id="${id}" ${bind} data-rerender><option value="">${path === "product" ? "Pick a product" : "None"}</option>${list.map((p) => `<option value="${esc(p.id)}" ${p.id === val ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></div>`;
+      }
       if (type === "icon") return `<div class="ed-field"><label for="${id}">${esc(label)}</label><select class="select" id="${id}" ${bind}>${K.FEATURE_ICONS.map((n) => `<option ${n === val ? "selected" : ""}>${n}</option>`).join("")}</select></div>`;
       if (type === "link") return `<div class="ed-field"><label>${esc(label)}</label><div class="ed-link"><input class="input" ${bind.replace(path, path + ".text")} value="${esc(val?.text)}" placeholder="Button text" aria-label="${esc(label)} text"><input class="input" ${bind.replace(path, path + ".link")} value="${esc(val?.link)}" placeholder="Link, e.g. /shop" aria-label="${esc(label)} link"></div></div>`;
       if (type === "image") {
@@ -383,7 +399,10 @@ export const SiteEditor = (() => {
         <span class="ed-row-ico">${icon(ico)}</span><span class="ed-row-label">${esc(label)}</span>
         ${s && s.type !== "checkout" ? `<span class="ed-row-tools"><button type="button" class="ed-sm" data-row="up" data-id="${s.id}" aria-label="Move up" title="Move up">${icon("up")}</button><button type="button" class="ed-sm" data-row="down" data-id="${s.id}" aria-label="Move down" title="Move down">${icon("down")}</button><button type="button" data-row="hide" data-id="${s.id}" aria-label="${s.hidden ? "Show" : "Hide"} section" title="${s.hidden ? "Show" : "Hide"}">${icon(s.hidden ? "eyeOff" : "eye")}</button></span>` : ""}
       </div>`;
-      return `<div class="ed-sub">${split ? "Tap a part to edit it" : `Sections on ${esc(p.title)}`}</div>
+      // A landing page (outside the menu) can leave out the header or the sticky bar
+      const sw = (k, label, sub) => `<label class="ed-pshow"><span><b>${label}</b><small>${sub}</small></span><span class="switch"><input type="checkbox" data-page-show="${k}" ${p[k] ? "" : "checked"} aria-label="Show the ${label.toLowerCase()}"><i></i></span></label>`;
+      const shows = !p.system && !p.inNav ? `<div class="ed-pshows">${sw("hideHeader", "Header", "Logo and menu")}${sw("hideMbar", "Sticky bar", "The bar at the bottom")}</div>` : "";
+      return `${shows}<div class="ed-sub">${split ? "Tap a part to edit it" : `Sections on ${esc(p.title)}`}</div>
         <div class="ed-outline">${row("header", "Header", "layout")}${p.sections.map((s) => row(s.id, (K.TYPES[s.type] || {}).label || s.type, (K.TYPES[s.type] || {}).icon || "layout", s)).join("")}${row("footer", "Footer", "layout")}${row("mbar", "Sticky bar", "phone")}</div>
         <button type="button" class="btn ed-add ed-add-section ed-sm" data-add-section>${icon("plus")}Add a section</button>
         <p class="ed-note ed-lg">Drag sections in this list to change their order. To add a section, point at the line between two sections on your website and click the green <b>+</b>.</p>
@@ -576,6 +595,7 @@ export const SiteEditor = (() => {
     panel.addEventListener("change", async (e) => {
       const el = e.target;
       if (el.type === "checkbox" && el.dataset.scope) { write(el); return; }
+      if (el.dataset.pageShow) { page()[el.dataset.pageShow] = !el.checked; changed({ panel: true }); toast(`${el.dataset.pageShow === "hideHeader" ? "Header" : "Sticky bar"} ${el.checked ? "shown" : "hidden"} on this page`); return; }
       if (el.type === "file" && el.files[0]) {
         const lab = el.closest(".ed-upload");
         lab.classList.add("busy");
@@ -626,6 +646,7 @@ export const SiteEditor = (() => {
       }
       if (b.hasAttribute("data-add-page")) {
         if (!d.canAddPage()) { toast("Your plan's page limit is reached — upgrade to add more"); return; }
+        if (d.newPage) { d.newPage((p) => { state.pageId = p.id; state.selected = null; state.mode = "sections"; changed({ panel: true }); }); return; }
         dialog({
           title: "New page",
           body: `<div class="field"><label>Page title</label><input class="input" name="title" required maxlength="40" placeholder="e.g. FAQ"></div>`,
