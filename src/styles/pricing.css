@@ -107,14 +107,13 @@
 .compare table[hidden] { display: none; }
 
 
-/* Phones: the plans stacked top to bottom, the popular one first. "Included free" is shown once in the
+/* Phones: the plans stacked top to bottom, from Starter (৳149) up. "Included free" is shown once in the
    perks under the plans, so the cards stay short. The comparison table fits the screen with no sideways scroll. */
 @media (max-width: 760px) {
   .price-page .page-head h1.bn { font-size: 26px; }
   .price-page .page-head p.bn { font-size: 15px; line-height: 1.75; }
   .cat-best { font-size: 13px; line-height: 1.6; max-width: 340px; margin-left: auto; margin-right: auto; }
   .pcards { display: flex; flex-direction: column; gap: 14px; max-width: 480px; margin-top: 18px; }
-  .pcard-pop { order: -1; }
   .pcard { padding: 22px 20px 20px; border-radius: 18px; box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 10px 24px -16px rgba(16, 24, 40, .18); }
   .pcard:hover { transform: none; }
   .pcard-pop { box-shadow: 0 18px 40px -14px rgba(11, 13, 18, .45), 0 0 0 3px rgba(65, 162, 18, .25); }
