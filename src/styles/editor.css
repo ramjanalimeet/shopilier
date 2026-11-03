@@ -189,3 +189,11 @@ body.editor-open .toast { z-index: 310; }
 .tb-bar [hidden] { display: none; }
 body.editor-open .ed-root:has(> .tb-bar) { flex-direction: column; }
 .ed-root > .tb-bar ~ .ed { flex: 1; min-height: 0; }
+
+/* A landing page: switches to show or hide the header and the sticky bar, at the top of the panel */
+.ed-pshows { display: grid; margin-bottom: 14px; border: 1px solid #d7ecdf; border-radius: 14px; background: #f3faf6; overflow: hidden; }
+.ed-pshow { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; }
+.ed-pshow + .ed-pshow { border-top: 1px solid #d7ecdf; }
+.ed-pshow > span:first-child { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.ed-pshow b { color: #101828; font-size: 14px; }
+.ed-pshow small { color: #667085; font-size: 12px; }

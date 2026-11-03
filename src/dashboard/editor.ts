@@ -399,7 +399,10 @@ export const SiteEditor = (() => {
         <span class="ed-row-ico">${icon(ico)}</span><span class="ed-row-label">${esc(label)}</span>
         ${s && s.type !== "checkout" ? `<span class="ed-row-tools"><button type="button" class="ed-sm" data-row="up" data-id="${s.id}" aria-label="Move up" title="Move up">${icon("up")}</button><button type="button" class="ed-sm" data-row="down" data-id="${s.id}" aria-label="Move down" title="Move down">${icon("down")}</button><button type="button" data-row="hide" data-id="${s.id}" aria-label="${s.hidden ? "Show" : "Hide"} section" title="${s.hidden ? "Show" : "Hide"}">${icon(s.hidden ? "eyeOff" : "eye")}</button></span>` : ""}
       </div>`;
-      return `<div class="ed-sub">${split ? "Tap a part to edit it" : `Sections on ${esc(p.title)}`}</div>
+      // A landing page (outside the menu) can leave out the header or the sticky bar
+      const sw = (k, label, sub) => `<label class="ed-pshow"><span><b>${label}</b><small>${sub}</small></span><span class="switch"><input type="checkbox" data-page-show="${k}" ${p[k] ? "" : "checked"} aria-label="Show the ${label.toLowerCase()}"><i></i></span></label>`;
+      const shows = !p.system && !p.inNav ? `<div class="ed-pshows">${sw("hideHeader", "Header", "Logo and menu")}${sw("hideMbar", "Sticky bar", "The bar at the bottom")}</div>` : "";
+      return `${shows}<div class="ed-sub">${split ? "Tap a part to edit it" : `Sections on ${esc(p.title)}`}</div>
         <div class="ed-outline">${row("header", "Header", "layout")}${p.sections.map((s) => row(s.id, (K.TYPES[s.type] || {}).label || s.type, (K.TYPES[s.type] || {}).icon || "layout", s)).join("")}${row("footer", "Footer", "layout")}${row("mbar", "Sticky bar", "phone")}</div>
         <button type="button" class="btn ed-add ed-add-section ed-sm" data-add-section>${icon("plus")}Add a section</button>
         <p class="ed-note ed-lg">Drag sections in this list to change their order. To add a section, point at the line between two sections on your website and click the green <b>+</b>.</p>
@@ -592,6 +595,7 @@ export const SiteEditor = (() => {
     panel.addEventListener("change", async (e) => {
       const el = e.target;
       if (el.type === "checkbox" && el.dataset.scope) { write(el); return; }
+      if (el.dataset.pageShow) { page()[el.dataset.pageShow] = !el.checked; changed({ panel: true }); toast(`${el.dataset.pageShow === "hideHeader" ? "Header" : "Sticky bar"} ${el.checked ? "shown" : "hidden"} on this page`); return; }
       if (el.type === "file" && el.files[0]) {
         const lab = el.closest(".ed-upload");
         lab.classList.add("busy");
