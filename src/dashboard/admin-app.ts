@@ -1742,9 +1742,10 @@ export const start = async () => {
         const title = seo.title || s.name || "My Store", desc = seo.description || "";
         const v = (x) => esc(x ?? "");
         const text = (k, label, val, o = {}) => `<div class="field"><label for="p-${k}">${label}</label><input class="input" id="p-${k}" data-k="${k}" value="${v(val)}" maxlength="${o.max || 120}" placeholder="${v(o.ph)}"${o.type ? ` type="${o.type}"` : ""}>${o.hint ? `<span class="pf-hint">${o.hint}</span>` : ""}</div>`;
-        const image = (k, label, val, hint) => {
+        // wide: a wide picture (the share image); otherwise square (the logo)
+        const image = (k, label, val, hint, wide) => {
           const src = SiteKit.safeImg(val);
-          return `<div class="field"><label>${label}</label><div class="pf-image">
+          return `<div class="field"><label>${label}</label><div class="pf-image${wide ? " wide" : " square"}">
             <span class="pf-thumb">${src ? `<img src="${esc(src)}" alt="">` : icon("image")}</span>
             <div><div class="pf-image-btns"><label class="btn btn-sm">${icon("plus")}${src ? "Replace" : "Upload"}<input type="file" accept="image/*" hidden data-upload="${k}"></label>${src ? `<button type="button" class="btn btn-sm" data-clear="${k}">Remove</button>` : ""}</div>
             <span class="pf-hint">${hint}</span></div></div></div>`;
@@ -1759,30 +1760,30 @@ export const start = async () => {
         return `${head("Preferences", "Your website's important settings in one place. Changes save automatically.", `<span class="pf-saved" id="pf-saved">${icon("check")}All changes saved</span>`)}
           <form id="prefs-form" autocomplete="off" onsubmit="return false">
             <div class="pf-stack">
-              <div class="card"><div class="card-head"><span class="card-title">Store details<small>Header, footer and Contact section</small></span></div><div class="card-body">
+              <div class="card"><div class="card-head"><span class="pf-ico">${icon("store")}</span><span class="card-title">Store details<small>Header, footer and Contact section</small></span></div><div class="card-body">
                   ${text("name", "Website name", s.name, { max: 40, ph: "My Store" })}
-                  ${image("header.logo", "Logo", h.logo, "Shown as a square with rounded corners, with your website name beside it, in the header and footer. A square image (512 × 512) works best.")}
+                  ${image("header.logo", "Logo", h.logo, "Shown beside your website name in the header and footer. A square image (512 × 512) works best.")}
                   <div class="row">${text("phone", "Phone", s.phone, { max: 30, ph: "01XXX-XXXXXX" })}${text("email", "Email", s.email, { max: 120, ph: "hello@yourstore.com", type: "email" })}</div>
                   ${text("address", "Address", s.address, { max: 160, ph: "House, road, area, city" })}
               </div></div>
-              <div class="card"><div class="card-head"><span class="card-title">Social media<small>Shown in your website's footer</small></span></div><div class="card-body">
+              <div class="card"><div class="card-head"><span class="pf-ico">${icon("globe")}</span><span class="card-title">Social media<small>Shown in your website's footer</small></span></div><div class="card-body">
                   ${shown.map((k) => `<div class="pf-social"><span class="pf-social-ico">${SiteKit.socialIcon(k)}</span><div class="field"><label for="p-${k}">${SiteKit.SOCIALS[k].name}</label><input class="input" id="p-${k}" data-k="social.${k}" type="url" maxlength="200" value="${v(so[k])}" placeholder="${SiteKit.SOCIALS[k].ph}"></div>${BASE.includes(k) ? "" : `<button type="button" class="icon-btn pf-social-x" data-remove-social="${k}" aria-label="Remove ${SiteKit.SOCIALS[k].name}" title="Remove">${icon("x")}</button>`}</div>`).join("")}
                   ${more.length ? `<div class="v-more pf-add-social"><button type="button" class="btn" data-action="version-menu" aria-haspopup="menu" aria-expanded="false">${icon("plus")}Add social media</button>
                     <div class="v-menu" role="menu" hidden>${more.map((k) => `<button type="button" role="menuitem" data-add-social="${k}"><span class="pf-menu-ico">${SiteKit.socialIcon(k)}</span><span><b>${SiteKit.SOCIALS[k].name}</b></span></button>`).join("")}</div></div>` : ""}
                   ${text("footer.copyright", "Footer copyright line", f.copyright, { max: 120, ph: `© ${new Date().getFullYear()} ${s.name || "My Store"}. All rights reserved.` })}
               </div></div>
-              <div class="card"><div class="card-head"><span class="card-title">Search engine listing</span></div><div class="card-body">
+              <div class="card"><div class="card-head"><span class="pf-ico">${icon("search")}</span><span class="card-title">Search engine listing</span></div><div class="card-body">
                   <div class="serp"><span class="serp-url">${esc(siteUrl())}</span><b class="serp-title" id="serp-title">${esc(title)}</b><span class="serp-desc" id="serp-desc">${esc(desc || "Add a description so people know what you sell.")}</span></div>
                   ${text("seo.title", "Title in Google", seo.title, { max: 70, ph: s.name || "My Store", hint: `<span data-count="seo.title">${seo.title.length}</span> of 70 characters` })}
                   <div class="field"><label for="p-desc">Description</label><textarea class="textarea" id="p-desc" data-k="seo.description" maxlength="160" placeholder="e.g. Handmade furniture delivered across Bangladesh.">${esc(seo.description)}</textarea><span class="pf-hint"><span data-count="seo.description">${seo.description.length}</span> of 160 characters</span></div>
-                  ${image("seo.image", "Share image", seo.image, "Shown when your link is shared on Facebook, WhatsApp or Messenger. 1200 × 630 works best.")}
+                  ${image("seo.image", "Share image", seo.image, "Shown when your link is shared on Facebook, WhatsApp or Messenger. 1200 × 630 works best.", true)}
               </div></div>
-              <div class="card"><div class="card-head"><span class="card-title">Promotional banner<small>A short message at the very top of every page</small></span>
+              <div class="card"><div class="card-head"><span class="pf-ico">${icon("megaphone")}</span><span class="card-title">Promotional banner<small>A short message at the very top of every page</small></span>
                 <label class="switch" style="margin-left:auto"><input type="checkbox" data-k="header.announcement.show" ${h.announcement.show ? "checked" : ""} aria-label="Show the promotional banner"><i></i></label></div><div class="card-body">
                   <div class="pf-announce-demo ${h.announcement.show ? "" : "off"}" style="${esc(SiteKit.announceStyle(h.announcement) || `background:${s.accent};color:${SiteKit.isDark(s.accent) ? "#fff" : "#111"}`)}" id="pf-announce-demo">${esc(h.announcement.text || "Your message")}${h.announcement.link ? " →" : ""}</div>
                   <div class="pf-banner-edit"><span class="muted small">Change the message, link and color in Navigation.</span><button type="button" class="btn btn-sm" data-edit-banner>${icon("edit")}Edit banner</button></div>
               </div></div>
-              <div class="card"><div class="card-head"><span class="card-title">Look &amp; feel<small>Colors, fonts and buttons for your whole website</small></span></div>
+              <div class="card"><div class="card-head"><span class="pf-ico">${icon("palette")}</span><span class="card-title">Look &amp; feel<small>Colors, fonts and buttons for your whole website</small></span></div>
                 <div class="card-body pf-look">
                   <div>
                     <div class="field"><label>Color sets</label><div class="pf-palettes">${PALETTES.map(([n, bg, tx, ac]) => `<button type="button" data-palette="${bg},${tx},${ac}" class="${s.bg === bg && s.accent === ac ? "on" : ""}"><i style="background:${bg}"></i><i style="background:${ac}"></i>${n}</button>`).join("")}</div></div>
