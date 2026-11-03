@@ -951,3 +951,100 @@ figcaption span { font-size: 14px; opacity: .7; }
 .theme-launch .p-img { background: #15151f !important; }
 .theme-launch .faq details, .theme-launch .quote { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.1); }
 .theme-launch .s-header, .theme-launch .s-footer { background: var(--bg); }
+
+/* ---------- Landing page: the product with its order button ---------- */
+.lp-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 48px; align-items: start; }
+.lp-grid[hidden] { display: none; }
+.lp-media { position: sticky; top: 20px; display: grid; gap: 12px; }
+.lp-main { position: relative; display: grid; place-items: center; overflow: hidden; aspect-ratio: 1 / 1; border-radius: 20px; }
+.lp-main img { width: 100%; height: 100%; object-fit: cover; }
+.lp-main > span { font-size: 64px; font-weight: 700; opacity: .25; }
+.lp-off { position: absolute; top: 14px; left: 14px; padding: 6px 12px; border-radius: 999px; background: #e11d48; color: #fff; font-size: 14px; font-style: normal; font-weight: 700; box-shadow: 0 8px 18px -8px rgba(225, 29, 72, .7); }
+.lp-thumbs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.lp-thumbs::-webkit-scrollbar { display: none; }
+.lp-thumbs button { flex: none; width: 68px; height: 68px; padding: 0; overflow: hidden; border: 2px solid transparent; border-radius: 12px; background: var(--soft); cursor: pointer; opacity: .7; }
+.lp-thumbs button.on { border-color: var(--accent); opacity: 1; }
+.lp-thumbs img { width: 100%; height: 100%; object-fit: cover; }
+.lp-info { display: grid; gap: 16px; align-content: start; }
+.lp-badge { display: inline-flex; align-items: center; gap: 6px; justify-self: start; padding: 6px 12px; border-radius: 999px; background: #fff1e6; color: #c2410c; font-size: 13px; font-weight: 700; }
+.lp-badge .ic { width: 16px; height: 16px; }
+.lp-info h1 { font-family: var(--hfont); font-size: clamp(28px, 3.6vw, 42px); line-height: 1.15; letter-spacing: -.01em; }
+.lp-rating { display: flex; align-items: center; gap: 10px; font-size: 14px; opacity: .85; }
+.lp-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.lp-price b { font-size: 34px; font-weight: 800; color: var(--accent); }
+.lp-price s { font-size: 18px; opacity: .5; }
+.lp-price em { padding: 4px 10px; border-radius: 999px; background: rgba(22, 163, 74, .12); color: #15803d; font-size: 13px; font-style: normal; font-weight: 700; }
+.lp-picks { display: grid; gap: 8px; }
+.lp-picks button { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--bg); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.lp-picks button.on { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.lp-picks img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; }
+.lp-picks span { display: grid; gap: 2px; }
+.lp-picks b { font-size: 15px; } .lp-picks small { font-size: 14px; opacity: .7; }
+.lp-points { display: grid; gap: 10px; list-style: none; padding: 0; margin: 0; }
+.lp-points li { display: flex; align-items: flex-start; gap: 10px; font-size: 16px; }
+.lp-points .ic { flex: none; width: 22px; height: 22px; padding: 3px; margin-top: 1px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); stroke-width: 2.6; }
+.lp-opt { display: grid; gap: 8px; }
+.lp-opt b { font-size: 14px; font-weight: 600; }
+.lp-opt div { display: flex; flex-wrap: wrap; gap: 8px; }
+.lp-opt button { min-width: 46px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+.lp-opt button.on { border: 2px solid var(--accent); padding: 8px 13px; font-weight: 600; }
+.lp-buy { display: flex; gap: 10px; }
+.lp-qty { display: inline-flex; align-items: center; flex: none; border: 1px solid var(--line); border-radius: var(--btn-radius); }
+.lp-qty button { width: 44px; height: 54px; border: 0; background: none; color: var(--text); font-size: 20px; cursor: pointer; }
+.lp-qty b { min-width: 24px; text-align: center; }
+.lp-cta { flex: 1; min-height: 56px; font-size: 18px; font-weight: 700; box-shadow: 0 14px 28px -14px var(--accent); animation: lp-pulse 2.4s ease-in-out infinite; }
+.lp-cta .ic { width: 20px; height: 20px; }
+.lp-cta:disabled { opacity: .5; cursor: not-allowed; animation: none; }
+@keyframes lp-pulse { 0%, 100% { transform: none; } 50% { transform: scale(1.02); } }
+@media (prefers-reduced-motion: reduce) { .lp-cta { animation: none; } }
+.lp-msg { color: #dc2626; font-size: 14px; }
+.lp-stock { display: flex; align-items: center; gap: 8px; color: #c2410c; font-size: 14px; font-weight: 600; }
+.lp-stock .ic { width: 18px; height: 18px; }
+.lp-trust { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding-top: 4px; }
+.lp-trust span { display: grid; justify-items: center; gap: 6px; padding: 12px 6px; border-radius: 14px; background: var(--soft); font-size: 13px; font-weight: 600; text-align: center; }
+.lp-trust .ic { width: 24px; height: 24px; color: var(--accent); }
+.lp-desc { grid-column: 1 / -1; padding: 24px; border: 1px solid var(--line); border-radius: 18px; }
+.lp-desc h3 { margin-bottom: 10px; font-family: var(--hfont); font-size: 20px; }
+.lp-desc p { opacity: .85; line-height: 1.75; }
+@media (max-width: 860px) {
+  .lp-grid { grid-template-columns: 1fr; gap: 22px; }
+  .lp-media { position: static; }
+  .lp-main { border-radius: 16px; }
+  .lp-price b { font-size: 30px; }
+  .lp-trust span { font-size: 12px; }
+}
+
+/* ---------- Landing page: a video in the website's own player ---------- */
+.lp-video-wrap { text-align: center; }
+.lp-video-wrap .lead { margin-left: auto; margin-right: auto; }
+.lp-video { position: relative; overflow: hidden; margin-top: 24px; aspect-ratio: 16 / 9; border-radius: 20px; background: #000; box-shadow: 0 24px 50px -24px rgba(0, 0, 0, .5); }
+/* The player is taller than the box, so YouTube's title (top) and logo (bottom) are cut off */
+.lp-vframe, .lp-vframe iframe { position: absolute; left: 0; width: 100%; border: 0; pointer-events: none; }
+.lp-vframe { inset: 0; }
+.lp-vframe iframe { top: -60px; height: calc(100% + 120px); }
+.lp-vcover { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; justify-items: center; gap: 10px; border: 0; background: #111 center / cover no-repeat; color: #fff; cursor: pointer; transition: opacity .25s; }
+.lp-vcover::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .05), rgba(0, 0, 0, .35)); }
+.lp-vcover small { position: relative; font-size: 14px; opacity: .85; }
+.lp-vplay { position: relative; display: grid; place-items: center; width: 76px; height: 76px; border-radius: 50%; background: var(--accent); color: var(--on-accent); box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 30%, transparent), 0 14px 30px rgba(0, 0, 0, .35); transition: transform .2s; }
+.lp-vplay .ic { width: 30px; height: 30px; margin-left: 4px; }
+.lp-vcover:hover .lp-vplay { transform: scale(1.06); }
+.lp-video.loading .lp-vplay { animation: lp-spin-pulse 1s ease-in-out infinite; }
+@keyframes lp-spin-pulse { 50% { transform: scale(.9); opacity: .7; } }
+.lp-video.playing .lp-vcover { opacity: 0; pointer-events: none; }
+.lp-vtap { position: absolute; inset: 0; z-index: 1; border: 0; background: transparent; cursor: pointer; }
+.lp-vbar { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 3; display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #fff; opacity: 0; transition: opacity .25s; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.lp-video.playing .lp-vbar { opacity: 1; }
+.lp-video.playing:not(:hover) .lp-vbar { opacity: .0; }
+@media (hover: none) { .lp-video.playing .lp-vbar { opacity: 1; } }
+.lp-vbar button { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; color: #fff; cursor: pointer; }
+.lp-vbar .ic { width: 18px; height: 18px; }
+.lp-vbar .v-play, .lp-video.playing .lp-vbar .v-pause { display: block; }
+.lp-video.playing .lp-vbar .v-play, .lp-vbar .v-pause { display: none; }
+.lp-vbar .v-muted, .lp-video.muted .lp-vbar .v-sound { display: none; }
+.lp-video.muted .lp-vbar .v-muted { display: block; }
+.lp-vtrack { position: relative; flex: 1; height: 18px; cursor: pointer; }
+.lp-vtrack::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .3); }
+.lp-vtrack i { position: absolute; left: 0; top: 7px; height: 4px; width: 0; border-radius: 4px; background: var(--accent); }
+@media (max-width: 760px) { .lp-video { border-radius: 14px; } .lp-vplay { width: 62px; height: 62px; } }
+/* A landing page section with nothing to show yet (no product, no video link) takes no space on the website */
+body:not(.editing) .s-offer:empty, body:not(.editing) .s-video:empty { display: none; }

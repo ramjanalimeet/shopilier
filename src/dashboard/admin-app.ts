@@ -719,6 +719,31 @@ export const start = async () => {
       },
     });
   };
+  // A new page is either a blank page or a landing page: a ready page that sells a product, with the product
+  // and its order button, a video, reasons to buy, reviews, questions and the order form, all on one page
+  const ptypeCards = (cur) => `<div class="wpd-kinds np-types">${[["page", "pages", "Page", "A blank page you build yourself"], ["landing", "rocket", "Landing page", "Product, video and order form, ready to sell"]]
+    .map(([k, ic, l, sub]) => `<label class="wpd-kind"><input type="radio" name="ptype" value="${k}" ${cur === k ? "checked" : ""}>${icon(ic)}<b>${l}</b><small>${sub}</small></label>`).join("")}</div>`;
+  const lpProductField = () => {
+    const list = store.products.filter((p) => p.status !== "draft");
+    return `<div class="field np-product" data-lp-only><label>Product to sell</label>${list.length
+      ? `<select class="select" name="product">${list.map((p) => `<option value="${esc(p.id)}">${esc(p.name)} · ${taka(p.price)}</option>`).join("")}</select><small class="np-hint">You can add up to 3 products, a video and reviews on the page after.</small>`
+      : `<p class="np-hint">You have no products yet. Add one in Products, then pick it on the page.</p>`}</div>`;
+  };
+  // The product picker (and the header and sticky bar switches) show only for a landing page
+  const ptypeSync = (form) => {
+    const sync = () => {
+      const lp = (form.querySelector('input[name="ptype"]:checked') || {}).value === "landing";
+      form.querySelectorAll("[data-lp-only]").forEach((el) => { el.hidden = !lp; });
+      const t = form.querySelector('input[name="title"]');
+      if (t) t.placeholder = lp ? "e.g. Eid offer" : "e.g. About us";
+    };
+    form.addEventListener("change", sync); sync();
+  };
+  // A landing page's sections; its order form asks the same questions and charges the same delivery as Checkout
+  const landingFor = (np, productId) => {
+    const co = store.pages.find((p) => p.system === "checkout"), sec = co && co.sections.find((x) => x.type === "checkout");
+    np.sections = SiteKit.landingSections({ site: store.site, products: store.products }, productId, sec && sec.content);
+  };
   // A new menu page or landing page, then straight into editing it
   const wsAddPage = (kind) => {
     if (!withinLimit(plan().pages, pageCount())) { toast(`Your ${plan().name} plan allows ${plan().pages} pages — upgrade to add more`); return; }
@@ -726,10 +751,12 @@ export const start = async () => {
     dialog({
       title: kind === "menu" ? "New menu page" : "New landing page",
       submit: "Create page",
-      body: `<div class="field"><label>Page name</label><input class="input" name="title" required maxlength="40" placeholder="${kind === "menu" ? "e.g. About us" : "e.g. Eid offer"}"></div>${kind === "landing" ? wsLandingOpts(null) : ""}`,
+      body: `${kind === "landing" ? ptypeCards("landing") : ""}<div class="field"><label>Page name</label><input class="input" name="title" required maxlength="40" placeholder="${kind === "menu" ? "e.g. About us" : "e.g. Eid offer"}"></div>${kind === "landing" ? lpProductField() + wsLandingOpts(null) : ""}`,
+      onOpen: (form) => { if (kind === "landing") ptypeSync(form); },
       onSubmit: (v) => {
         const np = { id: uid("pg"), title: v.title, slug: uniqueSlug(v.title), inNav: false };
-        np.sections = SiteKit.pageSections(np, { site: store.site, products: store.products });
+        if (kind === "landing" && v.ptype === "landing") landingFor(np, v.product);
+        else np.sections = SiteKit.pageSections(np, { site: store.site, products: store.products });
         store.pages.push(np);
         if (kind === "menu") addToMenu(np);
         else { np.hideHeader = !v.header; np.hideMbar = !v.mbar; }
@@ -2098,6 +2125,8 @@ export const start = async () => {
         store, account, catalog, icon, toast, confirm, dialog, touchSite, persist, syncPayments,
         publish: () => actions.publish(),
         canAddPage: () => withinLimit(plan().pages, pageCount()),
+        // Add page in the editor: the same window as Pages (a page or a landing page)
+        newPage: (done) => pageDialog(null, done),
         // From Website → Edit Pages on a phone: the website and its parts side by side
         ...(/[?&]split=1/.test(location.hash) && matchMedia("(max-width: 760px)").matches ? { split: true, publishLabel: () => "Publish" } : {}),
       }),
@@ -2402,17 +2431,25 @@ export const start = async () => {
     });
   };
 
-  const pageDialog = (pg) => dialog({
+  // done(page): the website editor adds the page itself and opens it (instead of redrawing this screen)
+  const pageDialog = (pg, done) => dialog({
     title: pg ? "Rename page" : "New page",
-    body: `<div class="field"><label>Page title</label><input class="input" name="title" required maxlength="40" value="${esc(pg?.title)}" placeholder="e.g. FAQ"></div>`,
+    body: `${pg ? "" : ptypeCards("page")}<div class="field"><label>Page title</label><input class="input" name="title" required maxlength="40" value="${esc(pg?.title)}" placeholder="e.g. FAQ"></div>${pg ? "" : lpProductField()}`,
     submit: pg ? "Save" : "Add page",
+    onOpen: (form) => { if (!pg) ptypeSync(form); },
     onSubmit: (v) => {
       const slug = uniqueSlug(v.title, pg);
-      if (pg) { pg.title = v.title; if (!pg.locked) pg.slug = slug; }
-      // A new page joins the menu while there's room (5 pages fit in the menu bar)
-      let full = false;
-      if (!pg) { full = menuTopCount() >= MENU_MAX; const np = { id: uid("pg"), title: v.title, slug, inNav: !full }; np.sections = SiteKit.pageSections(np, { site: store.site, products: store.products }); store.pages.push(np); }
-      touchSite(); persist(); go(); toast(pg ? "Page renamed" : full ? `Page added. The menu already has ${MENU_MAX} pages, so it's not in the menu.` : "Page added");
+      if (pg) { pg.title = v.title; if (!pg.locked) pg.slug = slug; touchSite(); persist(); go(); toast("Page renamed"); return; }
+      // A landing page stays out of the menu and opens in the editor; a page joins the menu while there's room (5 fit)
+      const landing = v.ptype === "landing", full = !landing && menuTopCount() >= MENU_MAX;
+      const np = { id: uid("pg"), title: v.title, slug, inNav: !landing && !full };
+      if (landing) landingFor(np, v.product);
+      else np.sections = SiteKit.pageSections(np, { site: store.site, products: store.products });
+      store.pages.push(np);
+      if (done) { done(np); toast(landing ? "Landing page created" : "Page added"); return; }
+      touchSite(); persist();
+      toast(landing ? "Landing page created" : full ? `Page added. The menu already has ${MENU_MAX} pages, so it's not in the menu.` : "Page added");
+      if (landing) location.hash = `#/website?page=${np.id}`; else go();
     },
   });
 
