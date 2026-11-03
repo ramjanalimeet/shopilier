@@ -602,9 +602,10 @@ export const start = async () => {
   const curRoute = () => location.hash.replace(/^#\/?/, "").split("?")[0];
   // The top of each screen: back, title and Publish
   // back: an address, or "pages" for Edit Pages' own list (a page is open)
-  const wsTop = (title, back = "#/site") => `<div class="page ws-page"><div class="ws-top">
+  // review: a Review button beside Publish that opens the website as visitors see it
+  const wsTop = (title, back = "#/site", review = false) => `<div class="page ws-page"><div class="ws-top">
       ${back === "pages" ? `<button type="button" class="ws-back" data-wp-back aria-label="All pages" title="All pages">${icon("arrowLeft")}</button>` : `<a class="ws-back" href="${back}" aria-label="Back" title="Back">${icon("arrowLeft")}</a>`}<h1>${esc(title)}</h1>
-      <button type="button" class="btn btn-primary ws-publish${unpublished() ? " has-changes" : ""}" data-action="publish" title="${unpublished() ? "You have changes that aren't live yet" : "Your website is up to date"}">${icon("send")}<span>Publish</span></button>
+      ${review ? `<button type="button" class="btn ws-review" data-action="view-store" title="See your website as visitors do">${icon("eye")}<span>Review</span></button>` : ""}<button type="button" class="btn btn-primary ws-publish${unpublished() ? " has-changes" : ""}" data-action="publish" title="${unpublished() ? "You have changes that aren't live yet" : "Your website is up to date"}">${icon("send")}<span>Publish</span></button>
     </div>`;
   // A live preview box: the page at its real width (data-w), scaled down to fit.
   // fit="content" grows the box to the page's height (the header preview); otherwise the page scrolls inside the box.
@@ -1831,20 +1832,26 @@ export const start = async () => {
     },
 
     // ---------- Website: the Website tab on phones. A live phone with three ways in ----------
+    // Edit Nav and Edit Pages sit above the phone, Edit Sticky under it; a dotted line joins each to its part
+    // of the website (the header, the page, the sticky bar)
     site: {
       title: "Website",
       render: () => {
         const mb = store.site.header.mbar || {}, look = (SiteKit.MBAR_STYLES.find((x) => x.id === mb.style) || SiteKit.MBAR_STYLES[0]).name;
-        // [id, link, icon, name, what it changes]
-        const calls = [["nav", "#/site-nav", "edit", "Nav", "Banner & menu"], ["pages", "#/site-pages", "pages", "Pages", `${store.pages.length} ${store.pages.length === 1 ? "page" : "pages"}`], ["sticky", "#/site-sticky", "layers", "Sticky", mb.show ? look : "Off"]];
-        const arrow = '<i class="wh-line" aria-hidden="true"></i>';
-        return `${wsTop("Edit Website", "#/home")}
+        const card = (id, href, ic, label, sub, cls = "") => `<a class="wh-btn${cls}" data-wh="${id}" href="${href}"><span class="wh-btn-ico">${icon(ic)}</span><span class="wh-btn-t"><b>Edit ${label}</b><small>${esc(sub)}</small></span>${id === "sticky" ? `<span class="wh-btn-go">${icon("chevronRight")}</span>` : ""}</a>`;
+        const hot = (id, label, href) => `<a class="wh-hot" data-hot="${id}" href="${href}" tabindex="-1" aria-hidden="true" title="Edit ${label}"></a>`;
+        return `${wsTop("Edit Website", "#/home", true)}
           <div class="wh-stage">
-            <div class="wh-side">${calls.map(([id, href, ic, label, sub]) => `<a class="wh-pill" data-wh="${id}" href="${href}"><span class="wh-pill-ico">${icon(ic)}</span><span class="wh-pill-t"><b>Edit ${label}</b><small>${esc(sub)}</small></span>${arrow}</a>`).join("")}</div>
+            <svg class="wh-links" aria-hidden="true"></svg>
+            <div class="wh-top">
+              ${card("nav", "#/site-nav", "edit", "Nav", "Banner & menu", " wh-main")}
+              ${card("pages", "#/site-pages", "pages", "Pages", `${store.pages.length} ${store.pages.length === 1 ? "page" : "pages"}`)}
+            </div>
             <div class="wh-card">
               ${wsScreen(SiteKit.storeHTML(store.site, store.pages, { products: store.products, discounts: discountsForSite() }), 360, "wh-screen ws-site")}
-              ${calls.map(([id, href, , label]) => `<a class="wh-hot" data-hot="${id}" href="${href}" tabindex="-1" aria-hidden="true" title="Edit ${label}"></a>`).join("")}
+              ${hot("nav", "Nav", "#/site-nav")}${hot("pages", "Pages", "#/site-pages")}${hot("sticky", "Sticky", "#/site-sticky")}
             </div>
+            ${card("sticky", "#/site-sticky", "layers", "Sticky", mb.show ? look : "Off", " wh-wide")}
           </div>
         </div>`;
       },
@@ -1856,10 +1863,10 @@ export const start = async () => {
       },
       mount: (view) => {
         // Listeners go on this screen (made anew with each draw), never on #view, so they never pile up
-        const root = view.querySelector(".ws-page");
         wsMount(view);
-        // Line each button up with its part of the website: the header, the page, the sticky bar
-        const stage = view.querySelector(".wh-stage"), sc = view.querySelector(".wh-screen");
+        const stage = view.querySelector(".wh-stage"), sc = view.querySelector(".wh-screen"), phone = view.querySelector(".wh-card"), svg = view.querySelector(".wh-links");
+        // Each line: from its button to its part of the website, in its own colour, ending in a dot
+        const COLORS = { nav: "#a43ad6", pages: "#2f7be8", sticky: "#f59e0b" };
         const place = () => {
           const d = sc.querySelector("iframe").contentDocument;
           const k = sc.clientWidth / 360, H = sc.clientHeight;
@@ -1871,25 +1878,29 @@ export const start = async () => {
           const headBot = head ? Math.min(H * 0.3, head.getBoundingClientRect().bottom * k) : H * 0.1;
           const barTop = barOn ? Math.min(H - 24, bar.getBoundingClientRect().top * k) : H - 34;
           const spots = { nav: [0, headBot], pages: [headBot, barTop], sticky: [barTop, H] };
-          const top = sc.getBoundingClientRect().top - view.querySelector(".wh-side").getBoundingClientRect().top;
-          // The page button sits a little above the middle, where the page's own content is
-          const at = { nav: headBot / 2, pages: headBot + (barTop - headBot) * 0.42, sticky: (barTop + H) / 2 };
-          // Lined up with their part, but never above the website, below it, or on top of each other
-          let floor = 0;
-          const pills = [...view.querySelectorAll(".wh-pill")], gap = 10, end = top + H;
-          pills.forEach((c, i) => {
-            const left = pills.slice(i + 1).reduce((sum, x) => sum + x.offsetHeight + gap, 0);
-            const y = Math.min(Math.max(top + at[c.dataset.wh] - c.offsetHeight / 2, floor, top), end - left - c.offsetHeight);
-            c.style.top = Math.round(y) + "px"; floor = y + c.offsetHeight + gap;
-            // The line leaves the button level with its part (as far as the button reaches)
-            c.querySelector(".wh-line").style.top = Math.round(Math.min(Math.max(top + at[c.dataset.wh] - y, 16), c.offsetHeight - 16)) + "px";
-          });
           view.querySelectorAll(".wh-hot").forEach((a) => { const [t, b] = spots[a.dataset.hot]; a.style.top = Math.round(sc.offsetTop + t) + "px"; a.style.height = Math.max(24, Math.round(b - t)) + "px"; });
+
+          // The lines, measured from the stage
+          const S = stage.getBoundingClientRect(), P = phone.getBoundingClientRect(), sy = sc.getBoundingClientRect().top - S.top;
+          const box = (id) => { const r = view.querySelector(`.wh-btn[data-wh="${id}"]`).getBoundingClientRect(); return { l: r.left - S.left, r: r.right - S.left, t: r.top - S.top, b: r.bottom - S.top, w: r.width, h: r.height }; };
+          const pl = P.left - S.left, pr = P.right - S.left, pb = P.bottom - S.top;
+          const nav = box("nav"), pages = box("pages"), sticky = box("sticky");
+          const navY = sy + headBot * 0.55, pageY = sy + headBot + (barTop - headBot) * 0.42;
+          const lines = [
+            // Edit Nav: from under the button, round the left of the phone, into the header
+            ["nav", `M${nav.l + 26} ${nav.b + 2}C${nav.l - 4} ${nav.b + 40} ${pl - 46} ${navY - 30} ${pl} ${navY}`, [pl, navY]],
+            // Edit Pages: from under the button, down the right of the phone, into the page
+            ["pages", `M${pages.r - 26} ${pages.b + 2}C${pages.r + 2} ${pages.b + 120} ${pr + 30} ${pageY - 90} ${pr} ${pageY}`, [pr, pageY]],
+            // Edit Sticky: from the sticky bar, down into its button
+            ["sticky", `M${pl + (pr - pl) * 0.78} ${pb}C${pl + (pr - pl) * 0.8} ${pb + 26} ${sticky.l + sticky.w * 0.72} ${sticky.t + sticky.h * 0.25} ${sticky.l + sticky.w * 0.6} ${sticky.t + sticky.h * 0.5}`, [pl + (pr - pl) * 0.78, pb]],
+          ];
+          svg.setAttribute("viewBox", `0 0 ${S.width} ${S.height}`);
+          svg.innerHTML = lines.map(([id, path, [x, y]]) => `<g data-line="${id}" style="--c:${COLORS[id]}"><path d="${path}"/><circle cx="${x}" cy="${y}" r="5.5"/></g>`).join("");
           stage.classList.add("placed");
         };
         sc.onFit = place;
-        // Pointing at a part of the phone highlights its button, and the other way round
-        const glow = (id) => view.querySelectorAll("[data-wh], [data-hot]").forEach((el) => el.classList.toggle("glow", !!id && (el.dataset.wh || el.dataset.hot) === id));
+        // Pointing at a part of the phone highlights its button and line, and the other way round
+        const glow = (id) => view.querySelectorAll("[data-wh], [data-hot], [data-line]").forEach((el) => el.classList.toggle("glow", !!id && (el.dataset.wh || el.dataset.hot || el.dataset.line) === id));
         stage.addEventListener("pointerover", (e) => { const el = e.target.closest("[data-wh], [data-hot]"); glow(el ? el.dataset.wh || el.dataset.hot : null); });
         stage.addEventListener("pointerleave", () => glow(null));
       },
