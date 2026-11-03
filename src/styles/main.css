@@ -688,32 +688,51 @@ button { font: inherit; cursor: pointer; }
   .review-grid > * { flex: 0 0 86%; scroll-snap-align: center; }
   .reviews { padding-bottom: 54px; }
 
-  /* Bottom bar with the main action */
-  .m-cta { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 55; display: flex; gap: 8px; padding: 8px;
-    border-radius: 20px; background: rgba(255, 255, 255, .9); -webkit-backdrop-filter: saturate(180%) blur(14px); backdrop-filter: saturate(180%) blur(14px);
-    box-shadow: 0 12px 34px -8px rgba(16, 24, 40, .28), 0 0 0 1px rgba(16, 24, 40, .06); transform: translateY(140%); transition: transform .28s cubic-bezier(.2, .8, .2, 1); }
-  .m-cta.show { transform: none; }
-  .m-cta a { display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px; border-radius: 14px; font-size: 16px; font-weight: 700; }
-  .m-cta-main { flex: 1; background: var(--m-green); color: #fff; box-shadow: var(--m-shadow); }
-  .m-cta-side { padding: 0 16px; background: #f2f4f7; color: var(--ink); font-weight: 600 !important; }
+  /* Sticky bottom bar: the offer on the left, the main action on the right */
+  .m-cta { position: fixed; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 55; display: flex; align-items: center; gap: 10px; padding: 7px 7px 7px 14px;
+    border-radius: 20px; background: rgba(255, 255, 255, .92); -webkit-backdrop-filter: saturate(180%) blur(16px); backdrop-filter: saturate(180%) blur(16px);
+    box-shadow: 0 14px 36px -10px rgba(36, 95, 10, .35), 0 0 0 1px rgba(65, 162, 18, .16);
+    transform: translateY(150%); opacity: 0; transition: transform .32s cubic-bezier(.2, .8, .2, 1), opacity .2s; }
+  .m-cta.show { transform: none; opacity: 1; }
+  .m-cta-offer { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; line-height: 1.25; }
+  .m-cta-price { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .m-cta-price b { font-size: 19px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); }
+  .m-cta-perks { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--brand-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-cta-perks i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 3px rgba(65, 162, 18, .2); animation: m-live 1.8s ease-in-out infinite; }
+  @keyframes m-live { 50% { box-shadow: 0 0 0 5px rgba(65, 162, 18, 0); } }
+  .m-cta-main { position: relative; overflow: hidden; flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 16px;
+    border-radius: 14px; font-size: 16px; font-weight: 700; background: var(--m-green); color: #fff; box-shadow: var(--m-shadow); }
+  .m-cta-main:only-child { flex: 1; }
+  .m-cta-main:active { transform: scale(.97); }
+  /* A light sweep across the button every few seconds draws the eye without being noisy */
+  .m-cta-main::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; transform: skewX(-20deg);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .35), rgba(255, 255, 255, 0)); animation: m-shine 4.5s ease-in-out infinite; }
+  @keyframes m-shine { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+  @media (prefers-reduced-motion: reduce) { .m-cta-main::after, .m-cta-perks i { animation: none; } .m-cta-main::after { display: none; } }
+  @media (max-width: 350px) { .m-cta-perks { display: none; } .m-cta-main { padding: 0 14px; font-size: 15px; } }
   body.menu-open .m-cta { transform: translateY(140%); }
 
   /* The live demo is a desktop experience: no links to it on phones */
   .site-header .main-nav a[href="/demo"], .footer-nav a[href="/demo"], .demo-pill { display: none !important; }
-  body.has-mcta .site-footer .footer-bottom { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+  body.has-mcta .site-footer .footer-bottom { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 }
 
 /* ---------- Phones: a premium white hero ----------
    White with one soft brand glow at the top (no blotches), the main button and the play button side by side,
    and the three promises on one line. */
 @media (max-width: 760px) {
+  /* Phones: white + brand green aurora only (the side waves would sit behind forms and cards here) */
   body {
     background:
-      radial-gradient(130% 380px at 50% -60px, rgba(132, 204, 22, .18) 0%, rgba(65, 162, 18, .05) 50%, rgba(65, 162, 18, 0) 78%),
-      linear-gradient(180deg, #eef8e8 0, #f6fbf2 420px, #ffffff 760px) no-repeat,
+      radial-gradient(120% 360px at 0% -40px, rgba(132, 204, 22, .22) 0%, rgba(132, 204, 22, 0) 70%),
+      radial-gradient(120% 360px at 100% -20px, rgba(65, 162, 18, .16) 0%, rgba(65, 162, 18, 0) 70%),
+      radial-gradient(90% 320px at 50% 560px, rgba(132, 204, 22, .10) 0%, rgba(132, 204, 22, 0) 70%),
+      radial-gradient(90% 360px at 0% 1500px, rgba(132, 204, 22, .08) 0%, rgba(132, 204, 22, 0) 70%),
+      radial-gradient(90% 360px at 100% 2400px, rgba(65, 162, 18, .07) 0%, rgba(65, 162, 18, 0) 70%),
+      linear-gradient(180deg, #f1f9ea 0, #f8fcf4 420px, #ffffff 820px) no-repeat,
       #fff;
   }
-  body::before { top: 260px; height: 640px; background-size: 58vw 100%, 58vw 100%; opacity: .85; }
+  body::before { display: none; }
   .hero h1::after { display: none; }
   body::after { width: 100%; height: 360px; }
   .hero .cta { flex-direction: row; justify-content: center; align-items: center; gap: 14px; }
