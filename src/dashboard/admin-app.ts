@@ -1993,12 +1993,13 @@ export const start = async () => {
       render: () => {
         const menuN = menuTopCount(), canAdd = withinLimit(plan().pages, pageCount());
         const menu = menuRows(), checkout = store.pages.filter((p) => p.system), landing = store.pages.filter((p) => !p.inNav && !p.system);
-        // Each page as a card: a small live picture of the page on top, then its name, Edit and settings
+        // Each page as a card: a small live picture of the page on top (without the sticky bar, so the page shows),
+        // then its name, Edit and settings
         const card = (p, kind, child) => {
           const chips = kind === "landing" ? [p.hideHeader && "No header", p.hideMbar && "No sticky bar"].filter(Boolean) : child ? ["In a dropdown"] : [];
           const n = (p.sections || []).filter((x) => !x.hidden).length;
           return `<article class="pc">
-            <a class="pc-shot" href="#/website?page=${p.id}&split=1" tabindex="-1" aria-hidden="true">${wsScreen(pageDoc(p), 360, "pc-screen")}</a>
+            <a class="pc-shot" href="#/website?page=${p.id}&split=1" tabindex="-1" aria-hidden="true">${wsScreen(pageDoc({ ...p, hideMbar: true }), 360, "pc-screen")}</a>
             <a class="pc-top" href="#/website?page=${p.id}&split=1"><span class="wl-ico ${kind}">${icon(kind === "checkout" ? "cart" : kind === "landing" ? "rocket" : p.locked ? "home" : "pages")}</span><span class="wl-t"><b>${esc(p.title)}</b><small>/${esc(p.slug)} · ${n} ${n === 1 ? "part" : "parts"}</small>${chips.length ? `<span class="wl-chips">${chips.map((c) => `<i>${c}</i>`).join("")}</span>` : ""}</span></a>
             <div class="pc-acts">
               <a class="btn btn-primary pc-edit" href="#/website?page=${p.id}&split=1">${icon("edit")}Edit</a>
