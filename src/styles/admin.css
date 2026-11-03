@@ -2311,3 +2311,18 @@ body.editor-open .ed.ed-split .ed-done .btn { height: 44px; }
   #prefs-form .pf-banner-edit { flex-wrap: nowrap; }
   #prefs-form .pf-status { border-radius: 18px; }
 }
+
+/* ---------- Phones and tablets: steady buttons ----------
+   A tap leaves an element in its hover look on touch screens, so hover lifts and zooms would stay stuck and make
+   the screen look shaky. On touch screens a tap answers with colour only, and without the grey flash box. */
+html { -webkit-tap-highlight-color: transparent; }
+@media (hover: none) {
+  .g-card:hover, .chat-fab:hover { transform: none; }
+  .g-card:hover { box-shadow: none; }
+  body.chat-open .chat-fab { transform: none; }
+}
+/* Phones: boxes you type in use 16px text. Smaller text makes iPhones zoom the whole screen in when a box is
+   tapped, which shifts the page sideways and looks shaky. */
+@media (max-width: 760px) {
+  input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=range]):not([type=file]), select, textarea { font-size: 16px !important; }
+}

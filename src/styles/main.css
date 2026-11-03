@@ -674,7 +674,7 @@ button { font: inherit; cursor: pointer; }
 
   /* The main actions in the brand green: clean on white, easy to spot */
   .btn-dark { background: var(--m-green); border-color: transparent; color: #fff; box-shadow: var(--m-shadow); }
-  .btn-dark:active { transform: scale(.98); }
+  .btn-dark:active { filter: brightness(.94); }
   .btn { min-height: 46px; }
   .btn-outline { background: #fff; }
 
@@ -703,7 +703,7 @@ button { font: inherit; cursor: pointer; }
   .m-cta-main { position: relative; overflow: hidden; flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 16px;
     border-radius: 14px; font-size: 16px; font-weight: 700; background: var(--m-green); color: #fff; box-shadow: var(--m-shadow); }
   .m-cta-main:only-child { flex: 1; }
-  .m-cta-main:active { transform: scale(.97); }
+  .m-cta-main:active { filter: brightness(.94); }
   /* A light sweep across the button every few seconds draws the eye without being noisy */
   .m-cta-main::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; transform: skewX(-20deg);
     background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .35), rgba(255, 255, 255, 0)); animation: m-shine 4.5s ease-in-out infinite; }
@@ -749,4 +749,13 @@ button { font: inherit; cursor: pointer; }
   .checks { gap: 0 9px; font-size: 11px; }
   .checks svg { width: 11px; height: 11px; }
   .hero .cta { gap: 10px; }
+}
+
+/* Touch screens: a tap leaves the hover look on, so hover lifts and zooms stay off (they made taps look shaky) */
+@media (hover: none) {
+  .btn:hover, .logo:hover, .review:hover, .dash .demo-pill:hover, .social a:hover, .watch-btn:hover, .vp-big:hover, .video-card:hover .vc-play { transform: none; }
+}
+/* Phones: 16px text in form boxes, so iPhones don't zoom the page in when one is tapped */
+@media (max-width: 760px) {
+  input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px; }
 }

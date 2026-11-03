@@ -995,7 +995,7 @@ figcaption span { font-size: 14px; opacity: .7; }
 .lp-cta { flex: 1; min-height: 56px; font-size: 18px; font-weight: 700; box-shadow: 0 14px 28px -14px var(--accent); animation: lp-pulse 2.4s ease-in-out infinite; }
 .lp-cta .ic { width: 20px; height: 20px; }
 .lp-cta:disabled { opacity: .5; cursor: not-allowed; animation: none; }
-@keyframes lp-pulse { 0%, 100% { transform: none; } 50% { transform: scale(1.02); } }
+@keyframes lp-pulse { 0%, 100% { box-shadow: 0 14px 28px -14px var(--accent); } 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 22%, transparent), 0 14px 28px -14px var(--accent); } }
 @media (prefers-reduced-motion: reduce) { .lp-cta { animation: none; } }
 .lp-msg { color: #dc2626; font-size: 14px; }
 .lp-stock { display: flex; align-items: center; gap: 8px; color: #c2410c; font-size: 14px; font-weight: 600; }
@@ -1048,3 +1048,11 @@ figcaption span { font-size: 14px; opacity: .7; }
 @media (max-width: 760px) { .lp-video { border-radius: 14px; } .lp-vplay { width: 62px; height: 62px; } }
 /* A landing page section with nothing to show yet (no product, no video link) takes no space on the website */
 body:not(.editing) .s-offer:empty, body:not(.editing) .s-video:empty { display: none; }
+
+/* Touch screens: a tap leaves the hover look on, so hover lifts and zooms stay off */
+html { -webkit-tap-highlight-color: transparent; }
+@media (hover: none) { .theme-store .cat:hover, .lp-vcover:hover .lp-vplay { transform: none; } }
+/* Phones: 16px text in form boxes (checkout, search, newsletter), so iPhones don't zoom the page in on a tap */
+@media (max-width: 760px) {
+  input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px !important; }
+}
