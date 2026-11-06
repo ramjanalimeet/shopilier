@@ -504,8 +504,13 @@
 .pf-status-btns { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .pf-image { display: flex; align-items: center; gap: 14px; }
-.pf-thumb { width: 104px; height: 68px; flex: none; display: grid; place-items: center; border-radius: 12px; border: 1px dashed #cfd5db; background: #fafbfb; color: var(--muted); overflow: hidden; }
-.pf-thumb img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.pf-thumb { position: relative; width: 104px; height: 68px; flex: none; display: grid; place-items: center; border-radius: 12px; border: 1px dashed #cfd5db; background: #fafbfb; color: var(--muted); overflow: hidden; }
+/* Pinned to the box, so a picture of any shape fits whole instead of spilling out and being cut off */
+.pf-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; }
+/* The logo is square: a square box, with a little room around the picture */
+.pf-image.square .pf-thumb { width: 68px; }
+.pf-image.square .pf-thumb:has(img) { border-style: solid; border-color: #e3e7eb; }
+.pf-image.square .pf-thumb img { padding: 4px; }
 .pf-image-btns { display: flex; gap: 8px; }
 .pf-image-btns label { cursor: pointer; }
 /* (form labels are block-level by default; these are buttons) */
