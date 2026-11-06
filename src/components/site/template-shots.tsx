@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import TemplateThumb from "./TemplateThumb";
 
 // The template previews shown on the Templates page and in the preview popup (mock storefronts drawn with CSS and SVG).
 // "live" adds the phone-size menu button the popup shows.
@@ -6,11 +7,11 @@ const Burger = () => (
   <span className="s-burger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg></span>
 );
 
-// A template's real storefront in a frame: scaled down to the card, or full size in the preview popup
+// A template's real storefront: on the card at desktop and phone width side by side, or full size in the preview popup
 const RealShot = ({ id, name, live }: { id: string; name: string; live: boolean }) => (
   live
     ? <iframe className="shot-live-frame" src={`/templates/preview/${id}`} title={`${name} preview`} />
-    : <div className="shot shot-real"><iframe src={`/templates/preview/${id}`} title={`${name} preview`} loading="lazy" tabIndex={-1} aria-hidden="true" /></div>
+    : <TemplateThumb id={id} name={name} />
 );
 
 // desc is shown on the card in Bangla; search covers the English keywords and the Bangla description
