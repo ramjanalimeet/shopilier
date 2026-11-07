@@ -438,16 +438,9 @@ svg { display: block; }
 .ix-save { display: flex; justify-content: flex-end; margin-top: 16px; }
 @media (max-width: 1100px) { .ix-mails { grid-template-columns: 1fr; } }
 @media (max-width: 760px) { #emails-form .row { grid-template-columns: 1fr; } .ix-save .btn { width: 100%; justify-content: center; } }
-/* Leads & sign-ins: one panel with underline tabs, a slim row of numbers, filter chips and search, then the list */
+/* Leads & sign-ins: one panel with a slim row of numbers, filter chips and search, then one list of everything */
+.ix-d { font-size: 13px; color: var(--ink); }
 .ix-panel { padding: 0; overflow: hidden; }
-.ix-tabs { display: flex; gap: 4px; padding: 0 20px; border-bottom: 1px solid var(--line, #e9ebf0); }
-.ix-tab { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 52px; padding: 0 12px; font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none; transition: color .15s; }
-.ix-tab .i { width: 17px; height: 17px; }
-.ix-tab:hover { color: var(--ink); }
-.ix-tab.on { color: var(--ink); }
-.ix-tab.on::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--accent); }
-.ix-tab.on .i { color: var(--accent); }
-.ix-tab-n { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11.5px; font-weight: 600; }
 .ix-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line, #e9ebf0); }
 .ix-metrics.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .ix-metric { display: grid; gap: 4px; padding: 18px 22px; }
@@ -478,8 +471,6 @@ svg { display: block; }
 .ix-foot { display: flex; align-items: flex-start; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--line, #e9ebf0); background: #fafbfc; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
 .ix-foot .i { width: 15px; height: 15px; flex: none; margin-top: 1px; }
 @media (max-width: 760px) {
-  .ix-tabs { padding: 0 8px; overflow-x: auto; scrollbar-width: none; }
-  .ix-tab { white-space: nowrap; }
   .ix-metrics, .ix-metrics.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ix-metric { padding: 14px 16px; }
   .ix-metric:nth-child(3) { border-left: 0; }
@@ -487,4 +478,8 @@ svg { display: block; }
   .ix-metric b { font-size: 22px; }
   .ix-toolbar { padding: 12px 16px; }
   .ix-toolbar .box-search, .ix-toolbar .box-search input { width: 100%; }
+  /* Rows become cards on phones: no minimum width, and long emails wrap */
+  #view .ix-table { min-width: 0 !important; }
+  #view .ix-table td { flex-wrap: wrap; max-width: 100%; }
+  #view .ix-table .ix-contact { word-break: break-all; }
 }
