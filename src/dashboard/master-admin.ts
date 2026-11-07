@@ -126,12 +126,14 @@ export const start = () => {
   const paid = (list) => list.filter((p) => p.status === "Paid").reduce((s, p) => s + p.amount, 0);
   const statusPill = (u) => u.status === "active" ? '<span class="pill Paid">Active</span>' : '<span class="pill Cancelled">Suspended</span>';
 
+  // Leads & sign-ins is one clean panel: underline tabs, a slim row of numbers, filters and search, then the list
+  const metric = (label, value, hint, tone) => `<div class="ix-metric"><span class="ix-metric-l"><i class="ix-dot ${tone}"></i>${label}</span><b>${value}</b><small>${hint}</small></div>`;
+  const chips = (list, cur, action) => `<div class="ix-chips" role="group">${list.map(([t, l, n]) => `<button type="button" class="ix-chip${t === cur ? " on" : ""}" data-action="${action}" data-tab="${t}" aria-pressed="${t === cur}">${l}${n == null ? "" : `<span>${n}</span>`}</button>`).join("")}</div>`;
+  const emptyState = (ico, title, text, extra = "") => `<div class="ix-empty"><span class="ix-empty-ico">${icon(ico)}</span><b>${title}</b><p>${text}</p>${extra}</div>`;
   const leadsBody = () => {
-    if (!ix.leads) return loadingCard("Loading sign-up leads…");
+    if (!ix.leads) return '<div class="ix-loading">Loading sign-up leads…</div>';
     const all = ix.leads, n = (st) => all.filter((l) => l.status === st).length;
     const rate = all.length ? Math.round((n("converted") / all.length) * 100) : 0;
-    const stat = (label, value, ico, color, sub) => `<div class="stat"><div class="stat-top"><span class="stat-label">${label}</span><span class="stat-ico ${color}">${icon(ico)}</span></div><div class="stat-value">${value}</div><div class="stat-delta"><span class="muted">${sub}</span></div></div>`;
-    const tabs = [["waiting", "Waiting"], ["contacted", "Contacted"], ["converted", "Signed up"], ["all", "All"]];
     const q = ix.leadSearch.toLowerCase();
     const list = all.filter((l) => ix.leadTab === "all" || l.status === ix.leadTab).filter((l) => !q || (l.name + l.business + l.email + l.phone).toLowerCase().includes(q));
     const row = (l) => {
@@ -139,7 +141,7 @@ export const start = () => {
       const picked = [l.plan ? planTag(l.plan) : "", tplName(l.template) ? `<span class="sub">${esc(tplName(l.template))}</span>` : ""].join("") || '<span class="muted">—</span>';
       return `<tr>
         <td><span class="t-title">${avatar(l.name || l.email)}<span>${esc(l.name || "No name yet")}<span class="sub">${esc(l.business || "No business name")}</span></span></span></td>
-        <td><a class="link" href="mailto:${esc(l.email)}">${esc(l.email)}</a>${l.phone ? `<span class="sub"><a class="link" href="tel:${esc(l.phone)}">${esc(l.phone)}</a></span>` : '<span class="sub">No mobile number</span>'}</td>
+        <td><a class="ix-contact" href="mailto:${esc(l.email)}">${esc(l.email)}</a>${l.phone ? `<span class="sub"><a class="ix-contact" href="tel:${esc(l.phone)}">${esc(l.phone)}</a></span>` : '<span class="sub">No mobile number</span>'}</td>
         <td>${picked}</td>
         <td class="muted">${ago(l.updated_at)}${l.reminded_at ? `<span class="sub">Reminder sent ${ago(l.reminded_at)}</span>` : ""}${l.note ? `<span class="sub ix-note" title="${esc(l.note)}">${icon("edit")}${esc(cut(l.note, 40))}</span>` : ""}</td>
         <td><span class="tag dot ${color}">${label}</span></td>
@@ -152,50 +154,48 @@ export const start = () => {
         </div></td>
       </tr>`;
     };
-    return `
-      <div class="stats">
-        ${stat("Waiting", n("waiting"), "clock", "c3", "Haven't been contacted")}
-        ${stat("Contacted", n("contacted"), "chat", "c2", "You reached out")}
-        ${stat("Signed up later", n("converted"), "check", "c1", "Finished creating their account")}
-        ${stat("Finish rate", rate + "%", "barchart", "c4", `${n("converted")} of ${all.length} people`)}
+    const tabs = [["waiting", "Waiting", n("waiting")], ["contacted", "Contacted", n("contacted")], ["converted", "Signed up", n("converted")], ["all", "All", all.length]];
+    const body = !all.length
+      ? emptyState("user", "No sign-up leads yet", "When someone types their email on the last step of sign-up and leaves without creating an account, they show up here so you can help them finish.",
+        '<a class="btn btn-sm" href="/signup" target="_blank" rel="noopener">' + icon("external") + "See the sign-up page</a>")
+      : !list.length ? emptyState("search", "Nobody here", q ? "No one matches your search." : "No one has this status right now.")
+      : `<div class="table-wrap"><table class="table ix-table" style="min-width:980px">
+          <thead><tr><th>Person</th><th>Contact</th><th>Interested in</th><th>Last seen</th><th>Status</th><th class="t-actions"></th></tr></thead>
+          <tbody>${list.map(row).join("")}</tbody></table></div>`;
+    return `<div class="ix-metrics">
+        ${metric("Waiting", n("waiting"), "Not contacted yet", "amber")}
+        ${metric("Contacted", n("contacted"), "You reached out", "blue")}
+        ${metric("Signed up later", n("converted"), "Finished their account", "green")}
+        ${metric("Finish rate", rate + "%", `${n("converted")} of ${all.length} people`, "gray")}
       </div>
-      <div class="card" style="margin-top:18px">
-        <div class="card-head"><div class="seg" style="margin-right:auto">${tabs.map(([t, l]) => `<button class="${t === ix.leadTab ? "on" : ""}" data-action="lead-tab" data-tab="${t}">${l}<span>${t === "all" ? all.length : n(t)}</span></button>`).join("")}</div>
-          ${searchBox("lead-search", ix.leadSearch, "Search name, email, mobile")}</div>
-        <div class="table-wrap"><table class="table" style="min-width:980px">
-          <thead><tr><th>Person</th><th>Contact</th><th>Picked</th><th>Last seen</th><th>Status</th><th class="t-actions"></th></tr></thead>
-          <tbody>${list.map(row).join("") || `<tr><td colspan="6" class="table-empty">${all.length ? "Nobody here." : "No sign-up leads yet. When someone types their email on the sign-up page and doesn't finish, they show up here."}</td></tr>`}</tbody>
-        </table></div>
-        <div class="card-foot muted small">Saved from the last step of the sign-up page as people type (name, business, email and mobile number). Someone who finishes moves to <b>Signed up</b> by themselves.</div>
-      </div>
-`;
+      <div class="ix-toolbar">${chips(tabs, ix.leadTab, "lead-tab")}${searchBox("lead-search", ix.leadSearch, "Search name, email, mobile")}</div>
+      ${body}
+      <div class="ix-foot">${icon("info")}<span>Saved from the last step of the sign-up page as people type. Anyone who finishes moves to <b>Signed up</b> by themselves.</span></div>`;
   };
   const signinsBody = () => {
-    if (!ix.signins) return loadingCard("Loading sign-ins…");
+    if (!ix.signins) return '<div class="ix-loading">Loading sign-ins…</div>';
     const all = ix.signins, week = Date.now() - 7 * 864e5;
     const recent = all.filter((x) => new Date(x.created_at).getTime() >= week);
     const isNew = (x) => x.method === "signup" || x.method === "google-signup";
-    const tabs = [["all", "All"], ["signin", "Sign-ins"], ["new", "New accounts"]];
     const list = all.filter((x) => ix.signinTab === "all" || (ix.signinTab === "new" ? isNew(x) : !isNew(x)));
-    const stat = (label, value, ico, color) => `<div class="stat"><div class="stat-top"><span class="stat-label">${label}</span><span class="stat-ico ${color}">${icon(ico)}</span></div><div class="stat-value">${value}</div><div class="stat-delta"><span class="muted">Last 7 days</span></div></div>`;
-    return `
-      <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-        ${stat("Sign-ins", recent.filter((x) => !isNew(x)).length, "lock", "c2")}
-        ${stat("People who signed in", new Set(recent.filter((x) => !isNew(x)).map((x) => x.email)).size, "customers", "c1")}
-        ${stat("New accounts", recent.filter(isNew).length, "sparkle", "c3")}
-      </div>
-      <div class="card" style="margin-top:18px">
-        <div class="card-head"><div class="seg">${tabs.map(([t, l]) => `<button class="${t === ix.signinTab ? "on" : ""}" data-action="signin-tab" data-tab="${t}">${l}</button>`).join("")}</div></div>
-        <div class="table-wrap"><table class="table" style="min-width:820px">
+    const tabs = [["all", "All", all.length], ["signin", "Sign-ins", all.filter((x) => !isNew(x)).length], ["new", "New accounts", all.filter(isNew).length]];
+    const body = !all.length
+      ? emptyState("lock", "No sign-ins yet", "Every sign-in and every new account shows up here from now on, with the device and country.")
+      : !list.length ? emptyState("search", "Nothing here", "Nothing of this kind yet.")
+      : `<div class="table-wrap"><table class="table ix-table" style="min-width:820px">
           <thead><tr><th>Person</th><th>What happened</th><th>Device</th><th>Where</th><th>When</th></tr></thead>
           <tbody>${list.map((x) => `<tr>
             <td><span class="t-title">${avatar(x.business || x.email)}<span>${esc(x.business || x.name || "Deleted user")}<span class="sub">${esc(x.email)}</span></span></span></td>
             <td>${isNew(x) ? `<span class="tag dot green">${METHOD[x.method]}</span>` : `<span class="tag dot gray">${METHOD[x.method] || "Signed in"}</span>`}</td>
             <td>${esc(x.device || "—")}</td><td>${esc(x.country || "—")}</td>
-            <td class="muted">${when(x.created_at)}<span class="sub">${ago(x.created_at)}</span></td></tr>`).join("") || `<tr><td colspan="5" class="table-empty">No sign-ins yet. They show up here from now on.</td></tr>`}</tbody>
-        </table></div>
+            <td class="muted">${when(x.created_at)}<span class="sub">${ago(x.created_at)}</span></td></tr>`).join("")}</tbody></table></div>`;
+    return `<div class="ix-metrics three">
+        ${metric("Sign-ins", recent.filter((x) => !isNew(x)).length, "Last 7 days", "blue")}
+        ${metric("People who signed in", new Set(recent.filter((x) => !isNew(x)).map((x) => x.email)).size, "Last 7 days", "green")}
+        ${metric("New accounts", recent.filter(isNew).length, "Last 7 days", "amber")}
       </div>
-`;
+      <div class="ix-toolbar">${chips(tabs, ix.signinTab, "signin-tab")}</div>
+      ${body}`;
   };
   // ---------- Views ----------
   const routes = {
@@ -457,12 +457,13 @@ export const start = () => {
       render: () => {
         const tab = peopleTab();
         const waiting = (ix.leads || []).filter((l) => l.status === "waiting").length;
-        const views = [["leads", "Sign-up leads", "user", "People who started signing up but didn't finish", waiting || ""], ["signins", "Sign-in activity", "lock", "Who signed in or created an account", ""]];
-        return `${head("Leads &amp; sign-ins", "People who started signing up, and everyone who signs in. Reach out to help the ones who didn't finish.",
+        const tabs = [["leads", "Sign-up leads", "user", waiting], ["signins", "Sign-in activity", "lock", 0]];
+        return `${head("Leads &amp; sign-ins", "People who started signing up, and everyone who signs in.",
           tab === "leads" ? `<a class="btn" href="#/emails">${icon("send")}Reminder email</a>` : "")}
-          <div class="ix-views" role="tablist" aria-label="Leads and sign-ins">${views.map(([k, l, ic, sub, n]) => `<a class="ix-view${k === tab ? " on" : ""}" role="tab" aria-selected="${k === tab}" href="#/people${k === "leads" ? "" : "?tab=" + k}">
-            <span class="ix-view-ico">${icon(ic)}</span><span class="ix-view-t"><b>${l}${n ? `<span class="ix-view-n">${n}</span>` : ""}</b><small>${sub}</small></span></a>`).join("")}</div>
-          ${tab === "leads" ? leadsBody() : signinsBody()}
+          <div class="card ix-panel">
+            <nav class="ix-tabs" role="tablist" aria-label="Leads and sign-ins">${tabs.map(([k, l, ic, c]) => `<a class="ix-tab${k === tab ? " on" : ""}" role="tab" aria-selected="${k === tab}" href="#/people${k === "leads" ? "" : "?tab=" + k}">${icon(ic)}${l}${c ? `<span class="ix-tab-n">${c}</span>` : ""}</a>`).join("")}</nav>
+            ${tab === "leads" ? leadsBody() : signinsBody()}
+          </div>
         </div>`;
       },
       mount: () => { if (!fresh30("leads")) loadLeads(); if (!fresh30("signins")) loadSignins(); },
