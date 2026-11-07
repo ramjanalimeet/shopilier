@@ -55,6 +55,7 @@ export default function StartFlow() {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const root = useRef<HTMLDivElement>(null);
+  const leadSent = useRef("");
   const set = (patch: Partial<State>) => setS((cur) => (cur ? { ...cur, ...patch } : cur));
 
   useEffect(() => {
@@ -114,13 +115,25 @@ export default function StartFlow() {
     set({ ai: { ...a, headline: val("headline") || a.headline, sub: val("sub"), cta: val("cta") || a.cta, about: val("about") } });
     nextAfterSite();
   };
+  // What's typed on the account step is saved as it's filled in (once there's a valid email), so the team can help
+  // anyone who stops before creating the account. Only sends again when something changed.
+  const saveLead = (form: HTMLFormElement) => {
+    const f = new FormData(form);
+    const val = (k: string) => String(f.get(k) || "").trim();
+    const lead = { name: val("name"), business: val("business"), email: val("email"), phone: val("phone"), plan: s.plan, billing: s.billing, template: s.template };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lead.email)) return;
+    const key = JSON.stringify(lead);
+    if (key === leadSent.current) return;
+    leadSent.current = key;
+    fetch("/api/leads", { method: "POST", headers: { "Content-Type": "application/json" }, body: key, keepalive: true }).catch(() => {});
+  };
   const submitAccount = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const val = (k: string) => String(f.get(k) || "").trim();
     setBusy(true); setMsg("");
     try {
-      await postJson("/api/signup", { name: val("name"), business: val("business"), email: val("email"), password: f.get("password"), plan: s.plan, billing: s.billing, template: s.template });
+      await postJson("/api/signup", { name: val("name"), business: val("business"), email: val("email"), phone: val("phone"), password: f.get("password"), plan: s.plan, billing: s.billing, template: s.template });
       handOver();
       location.href = "/admin";
     } catch (err) {
@@ -217,16 +230,18 @@ export default function StartFlow() {
             <Back step={s.planPreset ? (s.start === "ai" ? "ai" : "template") : "plan"} />
             <Head title="Create your account" sub="Last step — then you're in your dashboard." />
             <div className="account-grid">
-              <form className="start-form" id="account-form" onSubmit={submitAccount}>
+              <form className="start-form" id="account-form" onSubmit={submitAccount} onBlur={(e) => { if (e.target.name && e.target.name !== "password") saveLead(e.currentTarget); }}>
                 <div className="field"><label htmlFor="name">Your name</label><input id="name" name="name" required maxLength={80} autoComplete="name" placeholder="Akash Rahman" /></div>
                 <div className="field"><label htmlFor="business">Business name</label><input id="business" name="business" maxLength={80} autoComplete="organization" defaultValue={s.ai?.name || ""} placeholder="Your business" /></div>
                 <div className="field"><label htmlFor="email">Email</label><input id="email" name="email" type="email" required autoComplete="email" placeholder="you@business.com" /></div>
+                <div className="field"><label htmlFor="phone">Mobile number <span className="field-opt">(optional)</span></label><input id="phone" name="phone" type="tel" inputMode="tel" maxLength={20} autoComplete="tel" placeholder="01XXX-XXXXXX" /></div>
                 <div className="field"><label htmlFor="password">Password</label><PasswordField id="password" name="password" minLength={8} required autoComplete="new-password" placeholder="At least 8 characters" /></div>
                 <button className="btn btn-dark btn-block btn-lg" type="submit" disabled={busy}>Create account &amp; start</button>
                 <div className="divider">or</div>
                 <GoogleButton id="google-start" href={"/api/auth/google?" + google} onClick={handOver} />
                 <p className="form-msg" role="status" style={errorStyle}>{msg}</p>
                 <p className="auth-foot">Already have an account? <Link className="link" href="/signin">Sign in</Link></p>
+                <p className="start-privacy">We keep your details as you type, so our team can help if you get stuck. We never share them.</p>
               </form>
               <aside className="summary">
                 <h2>Your order</h2>

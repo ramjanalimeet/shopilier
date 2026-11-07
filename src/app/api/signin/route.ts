@@ -1,8 +1,9 @@
 import { publicAccount, UserRow, withSession } from "@/lib/auth";
 import { hashPassword, safeEqual, unb64 } from "@/lib/crypto";
 import { api, clean, json, readJson } from "@/lib/http";
+import { recordSignin } from "@/lib/growth";
 
-export const POST = api(async (request, env) => {
+export const POST = api(async (request, env, url) => {
   const body = await readJson(request);
   const email = clean(body.email, 254).toLowerCase();
   const password = String(body.password || "").slice(0, 200);
@@ -14,5 +15,7 @@ export const POST = api(async (request, env) => {
   if (!row || !safeEqual(hash, row.password_hash)) return json({ error: "Wrong email or password." }, 401);
 
   await env.DB.prepare("DELETE FROM sessions WHERE user_id = ? AND expires_at < ?").bind(row.id, Date.now()).run();
+  // Logged for Sign-in activity, and the owner gets a "new sign-in" email (after the response)
+  recordSignin(env, request, row, "password", url.origin);
   return withSession(env, row.id, body.remember === true, json({ account: publicAccount(row) }), request);
 }, { limit: true });

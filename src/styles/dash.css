@@ -413,3 +413,28 @@ svg { display: block; }
 .store-admin, .store-admin * { scrollbar-width: none; }
 .store-admin ::-webkit-scrollbar { display: none; }
 .store-admin .scroll { scrollbar-gutter: auto; }
+
+/* ---------- Master dashboard: User interaction (unfinished sign-ups, sign-in activity, email automation) ---------- */
+.table td .sub { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.ix-acts { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.ix-acts .btn-sm { white-space: nowrap; }
+.ix-acts .ix-wa { color: #128c7e; }
+.ix-note { display: inline-flex !important; align-items: center; gap: 4px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ix-note .i { width: 12px; height: 12px; flex: none; }
+.ix-setup ol { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px; line-height: 1.5; }
+.ix-setup code, #emails-form code { font-size: 12px; padding: 1px 5px; border-radius: 5px; background: rgba(16, 24, 40, .06); }
+.callout.ix-setup { align-items: flex-start; }
+.ix-mails { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 18px; margin-top: 18px; }
+.ix-mails > .ix-mail { margin: 0; }
+.ix-mail .card-head { align-items: flex-start; gap: 12px; }
+.ix-mail-ico { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); }
+.ix-mail-ico .i { width: 18px; height: 18px; }
+.ix-mail-t { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.ix-mail-t b { font-size: 14.5px; color: var(--ink); }
+.ix-mail-t small { font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.ix-mail .switch { margin-top: 8px; }
+.ix-mail .textarea { min-height: 150px; line-height: 1.55; }
+.ix-mail-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.ix-save { display: flex; justify-content: flex-end; margin-top: 16px; }
+@media (max-width: 1100px) { .ix-mails { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { #emails-form .row { grid-template-columns: 1fr; } .ix-save .btn { width: 100%; justify-content: center; } }

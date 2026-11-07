@@ -129,6 +129,16 @@ Accounts, sessions and each user's store live in D1 (tables in `schema.sql`). Ro
 - `/master-admin/api/conversations…` — support messages in the master dashboard. Cloudflare Access
   guards `/master-admin`, and these handlers verify the signed Access token (`ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` in
   `wrangler.jsonc`). Locally, `ACCESS_DEV_BYPASS=1` in `.dev.vars` lets you open it without Access.
+- User interaction in the master dashboard (`src/lib/growth.ts`): `POST /api/leads` saves what visitors type on the
+  sign-up page's last step (name, business, email, mobile number); `/master-admin/api/leads…` lists them as
+  **Sign-up leads** (status, note, "Send reminder"); `/master-admin/api/signins` is **Sign-in activity**; and
+  `/master-admin/api/emails…` is **Email automation** (welcome, new sign-in, password changed and a reminder to finish
+  signing up, each with its own switch and text, plus "Send a test" and the log of sent emails). Sign-up, sign-in,
+  Google and password changes record the activity and send the matching email after the response. Emails go out
+  through [Resend](https://resend.com) once the `RESEND_API_KEY` secret is set (`npx wrangler secret put RESEND_API_KEY`)
+  and a sender email on a domain verified in Resend is entered in Email automation; until then nothing is sent and each
+  email is logged as "Not sent". The automatic reminder goes out after sign-ups, sign-ins and new leads, and whenever
+  Sign-up leads is opened (there is no scheduled job).
 
 Writes must come from this site (the `Origin` header is checked) and send JSON, except image uploads.
 
