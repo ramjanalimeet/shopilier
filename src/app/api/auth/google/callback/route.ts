@@ -4,6 +4,7 @@ import { GOOGLE_STATE_COOKIE, googleRedirectUri, nextPath } from "@/lib/google";
 import { api, clean, getCookie, redirect } from "@/lib/http";
 import { billingOf, CATEGORY, DEFAULT_PLAN, isPlan, templateOf } from "@/lib/plans";
 import { getSettings } from "@/lib/platform";
+import { recordSignin } from "@/lib/growth";
 
 type Pick = { state: string; next?: string; plan?: string; billing?: string; template?: string };
 
@@ -37,6 +38,7 @@ export const GET = api(async (request, env, url) => {
 
   const email = String(claims.email).toLowerCase();
   let user = await env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first<UserRow>();
+  const isNew = !user;
   if (!user) {
     // New accounts wait while sign-ups are paused (Settings in the master dashboard); existing ones still sign in
     if (!(await getSettings(env)).signups) return fail("signups_off");
@@ -57,6 +59,7 @@ export const GET = api(async (request, env, url) => {
     if (!user) return fail("google");
   }
 
+  recordSignin(env, request, user, isNew ? "google-signup" : "google", url.origin);
   const res = redirect(url, nextPath(pick.next));
   res.headers.append("Set-Cookie", `${GOOGLE_STATE_COOKIE}=; Path=/api/auth/google; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
   return withSession(env, user.id, true, res, request);

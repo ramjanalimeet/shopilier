@@ -90,3 +90,45 @@ CREATE TABLE IF NOT EXISTS courier_accounts (
   updated_at TEXT NOT NULL,
   PRIMARY KEY (user_id, courier)
 );
+
+-- User interaction in the master dashboard. The Worker also creates these tables on first use.
+-- Sign-up leads: what people typed on the sign-up page's last step before they created (or didn't create) an account
+CREATE TABLE IF NOT EXISTS leads (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL DEFAULT '',
+  business TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  plan TEXT NOT NULL DEFAULT '',
+  billing TEXT NOT NULL DEFAULT '',
+  template TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'waiting',  -- waiting, contacted or converted (signed up)
+  note TEXT NOT NULL DEFAULT '',
+  reminded_at TEXT,
+  user_id TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS leads_updated ON leads(updated_at);
+-- Sign-in activity: each sign-in and new account, with the device and country (no IP addresses)
+CREATE TABLE IF NOT EXISTS signins (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  email TEXT NOT NULL,
+  method TEXT NOT NULL,                    -- password, google, signup or google-signup
+  device TEXT NOT NULL DEFAULT '',
+  country TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS signins_created ON signins(created_at);
+-- Every automatic email: sent, failed or not sent (email not connected)
+CREATE TABLE IF NOT EXISTS email_log (
+  id TEXT PRIMARY KEY,
+  to_email TEXT NOT NULL,
+  kind TEXT NOT NULL,                      -- welcome, signin, password or reminder
+  subject TEXT NOT NULL,
+  status TEXT NOT NULL,                    -- sent, failed or skipped
+  error TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS email_log_created ON email_log(created_at);

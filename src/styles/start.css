@@ -142,3 +142,7 @@
 
 /* Touch screens: no lift when a choice is tapped (the picked one already shows its border) */
 @media (hover: none) { .choice:hover, .tpl-option:hover, .plan-option:hover { transform: none; } }
+
+/* Account step: "(optional)" beside a label, and a short note on how typed details are used */
+.field-opt { font-weight: 400; color: var(--muted); }
+.start-privacy { margin-top: 10px; text-align: center; font-size: 12.5px; line-height: 1.5; color: var(--faint, #8a909c); }

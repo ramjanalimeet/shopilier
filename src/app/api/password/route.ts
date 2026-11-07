@@ -1,8 +1,9 @@
 import { currentUser, SESSION_COOKIE } from "@/lib/auth";
 import { b64, hashPassword, randomBytes, safeEqual, sha256, unb64 } from "@/lib/crypto";
 import { api, getCookie, json, readJson } from "@/lib/http";
+import { passwordChanged } from "@/lib/growth";
 
-export const POST = api(async (request, env) => {
+export const POST = api(async (request, env, url) => {
   const user = await currentUser(request, env);
   if (!user) return json({ error: "Not signed in." }, 401);
   const body = await readJson(request);
@@ -20,5 +21,6 @@ export const POST = api(async (request, env) => {
     // Sign out every other device
     env.DB.prepare("DELETE FROM sessions WHERE user_id = ? AND token_hash != ?").bind(user.id, keep),
   ]);
+  passwordChanged(env, request, user, url.origin);
   return json({ ok: true });
 }, { limit: true });

@@ -1,4 +1,5 @@
-// The master admin shell (/master-admin): users, messages, templates, payments, plans and activity
+// The master admin shell (/master-admin): users, messages, templates, payments, plans and activity, then
+// User interaction: sign-up leads (unfinished sign-ups), sign-in activity and email automation
 import Icon from "@/components/Icon";
 
 export default function MasterShell() {
@@ -16,9 +17,10 @@ export default function MasterShell() {
           <a className="nav-item" data-route="activity" href="#/activity"><Icon name="clock" />Activity</a>
         </nav>
         <div className="side-group">
-          <div className="side-head">Shortcuts</div>
-          <a className="nav-item" href="/"><Icon name="globe" />Public website</a>
-          <a className="nav-item" href="/admin"><Icon name="store" />User dashboard</a>
+          <div className="side-head">User interaction</div>
+          <a className="nav-item" data-route="leads" href="#/leads"><Icon name="user" />Sign-up leads<span className="count" id="count-leads" /></a>
+          <a className="nav-item" data-route="signins" href="#/signins"><Icon name="lock" />Sign-in activity</a>
+          <a className="nav-item" data-route="emails" href="#/emails"><Icon name="send" />Email automation</a>
         </div>
         <div className="side-foot">
           <a className="nav-item" data-route="settings" href="#/settings"><Icon name="settings" />Settings</a>

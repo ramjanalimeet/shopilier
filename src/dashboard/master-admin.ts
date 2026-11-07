@@ -75,6 +75,51 @@ export const start = () => {
   };
 
   let userTab = "All", userSearch = "", tplTab = "All", payTab = "All";
+
+  // ---------- User interaction: data from the database ----------
+  // Unfinished sign-ups, sign-in activity and email automation are loaded when their page opens (and again
+  // after 30 seconds), then the page draws itself again with what came back.
+  const ix = { leads: null, signins: null, emails: null, at: {}, leadTab: "waiting", signinTab: "all", leadSearch: "" };
+  const getJson = async (url, opts) => {
+    const res = await fetch(url, opts);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Couldn't load. Check your connection.");
+    return data;
+  };
+  const sendJson = (url, method, body) => getJson(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+  const fresh30 = (k) => ix[k] && Date.now() - (ix.at[k] || 0) < 30000;
+  const leadBadge = () => { const n = (ix.leads || []).filter((l) => l.status === "waiting").length; document.getElementById("count-leads").textContent = n || ""; };
+  const loadIx = async (k, url, pick, route) => {
+    try {
+      const data = await getJson(url);
+      ix[k] = pick(data); ix.at[k] = Date.now();
+      if (k === "leads") leadBadge();
+      if (location.hash.replace(/^#\/?/, "").split("?")[0] === route) go();
+    } catch (err) { toast(err.message); }
+  };
+  const loadLeads = () => loadIx("leads", "/master-admin/api/leads", (d) => d.leads, "leads");
+  const loadSignins = () => loadIx("signins", "/master-admin/api/signins", (d) => d.signins, "signins");
+  const loadEmails = () => loadIx("emails", "/master-admin/api/emails", (d) => d, "emails");
+  const cut = (t, n) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
+  const loadingCard = (text) => `<div class="card"><div class="card-body muted">${text}</div></div>`;
+  const tplName = (id) => (db.templates.find((t) => t.id === id) || {}).name || "";
+  // A Bangladeshi mobile number as WhatsApp wants it (8801XXXXXXXXX)
+  const waNumber = (phone) => {
+    let d = String(phone || "").replace(/\D/g, "");
+    if (/^01\d{9}$/.test(d)) d = "88" + d;
+    return d.length >= 10 ? d : "";
+  };
+  const LEAD_STATUS = { waiting: ["Waiting", "yellow"], contacted: ["Contacted", "blue"], converted: ["Signed up", "green"] };
+  const leadMail = (l) => `mailto:${encodeURIComponent(l.email)}?subject=${encodeURIComponent("Your Shopilier store")}&body=${encodeURIComponent(`Hi ${l.name || "there"},\n\nI'm from Shopilier. I saw you started creating your online store${l.business ? ` for ${l.business}` : ""} but didn't finish. Can I help with anything?\n\n`)}`;
+  const leadWa = (l) => `https://wa.me/${waNumber(l.phone)}?text=${encodeURIComponent(`Assalamu Alaikum ${l.name || ""}! Shopilier theke bolchi. Apni online store toiri shuru korechilen${l.business ? ` (${l.business})` : ""}, kono help lagbe?`)}`;
+  const EMAIL_KINDS = {
+    welcome: ["Welcome email", "Sent right after someone creates an account (email and password, or Google).", "sparkle"],
+    signin: ["New sign-in alert", "Sent each time someone signs in to their account, with the time, device and country, so they spot a sign-in that wasn't them.", "lock"],
+    password: ["Password changed", "Sent when someone changes their password from their dashboard.", "shield"],
+    reminder: ["Finish your sign-up reminder", "Sent once to people in Sign-up leads who didn't create their account after the wait you choose.", "clock"],
+  };
+  const METHOD = { password: "Signed in", google: "Signed in with Google", signup: "New account", "google-signup": "New account with Google" };
+  const when = (d) => `${day(d)}, ${new Date(d).toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit" })}`;
   let range = 30; // days shown on Overview
   const inPeriod = (list, key, from, to) => list.filter((x) => { const t = new Date(x[key]).getTime(); return t >= from && t < to; });
   const paid = (list) => list.filter((p) => p.status === "Paid").reduce((s, p) => s + p.amount, 0);
@@ -328,6 +373,157 @@ export const start = () => {
           if (!r.ok) { toast("Couldn't remove the saved design."); return; }
           log(`The ${t.name} template went back to its built-in design`); persist(); toast("Back to the built-in design");
           go();
+        });
+      },
+    },
+
+    // ---------- User interaction ----------
+    leads: {
+      title: "Sign-up leads",
+      render: () => {
+        const intro = head("Sign-up leads", "People who typed their details on the sign-up page but didn't create their account. Reach out to help them finish.",
+          `<a class="btn" href="#/emails">${icon("send")}Reminder email</a>`);
+        if (!ix.leads) return `${intro}${loadingCard("Loading sign-up leads…")}</div>`;
+        const all = ix.leads, n = (st) => all.filter((l) => l.status === st).length;
+        const rate = all.length ? Math.round((n("converted") / all.length) * 100) : 0;
+        const stat = (label, value, ico, color, sub) => `<div class="stat"><div class="stat-top"><span class="stat-label">${label}</span><span class="stat-ico ${color}">${icon(ico)}</span></div><div class="stat-value">${value}</div><div class="stat-delta"><span class="muted">${sub}</span></div></div>`;
+        const tabs = [["waiting", "Waiting"], ["contacted", "Contacted"], ["converted", "Signed up"], ["all", "All"]];
+        const q = ix.leadSearch.toLowerCase();
+        const list = all.filter((l) => ix.leadTab === "all" || l.status === ix.leadTab).filter((l) => !q || (l.name + l.business + l.email + l.phone).toLowerCase().includes(q));
+        const row = (l) => {
+          const [label, color] = LEAD_STATUS[l.status] || LEAD_STATUS.waiting;
+          const picked = [l.plan ? planTag(l.plan) : "", tplName(l.template) ? `<span class="sub">${esc(tplName(l.template))}</span>` : ""].join("") || '<span class="muted">—</span>';
+          return `<tr>
+            <td><span class="t-title">${avatar(l.name || l.email)}<span>${esc(l.name || "No name yet")}<span class="sub">${esc(l.business || "No business name")}</span></span></span></td>
+            <td><a class="link" href="mailto:${esc(l.email)}">${esc(l.email)}</a>${l.phone ? `<span class="sub"><a class="link" href="tel:${esc(l.phone)}">${esc(l.phone)}</a></span>` : '<span class="sub">No mobile number</span>'}</td>
+            <td>${picked}</td>
+            <td class="muted">${ago(l.updated_at)}${l.reminded_at ? `<span class="sub">Reminder sent ${ago(l.reminded_at)}</span>` : ""}${l.note ? `<span class="sub ix-note" title="${esc(l.note)}">${icon("edit")}${esc(cut(l.note, 40))}</span>` : ""}</td>
+            <td><span class="tag dot ${color}">${label}</span></td>
+            <td class="t-actions"><div class="ix-acts">
+              <a class="icon-btn" href="${leadMail(l)}" title="Write an email" aria-label="Email ${esc(l.email)}">${icon("mail")}</a>
+              ${waNumber(l.phone) ? `<a class="icon-btn ix-wa" href="${leadWa(l)}" target="_blank" rel="noopener" title="Message on WhatsApp" aria-label="WhatsApp ${esc(l.phone)}">${icon("chat")}</a>` : ""}
+              ${l.status === "converted" ? "" : `<button class="btn btn-sm" data-action="lead-remind" data-id="${l.id}">${icon("send")}Remind</button>`}
+              <button class="icon-btn" data-action="lead-edit" data-id="${l.id}" title="Status and note" aria-label="Status and note for ${esc(l.email)}">${icon("edit")}</button>
+              <button class="icon-btn danger" data-action="lead-delete" data-id="${l.id}" title="Remove" aria-label="Remove ${esc(l.email)}">${icon("trash")}</button>
+            </div></td>
+          </tr>`;
+        };
+        return `${intro}
+          <div class="stats">
+            ${stat("Waiting", n("waiting"), "clock", "c3", "Haven't been contacted")}
+            ${stat("Contacted", n("contacted"), "chat", "c2", "You reached out")}
+            ${stat("Signed up later", n("converted"), "check", "c1", "Finished creating their account")}
+            ${stat("Finish rate", rate + "%", "barchart", "c4", `${n("converted")} of ${all.length} people`)}
+          </div>
+          <div class="card" style="margin-top:18px">
+            <div class="card-head"><div class="seg" style="margin-right:auto">${tabs.map(([t, l]) => `<button class="${t === ix.leadTab ? "on" : ""}" data-action="lead-tab" data-tab="${t}">${l}<span>${t === "all" ? all.length : n(t)}</span></button>`).join("")}</div>
+              ${searchBox("lead-search", ix.leadSearch, "Search name, email, mobile")}</div>
+            <div class="table-wrap"><table class="table" style="min-width:980px">
+              <thead><tr><th>Person</th><th>Contact</th><th>Picked</th><th>Last seen</th><th>Status</th><th class="t-actions"></th></tr></thead>
+              <tbody>${list.map(row).join("") || `<tr><td colspan="6" class="table-empty">${all.length ? "Nobody here." : "No sign-up leads yet. When someone types their email on the sign-up page and doesn't finish, they show up here."}</td></tr>`}</tbody>
+            </table></div>
+            <div class="card-foot muted small">Saved from the last step of the sign-up page as people type (name, business, email and mobile number). Someone who finishes moves to <b>Signed up</b> by themselves.</div>
+          </div>
+        </div>`;
+      },
+      mount: () => { if (!fresh30("leads")) loadLeads(); },
+    },
+
+    signins: {
+      title: "Sign-in activity",
+      render: () => {
+        const intro = head("Sign-in activity", "Who signed in and who created an account, newest first, with the device and country.");
+        if (!ix.signins) return `${intro}${loadingCard("Loading sign-ins…")}</div>`;
+        const all = ix.signins, week = Date.now() - 7 * 864e5;
+        const recent = all.filter((x) => new Date(x.created_at).getTime() >= week);
+        const isNew = (x) => x.method === "signup" || x.method === "google-signup";
+        const tabs = [["all", "All"], ["signin", "Sign-ins"], ["new", "New accounts"]];
+        const list = all.filter((x) => ix.signinTab === "all" || (ix.signinTab === "new" ? isNew(x) : !isNew(x)));
+        const stat = (label, value, ico, color) => `<div class="stat"><div class="stat-top"><span class="stat-label">${label}</span><span class="stat-ico ${color}">${icon(ico)}</span></div><div class="stat-value">${value}</div><div class="stat-delta"><span class="muted">Last 7 days</span></div></div>`;
+        return `${intro}
+          <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+            ${stat("Sign-ins", recent.filter((x) => !isNew(x)).length, "lock", "c2")}
+            ${stat("People who signed in", new Set(recent.filter((x) => !isNew(x)).map((x) => x.email)).size, "customers", "c1")}
+            ${stat("New accounts", recent.filter(isNew).length, "sparkle", "c3")}
+          </div>
+          <div class="card" style="margin-top:18px">
+            <div class="card-head"><div class="seg">${tabs.map(([t, l]) => `<button class="${t === ix.signinTab ? "on" : ""}" data-action="signin-tab" data-tab="${t}">${l}</button>`).join("")}</div></div>
+            <div class="table-wrap"><table class="table" style="min-width:820px">
+              <thead><tr><th>Person</th><th>What happened</th><th>Device</th><th>Where</th><th>When</th></tr></thead>
+              <tbody>${list.map((x) => `<tr>
+                <td><span class="t-title">${avatar(x.business || x.email)}<span>${esc(x.business || x.name || "Deleted user")}<span class="sub">${esc(x.email)}</span></span></span></td>
+                <td>${isNew(x) ? `<span class="tag dot green">${METHOD[x.method]}</span>` : `<span class="tag dot gray">${METHOD[x.method] || "Signed in"}</span>`}</td>
+                <td>${esc(x.device || "—")}</td><td>${esc(x.country || "—")}</td>
+                <td class="muted">${when(x.created_at)}<span class="sub">${ago(x.created_at)}</span></td></tr>`).join("") || `<tr><td colspan="5" class="table-empty">No sign-ins yet. They show up here from now on.</td></tr>`}</tbody>
+            </table></div>
+          </div>
+        </div>`;
+      },
+      mount: () => { if (!fresh30("signins")) loadSignins(); },
+    },
+
+    emails: {
+      title: "Email automation",
+      render: () => {
+        const intro = head("Email automation", "Emails that go out by themselves when something happens. Switch each one on or off and write it your way.");
+        if (!ix.emails) return `${intro}${loadingCard("Loading email automation…")}</div>`;
+        const { settings: st, connected, log: sent } = ix.emails;
+        const v = (x) => esc(x ?? "");
+        const setup = connected.ready
+          ? `<div class="callout green"><span class="ico">${icon("check")}</span><div><b>Emails are on.</b> They go out from ${esc(st.fromName)} &lt;${esc(st.fromEmail)}&gt; through Resend.</div></div>`
+          : `<div class="callout yellow ix-setup"><span class="ico">${icon("alert")}</span><div><b>Connect email sending to switch these on.</b> Until then nothing is sent, and each email shows below as <i>Not sent</i>.
+              <ol>
+                <li>${connected.key ? "✓ " : ""}Make a free account at <a class="link" href="https://resend.com" target="_blank" rel="noopener">resend.com</a>, add your domain (for example shopilier.com) and verify it.</li>
+                <li>${connected.key ? "✓ Resend key added." : "Create an API key in Resend and add it to the Worker as the secret <code>RESEND_API_KEY</code>: Cloudflare dashboard → Workers → <b>shopiliar</b> → Settings → Variables and Secrets (or <code>npx wrangler secret put RESEND_API_KEY</code>)."}</li>
+                <li>${st.fromEmail ? "✓ Sender email set." : "Enter the sender email below, on your verified domain (for example hello@shopilier.com), and save."}</li>
+              </ol></div></div>`;
+        const card = (k) => {
+          const [title, desc, ic] = EMAIL_KINDS[k], a = st[k];
+          return `<div class="card ix-mail"><div class="card-head"><span class="ix-mail-ico">${icon(ic)}</span><span class="ix-mail-t"><b>${title}</b><small>${desc}</small></span>
+              <label class="switch"><input type="checkbox" name="${k}_on" ${a.on ? "checked" : ""} aria-label="${title} on"><i></i></label></div>
+            <div class="card-body">
+              ${k === "reminder" ? `<div class="field"><label for="em-hours">Send after</label><select class="select" id="em-hours" name="reminder_hours">${[1, 3, 6, 12, 24, 48, 72].map((h) => `<option value="${h}"${a.hours === h ? " selected" : ""}>${h < 24 ? `${h} hour${h > 1 ? "s" : ""}` : `${h / 24} day${h > 24 ? "s" : ""}`}</option>`).join("")}</select></div>` : ""}
+              <div class="field"><label for="em-${k}-s">Subject</label><input class="input" id="em-${k}-s" name="${k}_subject" maxlength="150" value="${v(a.subject)}"></div>
+              <div class="field"><label for="em-${k}-b">Message</label><textarea class="textarea" id="em-${k}-b" name="${k}_body" rows="7" maxlength="3000">${v(a.body)}</textarea></div>
+              <div class="ix-mail-foot"><span class="muted small">A button to ${k === "reminder" ? "the sign-up page" : "their dashboard"} is added below the message.</span><button type="button" class="btn btn-sm" data-action="email-test" data-kind="${k}">${icon("send")}Send a test</button></div>
+            </div></div>`;
+        };
+        const STATUS = { sent: ["Sent", "green"], failed: ["Failed", "red"], skipped: ["Not sent", "gray"] };
+        return `${intro}
+          ${setup}
+          <form id="emails-form">
+            <div class="card" style="margin-top:18px"><div class="card-head"><span class="card-title">Sender</span></div><div class="card-body">
+              <div class="row">
+                <div class="field"><label for="em-from-name">From name</label><input class="input" id="em-from-name" name="fromName" maxlength="60" value="${v(st.fromName)}" placeholder="Shopilier"></div>
+                <div class="field"><label for="em-from">Sender email</label><input class="input" id="em-from" name="fromEmail" type="email" value="${v(st.fromEmail)}" placeholder="hello@shopilier.com"></div>
+                <div class="field"><label for="em-reply">Replies go to</label><input class="input" id="em-reply" name="replyTo" type="email" value="${v(st.replyTo)}" placeholder="support@shopilier.com"></div>
+              </div>
+              <p class="muted small">In the subject and message you can use <code>{name}</code> <code>{business}</code> <code>{plan}</code> <code>{email}</code>, and in the sign-in and password emails <code>{time}</code> <code>{device}</code> <code>{location}</code>.</p>
+            </div></div>
+            <div class="ix-mails">${["welcome", "signin", "password", "reminder"].map(card).join("")}</div>
+            <div class="ix-save"><button class="btn btn-primary" type="submit">${icon("check")}Save email settings</button></div>
+          </form>
+          <div class="card" style="margin-top:18px"><div class="card-head"><span class="card-title">Sent emails</span><span class="muted small">Latest 100</span></div>
+            <div class="table-wrap"><table class="table" style="min-width:760px">
+              <thead><tr><th>To</th><th>Email</th><th>Subject</th><th>Status</th><th>When</th></tr></thead>
+              <tbody>${sent.map((m) => { const [l, c] = STATUS[m.status] || STATUS.skipped; return `<tr><td>${esc(m.to_email)}</td><td>${esc((EMAIL_KINDS[m.kind] || [m.kind])[0])}</td><td class="small">${esc(m.subject)}</td>
+                <td><span class="tag dot ${c}"${m.error ? ` title="${esc(m.error)}"` : ""}>${l}</span>${m.error ? `<span class="sub">${esc(cut(m.error, 60))}</span>` : ""}</td><td class="muted">${when(m.created_at)}</td></tr>`; }).join("") || `<tr><td colspan="5" class="table-empty">No emails yet.</td></tr>`}</tbody>
+            </table></div></div>
+        </div>`;
+      },
+      mount: (view) => {
+        if (!fresh30("emails")) loadEmails();
+        const form = view.querySelector("#emails-form");
+        if (!form) return;
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const el = form.elements, val = (k) => el[k] ? el[k].value : undefined;
+          const a = (k) => ({ on: el[`${k}_on`].checked, subject: val(`${k}_subject`), body: val(`${k}_body`) });
+          const body = { fromName: val("fromName"), fromEmail: val("fromEmail"), replyTo: val("replyTo"), welcome: a("welcome"), signin: a("signin"), password: a("password"), reminder: { ...a("reminder"), hours: Number(val("reminder_hours")) } };
+          const btn = form.querySelector("[type=submit]"); btn.disabled = true;
+          sendJson("/master-admin/api/emails", "PUT", body)
+            .then((data) => { ix.emails = data; ix.at.emails = Date.now(); log("Email automation settings were updated"); persist(); go(); toast("Email settings saved"); })
+            .catch((err) => { btn.disabled = false; toast(err.message); });
         });
       },
     },
@@ -640,6 +836,59 @@ export const start = () => {
       log(`Template “${t.name}” was deleted`); persist(); go(); toast("Template deleted");
     },
     "pay-tab": (el) => { payTab = el.dataset.tab; go(); },
+    "lead-tab": (el) => { ix.leadTab = el.dataset.tab; go(); },
+    "signin-tab": (el) => { ix.signinTab = el.dataset.tab; go(); },
+    "lead-remind": async (el) => {
+      const l = (ix.leads || []).find((x) => x.id === el.dataset.id);
+      if (!l) return;
+      el.disabled = true;
+      try {
+        const data = await sendJson(`/master-admin/api/leads/${encodeURIComponent(l.id)}/remind`, "POST");
+        Object.assign(l, data.lead); toast(`Reminder sent to ${l.email}`); go();
+      } catch (err) { el.disabled = false; toast(err.message); }
+    },
+    "lead-edit": (el) => {
+      const l = (ix.leads || []).find((x) => x.id === el.dataset.id);
+      if (!l) return;
+      dialog({
+        title: l.name || l.email, submit: "Save",
+        body: `<p class="muted small" style="margin-bottom:12px">${esc(l.email)}${l.phone ? ` · ${esc(l.phone)}` : ""} · first seen ${day(l.created_at)}</p>
+          <div class="field"><label for="ld-status">Status</label><select class="select" id="ld-status" name="status">${Object.entries(LEAD_STATUS).map(([k, [lab]]) => `<option value="${k}"${l.status === k ? " selected" : ""}>${lab}</option>`).join("")}</select></div>
+          <div class="field"><label for="ld-note">Note</label><textarea class="textarea" id="ld-note" name="note" rows="4" maxlength="1000" placeholder="e.g. Called on Sunday, wants to start next week">${esc(l.note || "")}</textarea></div>`,
+        onSubmit: (v, close, form) => {
+          const btn = form.querySelector("[type=submit]"); btn.disabled = true;
+          sendJson(`/master-admin/api/leads/${encodeURIComponent(l.id)}`, "PATCH", { status: v.status, note: v.note })
+            .then((data) => { Object.assign(l, data.lead); leadBadge(); close(); go(); toast("Saved"); })
+            .catch((err) => { btn.disabled = false; toast(err.message); });
+          return false;
+        },
+      });
+    },
+    "lead-delete": async (el) => {
+      const l = (ix.leads || []).find((x) => x.id === el.dataset.id);
+      if (!l || !(await confirm("Remove from the list?", `${l.email} will be removed from Sign-up leads. If they type their details again, they come back.`, "Remove"))) return;
+      try {
+        await sendJson(`/master-admin/api/leads/${encodeURIComponent(l.id)}`, "DELETE");
+        ix.leads = ix.leads.filter((x) => x !== l); leadBadge(); go(); toast("Removed");
+      } catch (err) { toast(err.message); }
+    },
+    "email-test": (el) => {
+      const kind = el.dataset.kind;
+      const last = (() => { try { return localStorage.getItem("shopiliar.testEmail") || ""; } catch { return ""; } })();
+      dialog({
+        title: `Send a test: ${EMAIL_KINDS[kind][0]}`, submit: "Send test",
+        body: `<p class="muted small" style="margin-bottom:12px">Sends the saved version of this email with sample details (Akash, Akash Fashion), even when it's switched off. Save first if you changed it.</p>
+          <div class="field"><label for="em-test-to">Send to</label><input class="input" id="em-test-to" name="to" type="email" required value="${esc(last)}" placeholder="you@example.com"></div>`,
+        onSubmit: (v, close, form) => {
+          const btn = form.querySelector("[type=submit]"); btn.disabled = true;
+          try { localStorage.setItem("shopiliar.testEmail", v.to); } catch { /* fine */ }
+          sendJson("/master-admin/api/emails/test", "POST", { kind, to: v.to })
+            .then(() => { close(); toast(`Test sent to ${v.to}`); loadEmails(); })
+            .catch((err) => { btn.disabled = false; toast(err.message); loadEmails(); });
+          return false;
+        },
+      });
+    },
     "mark-paid": (el) => {
       const p = db.payments.find((x) => x.id === el.dataset.id);
       p.status = "Paid"; const u = userById(p.user);
@@ -662,11 +911,12 @@ export const start = () => {
     if (e.target.dataset.action === "range") { range = Number(e.target.value); go(); }
   });
   view.addEventListener("input", (e) => {
-    if (e.target.dataset.action !== "user-search") return;
-    userSearch = e.target.value;
+    const act = e.target.dataset.action;
+    if (act !== "user-search" && act !== "lead-search") return;
+    if (act === "user-search") userSearch = e.target.value; else ix.leadSearch = e.target.value;
     const pos = e.target.selectionStart;
     go();
-    const again = view.querySelector('[data-action="user-search"]');
+    const again = view.querySelector(`[data-action="${act}"]`);
     again.focus(); again.setSelectionRange(pos, pos);
   });
 
@@ -683,4 +933,6 @@ export const start = () => {
   if (location.hash === "#/settings") { history.replaceState(null, "", "#/overview"); setTimeout(() => openSettings(), 0); }
   rerender = router(routes, "overview");
   loadUsers();
+  // The Sign-up leads count in the sidebar
+  if (!location.hash.startsWith("#/leads")) loadLeads();
 };
