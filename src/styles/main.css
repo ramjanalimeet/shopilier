@@ -641,7 +641,9 @@ button { font: inherit; cursor: pointer; }
 @media (max-width: 760px) {
   :root { --m-green: linear-gradient(135deg, #43a713 0%, #2f7d0c 100%); --m-shadow: 0 10px 24px -10px rgba(36, 95, 10, .55); }
   html { -webkit-tap-highlight-color: transparent; }
-  body.menu-open { overflow: hidden; }
+  /* The page behind the menu doesn't scroll. The lock goes on <html>: it clips sideways overflow, so a lock on <body>
+     alone no longer reaches the page's scrolling (and the header couldn't hold at the top). */
+  html:has(> body.menu-open) { overflow: hidden; }
 
   /* Header: in the page's own colours at the top, and it scrolls away with the page (it doesn't stay on screen).
      While the menu is open it holds at the top, so the menu sheet always sits right under it. */
