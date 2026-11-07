@@ -419,7 +419,7 @@ svg { display: block; }
 .ix-acts { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; }
 .ix-acts .btn-sm { white-space: nowrap; }
 .ix-acts .ix-wa { color: #128c7e; }
-.ix-note { display: inline-flex !important; align-items: center; gap: 4px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ix-note { display: flex !important; align-items: center; gap: 4px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ix-note .i { width: 12px; height: 12px; flex: none; }
 .ix-setup ol { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px; line-height: 1.5; }
 .ix-setup code, #emails-form code { font-size: 12px; padding: 1px 5px; border-radius: 5px; background: rgba(16, 24, 40, .06); }
@@ -438,16 +438,48 @@ svg { display: block; }
 .ix-save { display: flex; justify-content: flex-end; margin-top: 16px; }
 @media (max-width: 1100px) { .ix-mails { grid-template-columns: 1fr; } }
 @media (max-width: 760px) { #emails-form .row { grid-template-columns: 1fr; } .ix-save .btn { width: 100%; justify-content: center; } }
-/* Leads & sign-ins: the two views as large tabs under the page title */
-.ix-views { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
-.ix-view { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--radius); border: 1px solid var(--line, #e9ebf0); background: #fff; color: var(--ink); text-decoration: none; transition: border-color .15s, box-shadow .15s, background-color .15s; }
-.ix-view:hover { border-color: var(--accent); }
-.ix-view.on { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent) inset; }
-.ix-view-ico { display: grid; place-items: center; flex: none; width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); }
-.ix-view.on .ix-view-ico { background: var(--accent); color: #fff; }
-.ix-view-ico .i { width: 18px; height: 18px; }
-.ix-view-t { display: grid; gap: 2px; min-width: 0; }
-.ix-view-t b { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; }
-.ix-view-t small { font-size: 12.5px; color: var(--muted); }
-.ix-view-n { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11.5px; font-weight: 600; }
-@media (max-width: 560px) { .ix-view { padding: 12px; gap: 10px; } .ix-view-t small { display: none; } }
+/* Leads & sign-ins: one panel with a slim row of numbers, filter chips and search, then one list of everything */
+.ix-d { font-size: 13px; color: var(--ink); }
+.ix-panel { padding: 0; overflow: hidden; }
+.ix-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line, #e9ebf0); }
+.ix-metrics.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ix-metric { display: grid; gap: 4px; padding: 18px 22px; }
+.ix-metric + .ix-metric { border-left: 1px solid var(--line, #e9ebf0); }
+.ix-metric-l { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.ix-metric b { font-size: 26px; line-height: 1.15; font-weight: 700; color: var(--ink); letter-spacing: -.02em; }
+.ix-metric small { font-size: 12px; color: var(--faint, #9ca3af); }
+.ix-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.ix-dot.amber { background: #f59e0b; } .ix-dot.blue { background: #3b82f6; } .ix-dot.green { background: #22a447; } .ix-dot.gray { background: #9ca3af; }
+.ix-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 20px; }
+.ix-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ix-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--line, #e3e6eb); border-radius: 999px; background: #fff; font-size: 13px; font-weight: 500; color: #4b5260; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.ix-chip span { font-size: 12px; color: var(--faint, #9ca3af); }
+.ix-chip:hover { border-color: #cfd4db; color: var(--ink); }
+.ix-chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.ix-chip.on span { color: rgba(255, 255, 255, .7); }
+.ix-panel .table-wrap { border-top: 1px solid var(--line, #e9ebf0); }
+.ix-table thead th { background: #fafbfc; }
+.ix-contact { color: var(--ink); text-decoration: none; }
+.ix-contact:hover { color: var(--accent); text-decoration: underline; }
+.ix-empty { display: grid; justify-items: center; gap: 6px; padding: 44px 20px 48px; text-align: center; border-top: 1px solid var(--line, #e9ebf0); }
+.ix-empty-ico { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 6px; border-radius: 14px; background: var(--accent-soft); color: var(--accent); }
+.ix-empty-ico .i { width: 22px; height: 22px; }
+.ix-empty b { font-size: 15px; color: var(--ink); }
+.ix-empty p { max-width: 440px; margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+.ix-empty .btn { margin-top: 10px; }
+.ix-loading { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13.5px; }
+.ix-foot { display: flex; align-items: flex-start; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--line, #e9ebf0); background: #fafbfc; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.ix-foot .i { width: 15px; height: 15px; flex: none; margin-top: 1px; }
+@media (max-width: 760px) {
+  .ix-metrics, .ix-metrics.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ix-metric { padding: 14px 16px; }
+  .ix-metric:nth-child(3) { border-left: 0; }
+  .ix-metric:nth-child(n + 3) { border-top: 1px solid var(--line, #e9ebf0); }
+  .ix-metric b { font-size: 22px; }
+  .ix-toolbar { padding: 12px 16px; }
+  .ix-toolbar .box-search, .ix-toolbar .box-search input { width: 100%; }
+  /* Rows become cards on phones: no minimum width, and long emails wrap */
+  #view .ix-table { min-width: 0 !important; }
+  #view .ix-table td { flex-wrap: wrap; max-width: 100%; }
+  #view .ix-table .ix-contact { word-break: break-all; }
+}

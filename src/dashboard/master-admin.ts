@@ -79,7 +79,7 @@ export const start = () => {
   // ---------- User interaction: data from the database ----------
   // Unfinished sign-ups, sign-in activity and email automation are loaded when their page opens (and again
   // after 30 seconds), then the page draws itself again with what came back.
-  const ix = { leads: null, signins: null, emails: null, at: {}, leadTab: "waiting", signinTab: "all", leadSearch: "" };
+  const ix = { leads: null, signins: null, emails: null, at: {}, leadTab: "all", leadSearch: "" };
   const getJson = async (url, opts) => {
     const res = await fetch(url, opts);
     const data = await res.json().catch(() => ({}));
@@ -100,7 +100,6 @@ export const start = () => {
   const loadLeads = () => loadIx("leads", "/master-admin/api/leads", (d) => d.leads, "leads");
   const loadSignins = () => loadIx("signins", "/master-admin/api/signins", (d) => d.signins, "signins");
   const loadEmails = () => loadIx("emails", "/master-admin/api/emails", (d) => d, "emails");
-  const peopleTab = () => (new URLSearchParams(location.hash.split("?")[1] || "").get("tab") === "signins" ? "signins" : "leads");
   const cut = (t, n) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
   const loadingCard = (text) => `<div class="card"><div class="card-body muted">${text}</div></div>`;
   const tplName = (id) => (db.templates.find((t) => t.id === id) || {}).name || "";
@@ -117,7 +116,7 @@ export const start = () => {
     welcome: ["Welcome email", "Sent right after someone creates an account (email and password, or Google).", "sparkle"],
     signin: ["New sign-in alert", "Sent each time someone signs in to their account, with the time, device and country, so they spot a sign-in that wasn't them.", "lock"],
     password: ["Password changed", "Sent when someone changes their password from their dashboard.", "shield"],
-    reminder: ["Finish your sign-up reminder", "Sent once to people in Sign-up leads (Leads & sign-ins) who didn't create their account after the wait you choose.", "clock"],
+    reminder: ["Finish your sign-up reminder", "Sent once to people in Leads & sign-ins who didn't create their account after the wait you choose.", "clock"],
   };
   const METHOD = { password: "Signed in", google: "Signed in with Google", signup: "New account", "google-signup": "New account with Google" };
   const when = (d) => `${day(d)}, ${new Date(d).toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit" })}`;
@@ -126,76 +125,73 @@ export const start = () => {
   const paid = (list) => list.filter((p) => p.status === "Paid").reduce((s, p) => s + p.amount, 0);
   const statusPill = (u) => u.status === "active" ? '<span class="pill Paid">Active</span>' : '<span class="pill Cancelled">Suspended</span>';
 
-  const leadsBody = () => {
-    if (!ix.leads) return loadingCard("Loading sign-up leads…");
-    const all = ix.leads, n = (st) => all.filter((l) => l.status === st).length;
-    const rate = all.length ? Math.round((n("converted") / all.length) * 100) : 0;
-    const stat = (label, value, ico, color, sub) => `<div class="stat"><div class="stat-top"><span class="stat-label">${label}</span><span class="stat-ico ${color}">${icon(ico)}</span></div><div class="stat-value">${value}</div><div class="stat-delta"><span class="muted">${sub}</span></div></div>`;
-    const tabs = [["waiting", "Waiting"], ["contacted", "Contacted"], ["converted", "Signed up"], ["all", "All"]];
-    const q = ix.leadSearch.toLowerCase();
-    const list = all.filter((l) => ix.leadTab === "all" || l.status === ix.leadTab).filter((l) => !q || (l.name + l.business + l.email + l.phone).toLowerCase().includes(q));
-    const row = (l) => {
-      const [label, color] = LEAD_STATUS[l.status] || LEAD_STATUS.waiting;
-      const picked = [l.plan ? planTag(l.plan) : "", tplName(l.template) ? `<span class="sub">${esc(tplName(l.template))}</span>` : ""].join("") || '<span class="muted">—</span>';
-      return `<tr>
-        <td><span class="t-title">${avatar(l.name || l.email)}<span>${esc(l.name || "No name yet")}<span class="sub">${esc(l.business || "No business name")}</span></span></span></td>
-        <td><a class="link" href="mailto:${esc(l.email)}">${esc(l.email)}</a>${l.phone ? `<span class="sub"><a class="link" href="tel:${esc(l.phone)}">${esc(l.phone)}</a></span>` : '<span class="sub">No mobile number</span>'}</td>
-        <td>${picked}</td>
-        <td class="muted">${ago(l.updated_at)}${l.reminded_at ? `<span class="sub">Reminder sent ${ago(l.reminded_at)}</span>` : ""}${l.note ? `<span class="sub ix-note" title="${esc(l.note)}">${icon("edit")}${esc(cut(l.note, 40))}</span>` : ""}</td>
-        <td><span class="tag dot ${color}">${label}</span></td>
-        <td class="t-actions"><div class="ix-acts">
-          <a class="icon-btn" href="${leadMail(l)}" title="Write an email" aria-label="Email ${esc(l.email)}">${icon("mail")}</a>
-          ${waNumber(l.phone) ? `<a class="icon-btn ix-wa" href="${leadWa(l)}" target="_blank" rel="noopener" title="Message on WhatsApp" aria-label="WhatsApp ${esc(l.phone)}">${icon("chat")}</a>` : ""}
-          ${l.status === "converted" ? "" : `<button class="btn btn-sm" data-action="lead-remind" data-id="${l.id}">${icon("send")}Remind</button>`}
-          <button class="icon-btn" data-action="lead-edit" data-id="${l.id}" title="Status and note" aria-label="Status and note for ${esc(l.email)}">${icon("edit")}</button>
-          <button class="icon-btn danger" data-action="lead-delete" data-id="${l.id}" title="Remove" aria-label="Remove ${esc(l.email)}">${icon("trash")}</button>
-        </div></td>
-      </tr>`;
-    };
-    return `
-      <div class="stats">
-        ${stat("Waiting", n("waiting"), "clock", "c3", "Haven't been contacted")}
-        ${stat("Contacted", n("contacted"), "chat", "c2", "You reached out")}
-        ${stat("Signed up later", n("converted"), "check", "c1", "Finished creating their account")}
-        ${stat("Finish rate", rate + "%", "barchart", "c4", `${n("converted")} of ${all.length} people`)}
-      </div>
-      <div class="card" style="margin-top:18px">
-        <div class="card-head"><div class="seg" style="margin-right:auto">${tabs.map(([t, l]) => `<button class="${t === ix.leadTab ? "on" : ""}" data-action="lead-tab" data-tab="${t}">${l}<span>${t === "all" ? all.length : n(t)}</span></button>`).join("")}</div>
-          ${searchBox("lead-search", ix.leadSearch, "Search name, email, mobile")}</div>
-        <div class="table-wrap"><table class="table" style="min-width:980px">
-          <thead><tr><th>Person</th><th>Contact</th><th>Picked</th><th>Last seen</th><th>Status</th><th class="t-actions"></th></tr></thead>
-          <tbody>${list.map(row).join("") || `<tr><td colspan="6" class="table-empty">${all.length ? "Nobody here." : "No sign-up leads yet. When someone types their email on the sign-up page and doesn't finish, they show up here."}</td></tr>`}</tbody>
-        </table></div>
-        <div class="card-foot muted small">Saved from the last step of the sign-up page as people type (name, business, email and mobile number). Someone who finishes moves to <b>Signed up</b> by themselves.</div>
-      </div>
-`;
-  };
-  const signinsBody = () => {
-    if (!ix.signins) return loadingCard("Loading sign-ins…");
-    const all = ix.signins, week = Date.now() - 7 * 864e5;
-    const recent = all.filter((x) => new Date(x.created_at).getTime() >= week);
+  // Leads & sign-ins is one clean panel: underline tabs, a slim row of numbers, filters and search, then the list
+  const metric = (label, value, hint, tone) => `<div class="ix-metric"><span class="ix-metric-l"><i class="ix-dot ${tone}"></i>${label}</span><b>${value}</b><small>${hint}</small></div>`;
+  const chips = (list, cur, action) => `<div class="ix-chips" role="group">${list.map(([t, l, n]) => `<button type="button" class="ix-chip${t === cur ? " on" : ""}" data-action="${action}" data-tab="${t}" aria-pressed="${t === cur}">${l}${n == null ? "" : `<span>${n}</span>`}</button>`).join("")}</div>`;
+  const emptyState = (ico, title, text, extra = "") => `<div class="ix-empty"><span class="ix-empty-ico">${icon(ico)}</span><b>${title}</b><p>${text}</p>${extra}</div>`;
+  // Everything in one list, newest first: people who stopped during sign-up (Waiting or Contacted), new accounts
+  // and sign-ins. Someone who stopped and later signed up shows once, as the new account (their mobile number from
+  // the sign-up page is kept on that row).
+  const peopleBody = () => {
+    if (!ix.leads || !ix.signins) return '<div class="ix-loading">Loading…</div>';
+    const leadByEmail = new Map(ix.leads.map((l) => [l.email, l]));
     const isNew = (x) => x.method === "signup" || x.method === "google-signup";
-    const tabs = [["all", "All"], ["signin", "Sign-ins"], ["new", "New accounts"]];
-    const list = all.filter((x) => ix.signinTab === "all" || (ix.signinTab === "new" ? isNew(x) : !isNew(x)));
-    const stat = (label, value, ico, color) => `<div class="stat"><div class="stat-top"><span class="stat-label">${label}</span><span class="stat-ico ${color}">${icon(ico)}</span></div><div class="stat-value">${value}</div><div class="stat-delta"><span class="muted">Last 7 days</span></div></div>`;
-    return `
-      <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-        ${stat("Sign-ins", recent.filter((x) => !isNew(x)).length, "lock", "c2")}
-        ${stat("People who signed in", new Set(recent.filter((x) => !isNew(x)).map((x) => x.email)).size, "customers", "c1")}
-        ${stat("New accounts", recent.filter(isNew).length, "sparkle", "c3")}
+    const rows = [
+      ...ix.leads.filter((l) => l.status !== "converted").map((l) => ({ type: "lead", at: l.updated_at, lead: l, email: l.email, name: l.name, business: l.business, phone: l.phone })),
+      ...ix.signins.map((x) => { const l = leadByEmail.get(x.email); return { type: isNew(x) ? "new" : "signin", at: x.created_at, sign: x, lead: l, email: x.email, name: x.name || l?.name || "", business: x.business || "", phone: l?.phone || "" }; }),
+    ].sort((a, b) => new Date(b.at) - new Date(a.at));
+    const week = Date.now() - 7 * 864e5, inWeek = (r) => new Date(r.at).getTime() >= week;
+    const count = (t) => rows.filter((r) => r.type === t).length;
+    const waiting = ix.leads.filter((l) => l.status === "waiting").length, contacted = ix.leads.filter((l) => l.status === "contacted").length;
+    const filters = [["all", "All", rows.length], ["lead", "Didn't finish", count("lead")], ["new", "Signed up", count("new")], ["signin", "Signed in", count("signin")]];
+    const show = filters.some(([k]) => k === ix.leadTab) ? ix.leadTab : "all";
+    const q = ix.leadSearch.toLowerCase();
+    const list = rows.filter((r) => show === "all" || r.type === show).filter((r) => !q || (r.name + r.business + r.email + r.phone).toLowerCase().includes(q));
+    const what = (r) => {
+      if (r.type === "lead") { const [label, color] = r.lead.status === "contacted" ? ["Contacted", "blue"] : ["Didn't finish", "yellow"]; return `<span class="tag dot ${color}">${label}</span>`; }
+      return r.type === "new" ? `<span class="tag dot green">${METHOD[r.sign.method]}</span>` : `<span class="tag dot gray">${METHOD[r.sign.method] || "Signed in"}</span>`;
+    };
+    const details = (r) => {
+      if (r.type === "lead") {
+        const l = r.lead, bits = [l.plan ? planTag(l.plan) : "", tplName(l.template) ? `<span class="ix-d">${esc(tplName(l.template))}</span>` : ""].filter(Boolean).join(" ");
+        return `${bits || '<span class="muted">—</span>'}${l.reminded_at ? `<span class="sub">Reminder sent ${ago(l.reminded_at)}</span>` : ""}${l.note ? `<span class="sub ix-note" title="${esc(l.note)}">${icon("edit")}${esc(cut(l.note, 40))}</span>` : ""}`;
+      }
+      return `<span class="ix-d">${esc(r.sign.device || "Unknown device")}</span><span class="sub">${esc(r.sign.country || "Unknown country")}</span>`;
+    };
+    const actions = (r) => {
+      const l = r.lead, mail = l ? leadMail(l) : `mailto:${encodeURIComponent(r.email)}`, phone = r.phone;
+      return `<div class="ix-acts">
+        <a class="icon-btn" href="${mail}" title="Write an email" aria-label="Email ${esc(r.email)}">${icon("mail")}</a>
+        ${waNumber(phone) ? `<a class="icon-btn ix-wa" href="${leadWa(l || r)}" target="_blank" rel="noopener" title="Message on WhatsApp" aria-label="WhatsApp ${esc(phone)}">${icon("chat")}</a>` : ""}
+        ${r.type === "lead" ? `<button class="btn btn-sm" data-action="lead-remind" data-id="${l.id}">${icon("send")}Remind</button>
+          <button class="icon-btn" data-action="lead-edit" data-id="${l.id}" title="Status and note" aria-label="Status and note for ${esc(r.email)}">${icon("edit")}</button>
+          <button class="icon-btn danger" data-action="lead-delete" data-id="${l.id}" title="Remove" aria-label="Remove ${esc(r.email)}">${icon("trash")}</button>` : ""}
+      </div>`;
+    };
+    const row = (r) => `<tr>
+      <td><span class="t-title">${avatar(r.business || r.name || r.email)}<span>${esc(r.name || r.business || "No name yet")}<span class="sub">${esc(r.business && r.name ? r.business : r.type === "lead" ? "No business name" : "")}</span></span></span></td>
+      <td><a class="ix-contact" href="mailto:${esc(r.email)}">${esc(r.email)}</a>${phone(r)}</td>
+      <td>${what(r)}</td>
+      <td>${details(r)}</td>
+      <td class="muted">${ago(r.at)}<span class="sub">${when(r.at)}</span></td>
+      <td class="t-actions">${actions(r)}</td></tr>`;
+    const phone = (r) => r.phone ? `<span class="sub"><a class="ix-contact" href="tel:${esc(r.phone)}">${esc(r.phone)}</a></span>` : "";
+    const body = !rows.length
+      ? emptyState("user", "Nobody yet", "People who start signing up, new accounts and every sign-in show up here, newest first.",
+        '<a class="btn btn-sm" href="/signup" target="_blank" rel="noopener">' + icon("external") + "See the sign-up page</a>")
+      : !list.length ? emptyState("search", "Nobody here", q ? "No one matches your search." : "Nothing of this kind yet.")
+      : `<div class="table-wrap"><table class="table ix-table" style="min-width:1040px">
+          <thead><tr><th>Person</th><th>Contact</th><th>What happened</th><th>Details</th><th>When</th><th class="t-actions"></th></tr></thead>
+          <tbody>${list.map(row).join("")}</tbody></table></div>`;
+    return `<div class="ix-metrics">
+        ${metric("Waiting", waiting, "Didn't finish, not contacted", "amber")}
+        ${metric("Contacted", contacted, "You reached out", "blue")}
+        ${metric("New accounts", rows.filter((r) => r.type === "new" && inWeek(r)).length, "Last 7 days", "green")}
+        ${metric("Sign-ins", rows.filter((r) => r.type === "signin" && inWeek(r)).length, "Last 7 days", "gray")}
       </div>
-      <div class="card" style="margin-top:18px">
-        <div class="card-head"><div class="seg">${tabs.map(([t, l]) => `<button class="${t === ix.signinTab ? "on" : ""}" data-action="signin-tab" data-tab="${t}">${l}</button>`).join("")}</div></div>
-        <div class="table-wrap"><table class="table" style="min-width:820px">
-          <thead><tr><th>Person</th><th>What happened</th><th>Device</th><th>Where</th><th>When</th></tr></thead>
-          <tbody>${list.map((x) => `<tr>
-            <td><span class="t-title">${avatar(x.business || x.email)}<span>${esc(x.business || x.name || "Deleted user")}<span class="sub">${esc(x.email)}</span></span></span></td>
-            <td>${isNew(x) ? `<span class="tag dot green">${METHOD[x.method]}</span>` : `<span class="tag dot gray">${METHOD[x.method] || "Signed in"}</span>`}</td>
-            <td>${esc(x.device || "—")}</td><td>${esc(x.country || "—")}</td>
-            <td class="muted">${when(x.created_at)}<span class="sub">${ago(x.created_at)}</span></td></tr>`).join("") || `<tr><td colspan="5" class="table-empty">No sign-ins yet. They show up here from now on.</td></tr>`}</tbody>
-        </table></div>
-      </div>
-`;
+      <div class="ix-toolbar">${chips(filters, show, "lead-tab")}${searchBox("lead-search", ix.leadSearch, "Search name, email, mobile")}</div>
+      ${body}
+      <div class="ix-foot">${icon("info")}<span><b>Didn't finish</b> is saved from the last step of the sign-up page as people type. Anyone who finishes shows up once, as a new account.</span></div>`;
   };
   // ---------- Views ----------
   const routes = {
@@ -454,17 +450,10 @@ export const start = () => {
     // and Sign-in activity (who signed in or created an account). ?tab=signins opens the second.
     people: {
       title: "Leads & sign-ins",
-      render: () => {
-        const tab = peopleTab();
-        const waiting = (ix.leads || []).filter((l) => l.status === "waiting").length;
-        const views = [["leads", "Sign-up leads", "user", "People who started signing up but didn't finish", waiting || ""], ["signins", "Sign-in activity", "lock", "Who signed in or created an account", ""]];
-        return `${head("Leads &amp; sign-ins", "People who started signing up, and everyone who signs in. Reach out to help the ones who didn't finish.",
-          tab === "leads" ? `<a class="btn" href="#/emails">${icon("send")}Reminder email</a>` : "")}
-          <div class="ix-views" role="tablist" aria-label="Leads and sign-ins">${views.map(([k, l, ic, sub, n]) => `<a class="ix-view${k === tab ? " on" : ""}" role="tab" aria-selected="${k === tab}" href="#/people${k === "leads" ? "" : "?tab=" + k}">
-            <span class="ix-view-ico">${icon(ic)}</span><span class="ix-view-t"><b>${l}${n ? `<span class="ix-view-n">${n}</span>` : ""}</b><small>${sub}</small></span></a>`).join("")}</div>
-          ${tab === "leads" ? leadsBody() : signinsBody()}
-        </div>`;
-      },
+      render: () => `${head("Leads &amp; sign-ins", "Everyone who started signing up, created an account or signed in, newest first.",
+          `<a class="btn" href="#/emails">${icon("send")}Reminder email</a>`)}
+          <div class="card ix-panel">${peopleBody()}</div>
+        </div>`,
       mount: () => { if (!fresh30("leads")) loadLeads(); if (!fresh30("signins")) loadSignins(); },
     },
 
@@ -844,7 +833,6 @@ export const start = () => {
     },
     "pay-tab": (el) => { payTab = el.dataset.tab; go(); },
     "lead-tab": (el) => { ix.leadTab = el.dataset.tab; go(); },
-    "signin-tab": (el) => { ix.signinTab = el.dataset.tab; go(); },
     "lead-remind": async (el) => {
       const l = (ix.leads || []).find((x) => x.id === el.dataset.id);
       if (!l) return;
@@ -938,8 +926,8 @@ export const start = () => {
   save(KEY, db);
   chrome();
   if (location.hash === "#/settings") { history.replaceState(null, "", "#/overview"); setTimeout(() => openSettings(), 0); }
-  // The old addresses of the two pages now open their tab on Leads & sign-ins
-  const legacy = { "#/leads": "#/people", "#/signins": "#/people?tab=signins" };
+  // The old addresses of the two pages now open Leads & sign-ins
+  const legacy = { "#/leads": "#/people", "#/signins": "#/people", "#/people?tab=signins": "#/people" };
   const fixHash = () => { if (legacy[location.hash]) history.replaceState(null, "", legacy[location.hash]); };
   fixHash();
   window.addEventListener("hashchange", () => { if (legacy[location.hash]) { fixHash(); go(); } });
