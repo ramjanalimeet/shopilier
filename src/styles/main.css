@@ -23,6 +23,10 @@
 /* html gets its own white so the body's layered background paints on the body box itself
    (not stretched onto the canvas, which left hard edges at desktop zoom) */
 html { -webkit-text-size-adjust: 100%; background: #fff; }
+/* Nothing may make the page wider than the screen: decorations that reach past the edge (glows, the marquee) are
+   cut off here. "clip" rather than "hidden" so the page stays the scroller and sticky parts keep working; phones,
+   Safari above all, let you pan sideways when only <body> hides the overflow, which showed as a white strip. */
+html, body { overflow-x: hidden; overflow-x: clip; }
 body {
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   color: var(--text);
@@ -40,7 +44,6 @@ body {
   background-repeat: no-repeat;
   min-height: 100vh;
   line-height: 1.5;
-  overflow-x: hidden;
   position: relative;
   isolation: isolate;
 }
@@ -731,6 +734,8 @@ button { font: inherit; cursor: pointer; }
   }
   body::before { display: none; }
   .hero h1::after { display: none; }
+  /* The glow behind the dashboard stays inside the screen */
+  .showcase::before { left: 0; right: 0; }
   body::after { width: 100%; height: 360px; }
   .hero .cta { flex-direction: row; justify-content: center; align-items: center; gap: 14px; }
   .hero .cta .btn { flex: 0 1 auto; }
