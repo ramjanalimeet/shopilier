@@ -24,9 +24,12 @@ export default function SiteFooter() {
           </a>
         </div>
       </div>
-      <div className="container footer-bottom">
-        <span>© 2026 Shopilier. All rights reserved.</span>
-        <span className="footer-made"><i aria-hidden="true" />Made in Bangladesh</span>
+      {/* The line sits inside the container, so it lines up with the content above and the rest of the website */}
+      <div className="container">
+        <div className="footer-bottom">
+          <span>© 2026 Shopilier. All rights reserved.</span>
+          <span className="footer-made"><i aria-hidden="true" />Made in Bangladesh</span>
+        </div>
       </div>
     </footer>
   );
