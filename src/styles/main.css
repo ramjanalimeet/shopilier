@@ -640,13 +640,12 @@ button { font: inherit; cursor: pointer; }
   html { -webkit-tap-highlight-color: transparent; }
   body.menu-open { overflow: hidden; }
 
-  /* Header: sticky and frosted, a hairline once the page scrolls */
-  /* At the top the header keeps the page's own colours (as before); once the page scrolls it turns white and frosted */
-  .site-header { position: sticky; top: 0; z-index: 60; padding: 10px 0; background: transparent; transition: box-shadow .2s, background .2s; }
-  .site-header.scrolled { -webkit-backdrop-filter: saturate(180%) blur(14px); backdrop-filter: saturate(180%) blur(14px); }
-  .site-header.scrolled { box-shadow: 0 1px 0 rgba(16, 24, 40, .08); background: rgba(255, 255, 255, .94); }
-  /* The blur would hold the menu sheet inside the header, so it's off while the menu is open */
-  .site-header.open { -webkit-backdrop-filter: none; backdrop-filter: none; background: #fff; }
+  /* Header: sticky. At the top it keeps the page's own colours; once the page scrolls it turns solid white with a
+     soft hairline, so the page never shows through it (a see-through, blurred header left smudges of the big
+     headline behind the logo) */
+  .site-header { position: sticky; top: 0; z-index: 60; padding: 10px 0; background: transparent; transition: box-shadow .2s, background-color .2s; }
+  .site-header.scrolled { background: #fff; box-shadow: 0 1px 0 rgba(16, 24, 40, .07), 0 6px 16px -12px rgba(16, 24, 40, .22); }
+  .site-header.open { background: #fff; }
   .brand { font-size: 21px; }
   .brand-mark { width: 30px; height: 30px; }
   .menu-toggle { display: grid; place-content: center; width: 44px; height: 44px; margin-right: -6px; border-radius: 12px; }
