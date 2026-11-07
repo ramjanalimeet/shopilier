@@ -1,10 +1,12 @@
 // User interaction, for the master dashboard: unfinished sign-ups (people who typed their contact details on the
 // sign-up page but didn't create the account), sign-in activity, and the automatic emails (welcome, new sign-in,
 // password changed, and a reminder to finish signing up). The tables are created on first use, like the others.
-// Emails go out through Resend (https://resend.com) once the RESEND_API_KEY secret is set; without it nothing is
-// sent and each email shows in the log as "Not sent", so the rest keeps working.
+// Emails go out through Resend (https://resend.com) once a Resend API key is connected: pasted in the master
+// dashboard (Email automation, kept in D1 and never sent back to the browser) or set as the RESEND_API_KEY secret,
+// which wins when both exist. Without one nothing is sent and each email shows in the log as "Not sent".
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { clean, EMAIL } from "./platform-clean";
+export { clean };
 
 declare global {
   interface CloudflareEnv {
@@ -107,14 +109,41 @@ export async function saveEmailSettings(env: CloudflareEnv, input: unknown) {
   return next;
 }
 /** Ready to send: a Resend key and a sender address on a domain verified in Resend. */
-export const emailReady = (env: CloudflareEnv, s: EmailSettings) => !!env.RESEND_API_KEY && !!s.fromEmail;
+// ---------- The Resend key ----------
+/** The key in use and where it came from: the Worker secret, or the one pasted in the dashboard. */
+export async function resendKey(env: CloudflareEnv): Promise<{ key: string; source: "secret" | "dashboard" | null }> {
+  if (env.RESEND_API_KEY) return { key: env.RESEND_API_KEY, source: "secret" };
+  await ensureGrowth(env);
+  const row = await env.DB.prepare("SELECT data FROM platform WHERE key = 'emails_key'").first<{ data: string }>();
+  try { const k = row ? String(JSON.parse(row.data).key || "") : ""; return k ? { key: k, source: "dashboard" } : { key: "", source: null }; } catch { return { key: "", source: null }; }
+}
+export async function saveResendKey(env: CloudflareEnv, key: string | null) {
+  await ensureGrowth(env);
+  if (!key) { await env.DB.prepare("DELETE FROM platform WHERE key = 'emails_key'").run(); return; }
+  await env.DB.prepare("INSERT INTO platform (key, data, updated_at) VALUES ('emails_key', ?, ?) ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at")
+    .bind(JSON.stringify({ key }), new Date().toISOString()).run();
+}
+export type Domain = { name: string; status: string };
+/** Checks a key with Resend and lists its domains. A "sending only" key works but can't list domains (domains: null). */
+export async function checkResendKey(key: string): Promise<{ ok: true; domains: Domain[] | null } | { ok: false; error: string }> {
+  try {
+    const res = await fetch("https://api.resend.com/domains", { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(5000) });
+    const data = (await res.json().catch(() => ({}))) as { data?: Array<{ name: string; status: string }>; name?: string; message?: string };
+    if (res.ok) return { ok: true, domains: (data.data || []).map((d) => ({ name: d.name, status: d.status })) };
+    if (data.name === "restricted_api_key" || /restricted/i.test(data.message || "")) return { ok: true, domains: null };
+    return { ok: false, error: res.status === 401 || res.status === 403 ? "Resend didn't accept this key. Copy it again from Resend → API Keys." : clean(data.message || `Resend answered ${res.status}`, 200) };
+  } catch {
+    return { ok: false, error: "Couldn't reach Resend. Try again in a moment." };
+  }
+}
+export const emailReady = async (env: CloudflareEnv, s: EmailSettings) => !!(await resendKey(env)).key && !!s.fromEmail;
 
 // ---------- Sending ----------
 const escHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-const fill = (text: string, vars: Record<string, string>) => text.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
+export const fill = (text: string, vars: Record<string, string>) => text.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
 
 // A simple, light email in the Shopilier green: the text as paragraphs, then an optional button
-const layout = (body: string, button?: { label: string; url: string }) => `<!doctype html><html><body style="margin:0;background:#f4faef;font-family:Inter,Segoe UI,Arial,sans-serif;color:#1f2937">
+export const layout = (body: string, button?: { label: string; url: string }) => `<!doctype html><html><body style="margin:0;background:#f4faef;font-family:Inter,Segoe UI,Arial,sans-serif;color:#1f2937">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4faef;padding:28px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;border:1px solid #e3eedb">
 <tr><td style="padding:26px 28px 6px"><span style="display:inline-block;width:30px;height:30px;border-radius:8px;background:#41a212;color:#fff;font-weight:800;font-size:18px;line-height:30px;text-align:center">S</span>
@@ -123,7 +152,7 @@ const layout = (body: string, button?: { label: string; url: string }) => `<!doc
 ${button ? `<tr><td style="padding:4px 28px 26px"><a href="${escHtml(button.url)}" style="display:inline-block;background:#41a212;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:10px">${escHtml(button.label)}</a></td></tr>` : ""}
 </table><p style="font-size:12px;color:#6b7280;margin:16px 0 0">Shopilier · Made in Bangladesh</p></td></tr></table></body></html>`;
 
-const BUTTONS: Record<Kind, string> = { welcome: "Open my dashboard", signin: "Open my dashboard", password: "Open my dashboard", reminder: "Finish creating my store" };
+export const BUTTONS: Record<Kind, string> = { welcome: "Open my dashboard", signin: "Open my dashboard", password: "Open my dashboard", reminder: "Finish creating my store" };
 
 /** Sends one automatic email (when that automation is on) and logs it. Returns how it went. */
 export async function sendEmail(env: CloudflareEnv, kind: Kind, to: string, vars: Record<string, string>, opts: { force?: boolean; origin?: string } = {}) {
@@ -135,12 +164,13 @@ export async function sendEmail(env: CloudflareEnv, kind: Kind, to: string, vars
   const subject = fill(a.subject, all), text = fill(a.body, all);
   const url = origin + (kind === "reminder" ? "/signup" : "/admin");
   let status: "sent" | "failed" | "skipped" = "skipped", error = "";
-  if (!emailReady(env, s)) error = !env.RESEND_API_KEY ? "Email isn't connected yet (no Resend key)." : "Add the sender email in Email automation.";
+  const { key } = await resendKey(env);
+  if (!key || !s.fromEmail) error = !key ? "Email isn't connected yet (no Resend key)." : "Choose the sender email in Email automation.";
   else {
     try {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
-        headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: `${s.fromName} <${s.fromEmail}>`, to: [to], subject, ...(s.replyTo ? { reply_to: s.replyTo } : {}),
           html: layout(text, { label: BUTTONS[kind], url }), text: `${text}\n\n${BUTTONS[kind]}: ${url}`,
@@ -155,6 +185,8 @@ export async function sendEmail(env: CloudflareEnv, kind: Kind, to: string, vars
   return { status, error };
 }
 
+/** Sample details for previews and test emails */
+export const SAMPLE = { name: "Akash", business: "Akash Fashion", plan: "Business", email: "akash@example.com", time: "1 Jan 2027, 10:30 am (Bangladesh time)", device: "Chrome on Android", location: "Bangladesh" };
 const when = () => new Date().toLocaleString("en-GB", { timeZone: "Asia/Dhaka", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }) + " (Bangladesh time)";
 const PLAN_NAMES: Record<string, string> = { starter: "Starter", business: "Business", pro: "Pro" };
 export const planName = (p: string) => PLAN_NAMES[p] || "Starter";
@@ -214,7 +246,7 @@ export async function remindLead(env: CloudflareEnv, lead: LeadRow, origin: stri
  *  Runs after sign-ups, sign-ins and new unfinished sign-ups, and whenever the master dashboard opens that page. */
 export async function sendDueReminders(env: CloudflareEnv, origin: string) {
   const s = await getEmailSettings(env);
-  if (!s.reminder.on || !emailReady(env, s)) return;
+  if (!s.reminder.on || !(await emailReady(env, s))) return;
   const before = new Date(Date.now() - s.reminder.hours * 36e5).toISOString();
   const { results } = await env.DB.prepare("SELECT * FROM leads WHERE status = 'waiting' AND reminded_at IS NULL AND updated_at < ? ORDER BY updated_at LIMIT 5").bind(before).all<LeadRow>();
   for (const lead of results) await remindLead(env, lead, origin);

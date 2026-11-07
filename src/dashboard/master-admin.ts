@@ -79,7 +79,7 @@ export const start = () => {
   // ---------- User interaction: data from the database ----------
   // Unfinished sign-ups, sign-in activity and email automation are loaded when their page opens (and again
   // after 30 seconds), then the page draws itself again with what came back.
-  const ix = { leads: null, signins: null, emails: null, at: {}, leadTab: "all", leadSearch: "" };
+  const ix = { leads: null, signins: null, emails: null, at: {}, leadTab: "all", leadSearch: "", logTab: "all", setupOpen: false };
   const getJson = async (url, opts) => {
     const res = await fetch(url, opts);
     const data = await res.json().catch(() => ({}));
@@ -94,7 +94,9 @@ export const start = () => {
       const data = await getJson(url);
       ix[k] = pick(data); ix.at[k] = Date.now();
       if (k === "leads") leadBadge();
-      if (location.hash.replace(/^#\/?/, "").split("?")[0] === "people" && (route === "people" || route === "leads" || route === "signins")) go();
+      // Draw the page again when its data arrives (sign-up leads and sign-ins both live on Leads & sign-ins)
+      const now = location.hash.replace(/^#\/?/, "").split("?")[0];
+      if (now === (route === "leads" || route === "signins" ? "people" : route)) go();
     } catch (err) { toast(err.message); }
   };
   const loadLeads = () => loadIx("leads", "/master-admin/api/leads", (d) => d.leads, "leads");
@@ -117,6 +119,12 @@ export const start = () => {
     signin: ["New sign-in alert", "Sent each time someone signs in to their account, with the time, device and country, so they spot a sign-in that wasn't them.", "lock"],
     password: ["Password changed", "Sent when someone changes their password from their dashboard.", "shield"],
     reminder: ["Finish your sign-up reminder", "Sent once to people in Leads & sign-ins who didn't create their account after the wait you choose.", "clock"],
+  };
+  const DEFAULT_EMAILS = {
+    welcome: { subject: "Welcome to Shopilier, {name}!", body: "Hi {name},\n\nThank you for joining Shopilier. Your store {business} is ready on the {plan} plan.\n\nOpen your dashboard to add your first products and publish your website. If you get stuck, just reply to this email and we'll help." },
+    signin: { subject: "New sign-in to your Shopilier account", body: "Hi {name},\n\nYour Shopilier account ({email}) was just signed in to.\n\nWhen: {time}\nDevice: {device}\nWhere: {location}\n\nIf this was you, there's nothing to do. If it wasn't, change your password right away from your dashboard (Settings → Password)." },
+    password: { subject: "Your Shopilier password was changed", body: "Hi {name},\n\nThe password for your Shopilier account ({email}) was changed on {time} from {device}.\n\nIf you didn't do this, reply to this email straight away and we'll secure your account." },
+    reminder: { subject: "Your Shopilier store is almost ready, {name}", body: "Hi {name},\n\nYou started creating your online store on Shopilier but didn't finish. It only takes a minute, and everything is free until online payments are switched on.\n\nPick up where you left off with the button below. Questions? Just reply to this email." },
   };
   const METHOD = { password: "Signed in", google: "Signed in with Google", signup: "New account", "google-signup": "New account with Google" };
   const when = (d) => `${day(d)}, ${new Date(d).toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit" })}`;
@@ -193,6 +201,103 @@ export const start = () => {
       ${body}
       <div class="ix-foot">${icon("info")}<span><b>Didn't finish</b> is saved from the last step of the sign-up page as people type. Anyone who finishes shows up once, as a new account.</span></div>`;
   };
+  // ---------- Email automation: the parts of the page ----------
+  const verifiedDomains = () => (ix.emails.connected.domains || []).filter((d) => d.status === "verified").map((d) => d.name);
+  const emailSteps = () => {
+    const { settings: st, connected: c, log: sent } = ix.emails;
+    const domains = c.domains, verified = verifiedDomains();
+    return [
+      { key: "account", done: c.key, title: "Create your free Resend account",
+        text: "Resend is the service that delivers Shopilier's emails. The free plan sends up to 3,000 emails a month — enough to start.",
+        body: `<a class="btn btn-sm" href="https://resend.com/signup" target="_blank" rel="noopener">${icon("external")}Open Resend</a>` },
+      { key: "domain", done: c.key && (domains === null || verified.length > 0), title: "Add your domain and verify it",
+        text: "In Resend open <b>Domains → Add domain</b> and type your domain (for example <b>shopilier.com</b>). If the domain is on Cloudflare, press <b>Auto configure</b> and Resend adds the records for you. Wait until it says <b>Verified</b> (usually a few minutes).",
+        body: `<a class="btn btn-sm" href="https://resend.com/domains" target="_blank" rel="noopener">${icon("external")}Open Domains in Resend</a>
+          ${domains && domains.length ? `<div class="em-domains">${domains.map((d) => `<span class="em-domain ${d.status === "verified" ? "ok" : "wait"}">${icon(d.status === "verified" ? "check" : "clock")}${esc(d.name)}<small>${d.status === "verified" ? "Verified" : esc(d.status.replace(/_/g, " "))}</small></span>`).join("")}</div>`
+            : c.key && domains ? '<p class="em-hint warn">No domains in Resend yet. Add one, then come back and refresh this page.</p>' : ""}` },
+      { key: "key", done: c.key && c.keyOk, title: "Connect Resend with your API key",
+        text: "In Resend open <b>API Keys → Create API key</b>, choose <b>Full access</b>, copy the key (it starts with <code>re_</code>) and paste it here.",
+        body: c.key ? `<div class="em-connected">${icon(c.keyOk ? "check" : "alert")}<span>${c.keyOk ? "Connected" : esc(c.keyError || "This key doesn't work any more")} · key ending <b>••••${esc(c.last4)}</b>${c.source === "secret" ? " (set as the Worker secret RESEND_API_KEY)" : ""}</span>
+            ${c.source === "dashboard" ? `<button type="button" class="btn btn-sm" data-action="email-disconnect">Disconnect</button>` : ""}</div>`
+          : `<div class="em-inline"><input class="input" type="password" id="em-key" placeholder="re_xxxxxxxx" autocomplete="off" spellcheck="false" aria-label="Resend API key">
+            <button type="button" class="btn btn-primary" data-action="email-connect">${icon("link")}Connect</button></div>
+            <a class="em-link" href="https://resend.com/api-keys" target="_blank" rel="noopener">${icon("external")}Open API Keys in Resend</a>` },
+      { key: "sender", done: !!st.fromEmail, title: "Choose who the emails come from",
+        text: "People see this name and address in their inbox. Replies can go to your support email.",
+        body: `<form class="em-sender" id="em-sender">
+            <div class="field"><label for="em-from-name">From name</label><input class="input" id="em-from-name" name="fromName" maxlength="60" value="${esc(st.fromName)}" placeholder="Shopilier"></div>
+            <div class="field"><label for="em-from-user">Sender email</label>${verified.length
+              ? `<div class="em-addr"><input class="input" id="em-from-user" name="fromUser" value="${esc(st.fromEmail.split("@")[0] || "hello")}" placeholder="hello"><span>@</span>
+                <select class="select" name="fromDomain" aria-label="Domain">${verified.map((d) => `<option${st.fromEmail.endsWith("@" + d) ? " selected" : ""}>${esc(d)}</option>`).join("")}</select></div>`
+              : `<input class="input" id="em-from-user" name="fromEmail" type="email" value="${esc(st.fromEmail)}" placeholder="hello@yourdomain.com">
+                 <small class="em-hint">${c.key && domains !== null ? "Verify a domain in Resend first — the sender email must be on it." : "Use an address on the domain you verified in Resend."}</small>`}</div>
+            <div class="field"><label for="em-reply">Replies go to <span class="muted">(optional)</span></label><input class="input" id="em-reply" name="replyTo" type="email" value="${esc(st.replyTo)}" placeholder="support@shopilier.com"></div>
+            <div><button type="submit" class="btn btn-primary">${icon("check")}Save sender</button></div>
+          </form>` },
+      { key: "test", done: sent.some((m) => m.status === "sent"), title: "Send yourself a test email",
+        text: "Check that everything works: we send the welcome email to you, with sample details.",
+        body: `<div class="em-inline"><input class="input" type="email" id="em-test-to" placeholder="you@example.com" value="${esc((() => { try { return localStorage.getItem("shopiliar.testEmail") || ""; } catch { return ""; } })())}" aria-label="Send the test to">
+            <button type="button" class="btn" data-action="email-test-quick">${icon("send")}Send test</button></div>` },
+    ];
+  };
+  const emailSetup = () => {
+    const steps = emailSteps(), doneAll = ix.emails.connected.ready && steps.every((x) => x.done);
+    const current = steps.findIndex((x) => !x.done);
+    const open = !doneAll || ix.setupOpen;
+    const done = steps.filter((x) => x.done).length;
+    return `<div class="card em-setup${doneAll ? " is-done" : ""}">
+      <div class="em-setup-head">
+        <span class="em-setup-ico">${icon(doneAll ? "check" : "rocket")}</span>
+        <span class="em-setup-t"><b>${doneAll ? "Email sending is set up" : "Set up email sending"}</b><small>${doneAll ? `Emails go out from ${esc(ix.emails.settings.fromName)} &lt;${esc(ix.emails.settings.fromEmail)}&gt;.` : `${done} of ${steps.length} steps done — takes about 10 minutes, once.`}</small></span>
+        ${doneAll ? `<button type="button" class="btn btn-sm" data-action="email-setup-toggle">${open ? "Hide steps" : "Change setup"}</button>` : `<span class="em-progress" aria-hidden="true"><i style="width:${(done / steps.length) * 100}%"></i></span>`}
+      </div>
+      ${open ? `<ol class="em-steps">${steps.map((x, i) => `<li class="em-step ${x.done ? "done" : i === current ? "now" : "todo"}">
+          <span class="em-num">${x.done ? icon("check") : i + 1}</span>
+          <div class="em-step-main"><b>${x.title}</b><p>${x.text}</p>${x.done && x.key === "account" ? "" : `<div class="em-step-body">${x.body}</div>`}</div>
+        </li>`).join("")}</ol>` : ""}
+    </div>`;
+  };
+  const emailAutos = () => {
+    const st = ix.emails.settings;
+    const when = { welcome: "Right after someone creates an account", signin: "Every time someone signs in — so they notice a sign-in that wasn't them", password: "When someone changes their password", reminder: `Once, ${(() => { const h = st.reminder.hours; return h < 24 ? `${h} hour${h > 1 ? "s" : ""}` : `${h / 24} day${h > 24 ? "s" : ""}`; })()} after someone stops before creating their account` };
+    return `<div class="card em-autos">
+      <div class="card-head"><span class="card-title">Automatic emails</span><span class="muted small">Switch each one on or off. Press Edit to change the words.</span></div>
+      ${["welcome", "signin", "password", "reminder"].map((k) => { const [title, , ic] = EMAIL_KINDS[k], a = st[k]; return `<div class="em-auto${a.on ? "" : " off"}">
+        <span class="em-auto-ico">${icon(ic)}</span>
+        <span class="em-auto-t"><b>${title}</b><small>${when[k]}</small><em>“${esc(cut(a.subject.replace(/\{name\}/g, "Akash"), 70))}”</em></span>
+        <span class="em-auto-state">${a.on ? "On" : "Off"}</span>
+        <label class="switch" title="${a.on ? "Switch off" : "Switch on"}"><input type="checkbox" data-email-toggle="${k}" ${a.on ? "checked" : ""} aria-label="${title}"><i></i></label>
+        <button type="button" class="btn btn-sm" data-action="email-edit" data-kind="${k}">${icon("edit")}Edit</button>
+      </div>`; }).join("")}
+    </div>`;
+  };
+  const emailLog = () => {
+    const sent = ix.emails.log, f = ix.logTab || "all";
+    const STATUS = { sent: ["Sent", "green"], failed: ["Failed", "red"], skipped: ["Not sent", "gray"] };
+    const list = sent.filter((m) => f === "all" || m.status === f);
+    const filters = [["all", "All", sent.length], ["sent", "Sent", sent.filter((m) => m.status === "sent").length], ["skipped", "Not sent", sent.filter((m) => m.status === "skipped").length], ["failed", "Failed", sent.filter((m) => m.status === "failed").length]];
+    return `<div class="card ix-panel em-log">
+      <div class="em-log-head"><span class="card-title">Sent emails</span>${chips(filters, f, "log-tab")}</div>
+      ${!sent.length ? emptyState("mail", "No emails yet", "Every automatic email shows here — sent, failed, or not sent because email isn't set up yet.")
+        : !list.length ? emptyState("search", "Nothing here", "No emails with this status.")
+        : `<div class="table-wrap"><table class="table ix-table" style="min-width:780px">
+          <thead><tr><th>To</th><th>Email</th><th>Status</th><th>When</th></tr></thead>
+          <tbody>${list.map((m) => { const [l, col] = STATUS[m.status] || STATUS.skipped; return `<tr>
+            <td><span class="ix-d">${esc(m.to_email)}</span><span class="sub">${esc(cut(m.subject, 60))}</span></td>
+            <td>${esc((EMAIL_KINDS[m.kind] || [m.kind])[0])}</td>
+            <td><span class="tag dot ${col}">${l}</span>${m.error ? `<span class="sub">${esc(cut(m.error, 70))}</span>` : ""}</td>
+            <td class="muted">${ago(m.created_at)}<span class="sub">${when(m.created_at)}</span></td></tr>`; }).join("")}</tbody></table></div>`}
+    </div>`;
+  };
+  // Saves the email settings (the whole set, with a change applied) and draws the page again
+  const saveEmails = async (change) => {
+    const st = JSON.parse(JSON.stringify(ix.emails.settings));
+    change(st);
+    const data = await sendJson("/master-admin/api/emails", "PUT", st);
+    ix.emails = data; ix.at.emails = Date.now(); go();
+    return data;
+  };
+
   // ---------- Views ----------
   const routes = {
     overview: {
@@ -458,70 +563,19 @@ export const start = () => {
     },
 
 
+    // Email automation, made for a first-time setup: a numbered checklist (Resend account, domain, API key pasted
+    // right here, sender, test email), then the four automatic emails (switch + Edit with a live preview), then
+    // every email sent. Data from /master-admin/api/emails; the Resend key itself never comes back to the browser.
     emails: {
       title: "Email automation",
       render: () => {
-        const intro = head("Email automation", "Emails that go out by themselves when something happens. Switch each one on or off and write it your way.");
+        const ready = ix.emails?.connected.ready;
+        const pill = !ix.emails ? "" : ready ? `<span class="em-pill on">${icon("check")}Emails are on</span>` : `<span class="em-pill off">${icon("clock")}Not set up yet</span>`;
+        const intro = head("Email automation", "Emails that go out by themselves, like a welcome email after sign-up or an alert when someone signs in.", pill);
         if (!ix.emails) return `${intro}${loadingCard("Loading email automation…")}</div>`;
-        const { settings: st, connected, log: sent } = ix.emails;
-        const v = (x) => esc(x ?? "");
-        const setup = connected.ready
-          ? `<div class="callout green"><span class="ico">${icon("check")}</span><div><b>Emails are on.</b> They go out from ${esc(st.fromName)} &lt;${esc(st.fromEmail)}&gt; through Resend.</div></div>`
-          : `<div class="callout yellow ix-setup"><span class="ico">${icon("alert")}</span><div><b>Connect email sending to switch these on.</b> Until then nothing is sent, and each email shows below as <i>Not sent</i>.
-              <ol>
-                <li>${connected.key ? "✓ " : ""}Make a free account at <a class="link" href="https://resend.com" target="_blank" rel="noopener">resend.com</a>, add your domain (for example shopilier.com) and verify it.</li>
-                <li>${connected.key ? "✓ Resend key added." : "Create an API key in Resend and add it to the Worker as the secret <code>RESEND_API_KEY</code>: Cloudflare dashboard → Workers → <b>shopiliar</b> → Settings → Variables and Secrets (or <code>npx wrangler secret put RESEND_API_KEY</code>)."}</li>
-                <li>${st.fromEmail ? "✓ Sender email set." : "Enter the sender email below, on your verified domain (for example hello@shopilier.com), and save."}</li>
-              </ol></div></div>`;
-        const card = (k) => {
-          const [title, desc, ic] = EMAIL_KINDS[k], a = st[k];
-          return `<div class="card ix-mail"><div class="card-head"><span class="ix-mail-ico">${icon(ic)}</span><span class="ix-mail-t"><b>${title}</b><small>${desc}</small></span>
-              <label class="switch"><input type="checkbox" name="${k}_on" ${a.on ? "checked" : ""} aria-label="${title} on"><i></i></label></div>
-            <div class="card-body">
-              ${k === "reminder" ? `<div class="field"><label for="em-hours">Send after</label><select class="select" id="em-hours" name="reminder_hours">${[1, 3, 6, 12, 24, 48, 72].map((h) => `<option value="${h}"${a.hours === h ? " selected" : ""}>${h < 24 ? `${h} hour${h > 1 ? "s" : ""}` : `${h / 24} day${h > 24 ? "s" : ""}`}</option>`).join("")}</select></div>` : ""}
-              <div class="field"><label for="em-${k}-s">Subject</label><input class="input" id="em-${k}-s" name="${k}_subject" maxlength="150" value="${v(a.subject)}"></div>
-              <div class="field"><label for="em-${k}-b">Message</label><textarea class="textarea" id="em-${k}-b" name="${k}_body" rows="7" maxlength="3000">${v(a.body)}</textarea></div>
-              <div class="ix-mail-foot"><span class="muted small">A button to ${k === "reminder" ? "the sign-up page" : "their dashboard"} is added below the message.</span><button type="button" class="btn btn-sm" data-action="email-test" data-kind="${k}">${icon("send")}Send a test</button></div>
-            </div></div>`;
-        };
-        const STATUS = { sent: ["Sent", "green"], failed: ["Failed", "red"], skipped: ["Not sent", "gray"] };
-        return `${intro}
-          ${setup}
-          <form id="emails-form">
-            <div class="card" style="margin-top:18px"><div class="card-head"><span class="card-title">Sender</span></div><div class="card-body">
-              <div class="row">
-                <div class="field"><label for="em-from-name">From name</label><input class="input" id="em-from-name" name="fromName" maxlength="60" value="${v(st.fromName)}" placeholder="Shopilier"></div>
-                <div class="field"><label for="em-from">Sender email</label><input class="input" id="em-from" name="fromEmail" type="email" value="${v(st.fromEmail)}" placeholder="hello@shopilier.com"></div>
-                <div class="field"><label for="em-reply">Replies go to</label><input class="input" id="em-reply" name="replyTo" type="email" value="${v(st.replyTo)}" placeholder="support@shopilier.com"></div>
-              </div>
-              <p class="muted small">In the subject and message you can use <code>{name}</code> <code>{business}</code> <code>{plan}</code> <code>{email}</code>, and in the sign-in and password emails <code>{time}</code> <code>{device}</code> <code>{location}</code>.</p>
-            </div></div>
-            <div class="ix-mails">${["welcome", "signin", "password", "reminder"].map(card).join("")}</div>
-            <div class="ix-save"><button class="btn btn-primary" type="submit">${icon("check")}Save email settings</button></div>
-          </form>
-          <div class="card" style="margin-top:18px"><div class="card-head"><span class="card-title">Sent emails</span><span class="muted small">Latest 100</span></div>
-            <div class="table-wrap"><table class="table" style="min-width:760px">
-              <thead><tr><th>To</th><th>Email</th><th>Subject</th><th>Status</th><th>When</th></tr></thead>
-              <tbody>${sent.map((m) => { const [l, c] = STATUS[m.status] || STATUS.skipped; return `<tr><td>${esc(m.to_email)}</td><td>${esc((EMAIL_KINDS[m.kind] || [m.kind])[0])}</td><td class="small">${esc(m.subject)}</td>
-                <td><span class="tag dot ${c}"${m.error ? ` title="${esc(m.error)}"` : ""}>${l}</span>${m.error ? `<span class="sub">${esc(cut(m.error, 60))}</span>` : ""}</td><td class="muted">${when(m.created_at)}</td></tr>`; }).join("") || `<tr><td colspan="5" class="table-empty">No emails yet.</td></tr>`}</tbody>
-            </table></div></div>
-        </div>`;
+        return `${intro}${emailSetup()}${emailAutos()}${emailLog()}</div>`;
       },
-      mount: (view) => {
-        if (!fresh30("emails")) loadEmails();
-        const form = view.querySelector("#emails-form");
-        if (!form) return;
-        form.addEventListener("submit", (e) => {
-          e.preventDefault();
-          const el = form.elements, val = (k) => el[k] ? el[k].value : undefined;
-          const a = (k) => ({ on: el[`${k}_on`].checked, subject: val(`${k}_subject`), body: val(`${k}_body`) });
-          const body = { fromName: val("fromName"), fromEmail: val("fromEmail"), replyTo: val("replyTo"), welcome: a("welcome"), signin: a("signin"), password: a("password"), reminder: { ...a("reminder"), hours: Number(val("reminder_hours")) } };
-          const btn = form.querySelector("[type=submit]"); btn.disabled = true;
-          sendJson("/master-admin/api/emails", "PUT", body)
-            .then((data) => { ix.emails = data; ix.at.emails = Date.now(); log("Email automation settings were updated"); persist(); go(); toast("Email settings saved"); })
-            .catch((err) => { btn.disabled = false; toast(err.message); });
-        });
-      },
+      mount: () => { if (!fresh30("emails")) loadEmails(); },
     },
 
     activity: {
@@ -867,19 +921,77 @@ export const start = () => {
         ix.leads = ix.leads.filter((x) => x !== l); leadBadge(); go(); toast("Removed");
       } catch (err) { toast(err.message); }
     },
-    "email-test": (el) => {
-      const kind = el.dataset.kind;
-      const last = (() => { try { return localStorage.getItem("shopiliar.testEmail") || ""; } catch { return ""; } })();
+    "log-tab": (el) => { ix.logTab = el.dataset.tab; go(); },
+    "email-setup-toggle": () => { ix.setupOpen = !ix.setupOpen; go(); },
+    "email-connect": async (el) => {
+      const input = view.querySelector("#em-key"), key = input.value.trim();
+      if (!key) { toast("Paste your Resend API key first"); input.focus(); return; }
+      el.disabled = true; el.textContent = "Checking…";
+      try {
+        ix.emails = await sendJson("/master-admin/api/emails/connect", "POST", { key }); ix.at.emails = Date.now();
+        log("Resend was connected for email automation"); persist(); go(); toast("Resend connected");
+      } catch (err) { toast(err.message); go(); }
+    },
+    "email-disconnect": async () => {
+      if (!(await confirm("Disconnect Resend?", "Automatic emails stop going out until you connect a key again. Your email settings stay.", "Disconnect"))) return;
+      try { ix.emails = await sendJson("/master-admin/api/emails/connect", "DELETE"); ix.at.emails = Date.now(); go(); toast("Resend disconnected"); } catch (err) { toast(err.message); }
+    },
+    "email-test-quick": async (el) => {
+      const to = view.querySelector("#em-test-to").value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) { toast("Type the email to send the test to"); return; }
+      try { localStorage.setItem("shopiliar.testEmail", to); } catch { /* fine */ }
+      el.disabled = true;
+      try { await sendJson("/master-admin/api/emails/test", "POST", { kind: "welcome", to }); toast(`Test sent to ${to} — check your inbox`); }
+      catch (err) { toast(err.message); }
+      ix.at.emails = 0; loadEmails();
+    },
+    // The editor: subject and message on the left, the email as people will see it on the right
+    "email-edit": (el) => {
+      const kind = el.dataset.kind, [title, desc] = EMAIL_KINDS[kind], a = ix.emails.settings[kind];
+      const VARS = kind === "signin" || kind === "password" ? ["name", "business", "plan", "email", "time", "device", "location"] : ["name", "business", "plan", "email"];
+      let timer = 0, lastFocus = null;
       dialog({
-        title: `Send a test: ${EMAIL_KINDS[kind][0]}`, submit: "Send test",
-        body: `<p class="muted small" style="margin-bottom:12px">Sends the saved version of this email with sample details (Akash, Akash Fashion), even when it's switched off. Save first if you changed it.</p>
-          <div class="field"><label for="em-test-to">Send to</label><input class="input" id="em-test-to" name="to" type="email" required value="${esc(last)}" placeholder="you@example.com"></div>`,
+        title, size: "lg", submit: "Save email",
+        body: `<p class="muted small" style="margin:-4px 0 14px">${desc}</p>
+          <div class="em-editor">
+            <div class="em-editor-form">
+              ${kind === "reminder" ? `<div class="field"><label for="ed-hours">Send after</label><select class="select" id="ed-hours" name="hours">${[1, 3, 6, 12, 24, 48, 72].map((h) => `<option value="${h}"${a.hours === h ? " selected" : ""}>${h < 24 ? `${h} hour${h > 1 ? "s" : ""}` : `${h / 24} day${h > 24 ? "s" : ""}`}</option>`).join("")}</select></div>` : ""}
+              <div class="field"><label for="ed-subject">Subject</label><input class="input" id="ed-subject" name="subject" maxlength="150" value="${esc(a.subject)}"></div>
+              <div class="field"><label for="ed-body">Message</label><textarea class="textarea" id="ed-body" name="body" rows="11" maxlength="3000">${esc(a.body)}</textarea></div>
+              <div class="em-vars"><span class="muted small">Add details:</span>${VARS.map((v) => `<button type="button" class="em-var" data-var="${v}">{${v}}</button>`).join("")}</div>
+              <button type="button" class="link-btn em-reset" data-reset>Use the original text</button>
+            </div>
+            <div class="em-editor-preview"><div class="em-prev-bar"><span class="muted small">Preview</span><b id="ed-prev-subject"></b></div><iframe id="ed-prev" title="Email preview" sandbox=""></iframe></div>
+          </div>`,
+        onOpen: (form) => {
+          const subj = form.elements.subject, body = form.elements.body;
+          const preview = () => {
+            clearTimeout(timer);
+            timer = setTimeout(async () => {
+              try {
+                const r = await sendJson("/master-admin/api/emails/preview", "POST", { kind, subject: subj.value, body: body.value });
+                const fr = form.querySelector("#ed-prev"); if (!fr) return;
+                fr.srcdoc = r.html; form.querySelector("#ed-prev-subject").textContent = r.subject;
+              } catch { /* the preview waits for the next change */ }
+            }, 250);
+          };
+          [subj, body].forEach((x) => x.addEventListener("focus", () => { lastFocus = x; }));
+          form.addEventListener("input", preview);
+          form.addEventListener("click", (e) => {
+            const v = e.target.closest("[data-var]");
+            if (v) {
+              const t = lastFocus || body, s0 = t.selectionStart ?? t.value.length, s1 = t.selectionEnd ?? s0, ins = `{${v.dataset.var}}`;
+              t.value = t.value.slice(0, s0) + ins + t.value.slice(s1); t.focus(); t.setSelectionRange(s0 + ins.length, s0 + ins.length); preview();
+            }
+            if (e.target.closest("[data-reset]")) { subj.value = DEFAULT_EMAILS[kind].subject; body.value = DEFAULT_EMAILS[kind].body; preview(); }
+          });
+          preview();
+        },
         onSubmit: (v, close, form) => {
           const btn = form.querySelector("[type=submit]"); btn.disabled = true;
-          try { localStorage.setItem("shopiliar.testEmail", v.to); } catch { /* fine */ }
-          sendJson("/master-admin/api/emails/test", "POST", { kind, to: v.to })
-            .then(() => { close(); toast(`Test sent to ${v.to}`); loadEmails(); })
-            .catch((err) => { btn.disabled = false; toast(err.message); loadEmails(); });
+          saveEmails((st) => { Object.assign(st[kind], { subject: v.subject, body: v.body }); if (kind === "reminder") st.reminder.hours = Number(v.hours); })
+            .then(() => { log(`The "${title}" email was edited`); persist(); close(); toast("Email saved"); })
+            .catch((err) => { btn.disabled = false; toast(err.message); });
           return false;
         },
       });
@@ -903,7 +1015,26 @@ export const start = () => {
     if (fn) { e.preventDefault(); fn(el); }
   });
   view.addEventListener("change", (e) => {
+    const tg = e.target.closest("[data-email-toggle]");
+    if (tg) {
+      const k = tg.dataset.emailToggle, on = tg.checked, name = EMAIL_KINDS[k][0];
+      saveEmails((st) => { st[k].on = on; }).then(() => { log(`"${name}" was switched ${on ? "on" : "off"}`); persist(); toast(`${name} ${on ? "on" : "off"}`); })
+        .catch((err) => { toast(err.message); go(); });
+      return;
+    }
     if (e.target.dataset.action === "range") { range = Number(e.target.value); go(); }
+  });
+  // Email automation: Save sender
+  view.addEventListener("submit", (e) => {
+    if (e.target.id !== "em-sender") return;
+    e.preventDefault();
+    const f = e.target.elements, btn = e.target.querySelector("[type=submit]");
+    const fromEmail = f.fromDomain ? `${f.fromUser.value.trim().toLowerCase()}@${f.fromDomain.value}` : f.fromEmail.value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromEmail)) { toast("Type a sender email, like hello@yourdomain.com"); return; }
+    btn.disabled = true;
+    saveEmails((st) => { st.fromName = f.fromName.value.trim(); st.fromEmail = fromEmail; st.replyTo = f.replyTo.value.trim(); })
+      .then(() => { log("The email sender was updated"); persist(); toast("Sender saved"); })
+      .catch((err) => { btn.disabled = false; toast(err.message); });
   });
   view.addEventListener("input", (e) => {
     const act = e.target.dataset.action;
