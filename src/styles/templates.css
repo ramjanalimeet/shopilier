@@ -304,7 +304,8 @@
   .shot.live .s-foot { padding: 20px; flex-direction: column; align-items: flex-start; }
 }
 
-body.no-scroll { overflow: hidden; }
+/* The page behind the preview popup doesn't scroll (on <html>, which holds the page's scrolling) */
+html:has(> body.no-scroll) { overflow: hidden; }
 
 @media (max-width: 1100px) {
   .tpl-list { grid-template-columns: repeat(2, 1fr); }
