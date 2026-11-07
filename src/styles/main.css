@@ -632,7 +632,7 @@ button { font: inherit; cursor: pointer; }
 
 
 /* ---------- Phones: app-like ----------
-   A sticky frosted header, the menu as a full sheet, the brand green for the main actions, swipeable rows
+   A header that scrolls away with the page, the menu as a full sheet, the brand green for the main actions, swipeable rows
    (reviews, plans) instead of very long stacks, thumb-size tap targets and a bottom bar with the main action. */
 .m-cta { display: none; }
 @media (max-width: 760px) {
@@ -640,12 +640,10 @@ button { font: inherit; cursor: pointer; }
   html { -webkit-tap-highlight-color: transparent; }
   body.menu-open { overflow: hidden; }
 
-  /* Header: sticky. At the top it keeps the page's own colours; once the page scrolls it turns solid white with a
-     soft hairline, so the page never shows through it (a see-through, blurred header left smudges of the big
-     headline behind the logo) */
-  .site-header { position: sticky; top: 0; z-index: 60; padding: 10px 0; background: transparent; transition: box-shadow .2s, background-color .2s; }
-  .site-header.scrolled { background: #fff; box-shadow: 0 1px 0 rgba(16, 24, 40, .07), 0 6px 16px -12px rgba(16, 24, 40, .22); }
-  .site-header.open { background: #fff; }
+  /* Header: in the page's own colours at the top, and it scrolls away with the page (it doesn't stay on screen).
+     While the menu is open it holds at the top, so the menu sheet always sits right under it. */
+  .site-header { position: relative; z-index: 60; padding: 10px 0; background: transparent; }
+  .site-header.open { position: sticky; top: 0; background: #fff; }
   .brand { font-size: 21px; }
   .brand-mark { width: 30px; height: 30px; }
   .menu-toggle { display: grid; place-content: center; width: 44px; height: 44px; margin-right: -6px; border-radius: 12px; }

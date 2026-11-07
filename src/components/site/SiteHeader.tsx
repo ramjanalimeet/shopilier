@@ -13,20 +13,11 @@ export default function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
 
   // Signed-in visitors get a Dashboard button instead of Sign in / Sign up
   useEffect(() => {
     fetch("/api/me").then((r) => setSignedIn(r.ok)).catch(() => {});
-  }, []);
-
-  // A soft shadow under the header once the page scrolls
-  useEffect(() => {
-    const onScroll = () => setScrolled(scrollY > 8);
-    onScroll();
-    addEventListener("scroll", onScroll, { passive: true });
-    return () => removeEventListener("scroll", onScroll);
   }, []);
 
   // The phone menu is a sheet over the page: the page behind doesn't scroll, Escape or growing past phone width closes it
@@ -43,7 +34,7 @@ export default function SiteHeader() {
 
   const close = () => setOpen(false);
   return (
-    <header className={"site-header" + (open ? " open" : "") + (scrolled ? " scrolled" : "")}>
+    <header className={"site-header" + (open ? " open" : "")}>
       <div className="container">
         <Link className="brand" href="/" onClick={close}><img className="brand-mark" src="/assets/logo.webp" width="34" height="34" alt="" />Shopilier</Link>
         <div className="nav-panel">
