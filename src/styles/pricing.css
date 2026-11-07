@@ -144,7 +144,7 @@
   .compare thead small { font-size: 10.5px; }
   .compare td { font-size: 12px; line-height: 1.3; word-break: break-word; }
   .compare .yes { width: 22px; height: 22px; }
-  .compare thead th { position: sticky; top: 64px; z-index: 2; }
+  .compare thead th { position: sticky; top: 0; z-index: 2; }
   .compare thead th:first-child { border-top-left-radius: 14px; }
   .compare thead th:last-child { border-top-right-radius: 14px; }
   .price-page .faq { margin-top: 48px; }
