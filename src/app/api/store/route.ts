@@ -1,7 +1,7 @@
 import { currentUser, publicAccount } from "@/lib/auth";
 import { api, clean, json } from "@/lib/http";
 import { CATEGORY, EMAIL, isPlan, templateOf } from "@/lib/plans";
-import { subdomainProblem, subdomainTaken } from "@/lib/subdomain";
+import { freeSubdomain, subdomainProblem, subdomainTaken } from "@/lib/subdomain";
 
 const MAX_STORE_BYTES = 1_000_000;
 
@@ -31,13 +31,19 @@ export const PUT = api(async (request, env) => {
     if (taken) return json({ error: "That email is already used by another account." }, 409);
   }
 
-  // A new free sub-domain must follow the rules and not belong to another store (an unchanged one is always fine)
-  const sub = String((body.store as { settings?: { subdomain?: unknown } }).settings?.subdomain ?? "").toLowerCase();
+  // A new free sub-domain must follow the rules and not belong to another store (an unchanged one is always fine).
+  // On the store's first save the address was suggested by the dashboard, so a taken or invalid one is swapped for
+  // a free one close to it (the response tells the dashboard) instead of taking over another store's address.
+  const settings = ((body.store as { settings?: Record<string, unknown> }).settings ||= {});
+  let sub = String(settings.subdomain ?? "").toLowerCase();
   const was = await env.DB.prepare("SELECT json_extract(data, '$.settings.subdomain') AS sub FROM stores WHERE user_id = ?").bind(user.id).first<{ sub: string | null }>();
-  if (sub && was && sub !== was.sub) {
+  if (!was) {
+    if (sub && (subdomainProblem(sub) || (await subdomainTaken(env, sub, user.id)))) sub = await freeSubdomain(env, sub, user.id);
+  } else if (sub && sub !== was.sub) {
     const problem = subdomainProblem(sub) || ((await subdomainTaken(env, sub, user.id)) ? "Another store already uses this website address." : "");
     if (problem) return json({ error: problem }, 422);
   }
+  settings.subdomain = sub;
 
   const now = new Date().toISOString();
   await env.DB.batch([
@@ -46,5 +52,5 @@ export const PUT = api(async (request, env) => {
     env.DB.prepare("INSERT INTO stores (user_id, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at")
       .bind(user.id, JSON.stringify(body.store), now),
   ]);
-  return json({ account: publicAccount({ ...user, ...next }), savedAt: now });
+  return json({ account: publicAccount({ ...user, ...next }), subdomain: sub, savedAt: now });
 });

@@ -1,8 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "shopiliar",
-  // The Next.js app, bundled for Workers by `npx opennextjs-cloudflare build` (see README: Deploying)
-  "main": ".open-next/worker.js",
+  // worker.ts sends store sub-domains (<name>.shopilier.com) to their websites, then hands over to the Next.js
+  // app, which `npx opennextjs-cloudflare build` bundles into .open-next/worker.js (see README: Deploying)
+  "main": "worker.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
@@ -19,7 +20,10 @@
   // Workers AI writes the first draft of a website in "Create with AI"
   "ai": { "binding": "AI" },
   // Cloudflare Access app that protects /master-admin (team domain and Application Audience tag)
+  // STORE_DOMAIN: the domain whose sub-domains are stores (<name>.shopilier.com); needs the wildcard DNS record
+  // and the *.shopilier.com/* route (README: Store sub-domains)
   "vars": {
+    "STORE_DOMAIN": "shopilier.com",
     "ACCESS_TEAM_DOMAIN": "muddy-hat-9802.cloudflareaccess.com",
     "ACCESS_AUD": "caa0b5cfd1121879a6a8096cb273c8bf7ed16d0c825dcab038f273729a8ce31f"
   },

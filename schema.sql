@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS stores (
   data TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+-- Finds a store by its free sub-domain (<name>.shopilier.com) without reading every store
+CREATE INDEX IF NOT EXISTS stores_subdomain ON stores(json_extract(data, '$.settings.subdomain'));
 
 -- Added after launch. On a database created before this column existed, run once:
 --   ALTER TABLE users ADD COLUMN category TEXT NOT NULL DEFAULT 'ecommerce';
