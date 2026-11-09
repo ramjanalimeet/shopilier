@@ -29,6 +29,9 @@
   // and the *.shopilier.com/* route (README: Store sub-domains)
   "vars": {
     "STORE_DOMAIN": "shopilier.com",
+    // Google sign-in: the OAuth client's ID is public (it appears in every sign-in link); GOOGLE_CLIENT_SECRET is a
+    // secret set on the Worker (dashboard → Variables and Secrets, or `npx wrangler secret put GOOGLE_CLIENT_SECRET`)
+    "GOOGLE_CLIENT_ID": "495267733696-ce0uqj98eopifq4u5v02pisq3hcfdvm4.apps.googleusercontent.com",
     "ACCESS_TEAM_DOMAIN": "muddy-hat-9802.cloudflareaccess.com",
     "ACCESS_AUD": "11f1272ab5ac7a1e3f698208bf240bbe5e62d0764c4fca254f08148290499090"
   },
