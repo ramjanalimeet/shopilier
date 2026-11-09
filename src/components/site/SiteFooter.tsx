@@ -10,7 +10,7 @@ export default function SiteFooter() {
         </div>
         <nav className="footer-nav" aria-label="Footer">
           <Link href="/">Home</Link><Link href="/templates">Templates</Link><Link href="/pricing">Pricing</Link><Link href="/demo">Demo</Link>
-          <Link href="/resources">Resources</Link><Link href="/contact">Contact Us</Link><Link href="/privacy">Privacy Policy</Link>
+          <Link href="/resources">Resources</Link><Link href="/contact">Contact Us</Link><Link href="/privacy">Privacy Policy</Link><Link href="/terms">Terms of Service</Link>
         </nav>
         <div className="social">
           <a data-platform="youtube" href="https://www.youtube.com/@shopilier" target="_blank" rel="noopener" aria-label="Shopilier on YouTube">

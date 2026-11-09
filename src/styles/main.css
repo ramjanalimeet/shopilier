@@ -610,8 +610,17 @@ button { font: inherit; cursor: pointer; }
     background: rgba(255, 255, 255, .78); border: 1px solid rgba(65, 162, 18, .14); font-size: 13.5px; text-align: center; line-height: 1.2;
   }
   .footer-nav a:active { background: var(--brand-soft); color: var(--brand-deep); }
+  /* Three links in the first row, then two to a row (Resources and Contact Us, then the two legal pages), so the
+     longer names fit on one line and no link sits alone */
+  .footer-nav { grid-template-columns: repeat(6, 1fr); }
+  .footer-nav a { grid-column: span 2; }
+  .footer-nav a[href="/resources"], .footer-nav a[href="/contact"], .footer-nav a[href="/privacy"], .footer-nav a[href="/terms"] { grid-column: span 3; }
   /* Very small phones: two to a row, so no link breaks onto two lines */
-  @media (max-width: 350px) { .footer-nav { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 350px) {
+    .footer-nav { grid-template-columns: repeat(2, 1fr); }
+    .footer-nav a, .footer-nav a[href] { grid-column: auto; }
+    .footer-nav a[href="/terms"] { grid-column: 1 / -1; }
+  }
   .social { justify-content: center; gap: 14px; }
   .social a { width: 44px; height: 44px; }
   .site-footer .footer-bottom { flex-direction: column; justify-content: center; gap: 6px; text-align: center; padding: 18px 0 calc(22px + env(safe-area-inset-bottom)); }
