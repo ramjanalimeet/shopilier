@@ -181,3 +181,22 @@ Build-time packages (`next`, `@opennextjs/cloudflare`, `wrangler`, `typescript`,
 dependencies, so the build works even where development dependencies aren't installed.
 
 After changing `wrangler.jsonc`, run `npm run cf-typegen` to refresh `cloudflare-env.d.ts`.
+
+## Store sub-domains
+Every store's website opens at `<name>.shopilier.com`. `worker.ts` (the Worker entry in `wrangler.jsonc`) looks at
+the address before Next.js sees the request (`src/lib/store-host.ts`):
+- `<name>.shopilier.com/<page>` is served from `/s/<name>/<page>`. The checkout's order API (`/api/shop/…`), uploaded
+  photos (`/media/…`) and static files pass through unchanged.
+- `shopilier.com/s/<name>/…` redirects to `<name>.shopilier.com/…`. A store website runs its owner's own code
+  (Marketing → custom code), so it never opens on the main site, where the sign-in cookie lives.
+- `www.shopilier.com` redirects to `shopilier.com`.
+- Any other address (workers.dev, localhost, `next dev`) is unchanged, so `/s/<name>` keeps working while developing.
+
+The domain comes from `STORE_DOMAIN` in `wrangler.jsonc`. Cloudflare needs two things on the `shopilier.com` zone:
+a Worker route `*.shopilier.com/*` → `shopiliar`, and a proxied wildcard DNS record (`AAAA *` → `100::`, orange cloud).
+The free Universal SSL certificate already covers `*.shopilier.com`.
+
+A store's first save checks its suggested sub-domain: if another store has it (or it breaks the rules), the server
+picks a free one close to it (`name-2`, `name-3`, …) and the dashboard switches to it. Later changes must be free
+(`/api/subdomain` checks first). After pulling this change, run `npm run db:remote` once to add the
+`stores_subdomain` index.

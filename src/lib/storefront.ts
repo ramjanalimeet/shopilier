@@ -11,9 +11,9 @@ type StoreData = {
 
 export const cleanSub = (s: string) => String(s || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 63);
 
-/** The store whose free sub-domain is `sub` (the most recently saved one, if two ever share it). */
+/** The store whose free sub-domain is `sub` (the oldest account's, if two ever share it: it had the name first). */
 export async function storeBySub(env: CloudflareEnv, sub: string) {
-  const row = await env.DB.prepare("SELECT user_id, data FROM stores WHERE json_extract(data, '$.settings.subdomain') = ? ORDER BY updated_at DESC LIMIT 1")
+  const row = await env.DB.prepare("SELECT s.user_id, s.data FROM stores s JOIN users u ON u.id = s.user_id WHERE json_extract(s.data, '$.settings.subdomain') = ? ORDER BY u.created_at, u.id LIMIT 1")
     .bind(cleanSub(sub)).first<{ user_id: string; data: string }>();
   if (!row) return null;
   try { return { userId: row.user_id, store: JSON.parse(row.data) as StoreData }; } catch { return null; }

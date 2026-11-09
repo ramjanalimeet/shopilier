@@ -170,6 +170,8 @@ export const start = async () => {
         throw new Error(data.error || "Couldn't save your changes. Check your connection.");
       }
       Object.assign(account, data.account);
+      // The first save swaps a taken sub-domain for a free one close to it
+      if (data.subdomain && data.subdomain !== store.settings.subdomain) { store.settings.subdomain = data.subdomain; refreshChrome(); }
       return true;
     }).catch((err) => { toast(err.message); return false; });
     return saving;
@@ -881,8 +883,10 @@ export const start = async () => {
   };
   const PAY_COLOR = { "Cash on delivery": "gray", bKash: "pink", Nagad: "orange", Card: "blue" };
   const sales = (orders) => orders.filter((o) => o.status !== "Cancelled").reduce((s, o) => s + o.total, 0);
-  // Where the published website really opens (this server, /s/<sub-domain>)
-  const liveUrl = () => location.origin + "/s/" + encodeURIComponent(store.settings.subdomain || "");
+  // Where the published website really opens: <sub-domain>.shopilier.com on the live site, /s/<sub-domain> on
+  // this server elsewhere (local development, workers.dev)
+  const onShopilier = () => /(^|\.)shopilier\.com$/.test(location.hostname);
+  const liveUrl = () => onShopilier() ? `https://${store.settings.subdomain}.shopilier.com` : location.origin + "/s/" + encodeURIComponent(store.settings.subdomain || "");
   const siteUrl = () => store.settings.domain && store.settings.domainStatus === "connected" ? store.settings.domain : store.settings.subdomain + ".shopilier.com";
   const orderNo = (o) => "#" + o.number;
 
@@ -3179,7 +3183,7 @@ export const start = async () => {
             <label class="sub-field"><input class="input" id="s-sub" value="${esc(st.subdomain)}" maxlength="40" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Sub-domain"><span>.shopilier.com</span></label>
             <button type="button" class="btn btn-primary" data-action="save-subdomain">Save</button>
           </div>
-          <p class="sub-msg muted small" id="s-sub-msg">${store.published ? `Live now at <a class="link" href="${esc(liveUrl())}" target="_blank" rel="noopener">${esc(location.host)}/s/${esc(st.subdomain)}</a>` : "Publish your website to open it at this address."}</p>
+          <p class="sub-msg muted small" id="s-sub-msg">${store.published ? `Live now at <a class="link" href="${esc(liveUrl())}" target="_blank" rel="noopener">${esc(liveUrl().replace(/^https?:\/\//, ""))}</a>` : "Publish your website to open it at this address."}</p>
         </div>
         ${freeDomain ? `<div class="callout green"><span class="ico">${icon("gift")}</span><div><b>Your yearly ${esc(plan().name)} plan includes a free custom domain.</b></div></div>` : ""}
         ${plan().domain ? "" : `<div class="callout blue"><span class="ico">${icon("globe")}</span><div><b>Your own domain (like www.yourbusiness.com) comes with Starter and up.</b> Until then your website lives at ${esc(st.subdomain)}.shopilier.com. <button type="button" class="link st-up" data-tab="billing">Upgrade to connect a domain</button>.</div></div>`}

@@ -22,10 +22,14 @@ export function getCookie(request: Request, name: string) {
   return null;
 }
 
-/** Where this request came from, as the visitor's browser sees it (host + protocol). */
+/**
+ * Where this request came from, as the visitor's browser sees it (host + protocol). Only the Host header counts:
+ * Cloudflare sets it to the address that was visited, while X-Forwarded-Host is whatever the visitor sent (it would
+ * let anyone put their own site into the links of Shopilier's emails).
+ */
 export const publicUrl = (request: Request) => {
   const url = new URL(request.url);
-  const host = request.headers.get("X-Forwarded-Host") || request.headers.get("Host");
+  const host = request.headers.get("Host");
   if (host) url.host = host;
   const proto = request.headers.get("X-Forwarded-Proto");
   if (proto === "http" || proto === "https") url.protocol = proto + ":";
