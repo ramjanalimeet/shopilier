@@ -1,6 +1,6 @@
 import { currentUser } from "@/lib/auth";
 import { api, json } from "@/lib/http";
-import { ensureMedia, MAX_IMAGE_BYTES, MAX_IMAGES_PER_USER, MEDIA_TYPES } from "@/lib/media";
+import { ensureMedia, MAX_IMAGE_BYTES, MAX_IMAGES_PER_USER, MEDIA_TYPES, mediaKey, putImage } from "@/lib/media";
 
 // Images uploaded in the website editor (signed in, JPG/PNG/WebP/GIF up to 1.5 MB, 300 per account)
 export const POST = api(async (request, env) => {
@@ -15,7 +15,8 @@ export const POST = api(async (request, env) => {
   const count = await env.DB.prepare("SELECT COUNT(*) AS n FROM media WHERE user_id = ?").bind(user.id).first<{ n: number }>();
   if ((count?.n || 0) >= MAX_IMAGES_PER_USER) return json({ error: `You've reached the limit of ${MAX_IMAGES_PER_USER} images.` }, 413);
   const id = crypto.randomUUID().replace(/-/g, "");
+  const stored = await putImage(env, mediaKey(id, user.id), data, type);
   await env.DB.prepare("INSERT INTO media (id, user_id, type, data, size, created_at) VALUES (?, ?, ?, ?, ?, ?)")
-    .bind(id, user.id, type, data, data.byteLength, new Date().toISOString()).run();
+    .bind(id, user.id, type, stored, data.byteLength, new Date().toISOString()).run();
   return json({ url: "/media/" + id });
 }, { json: false });

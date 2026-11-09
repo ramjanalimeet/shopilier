@@ -1,6 +1,6 @@
 import { adminApi } from "@/lib/admin-api";
 import { json } from "@/lib/http";
-import { ensureTemplateMedia, MAX_IMAGE_BYTES, MEDIA_TYPES } from "@/lib/media";
+import { ensureTemplateMedia, MAX_IMAGE_BYTES, MEDIA_TYPES, mediaKey, putImage } from "@/lib/media";
 
 // Photos for template designs, uploaded in the master dashboard's template builder (JPG/PNG/WebP/GIF up to 1.5 MB)
 export const POST = adminApi(async (request, env) => {
@@ -11,7 +11,8 @@ export const POST = adminApi(async (request, env) => {
   if (data.byteLength > MAX_IMAGE_BYTES) return json({ error: "That image is too large. Try a smaller one." }, 413);
   await ensureTemplateMedia(env);
   const id = "t" + crypto.randomUUID().replace(/-/g, "");
+  const stored = await putImage(env, mediaKey(id), data, type);
   await env.DB.prepare("INSERT INTO template_media (id, type, data, size, created_at) VALUES (?, ?, ?, ?, ?)")
-    .bind(id, type, data, data.byteLength, new Date().toISOString()).run();
+    .bind(id, type, stored, data.byteLength, new Date().toISOString()).run();
   return json({ url: "/media/" + id });
 }, { json: false });
