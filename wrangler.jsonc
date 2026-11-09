@@ -30,7 +30,7 @@
   "vars": {
     "STORE_DOMAIN": "shopilier.com",
     "ACCESS_TEAM_DOMAIN": "muddy-hat-9802.cloudflareaccess.com",
-    "ACCESS_AUD": "caa0b5cfd1121879a6a8096cb273c8bf7ed16d0c825dcab038f273729a8ce31f"
+    "ACCESS_AUD": "11f1272ab5ac7a1e3f698208bf240bbe5e62d0764c4fca254f08148290499090"
   },
   "observability": { "enabled": true }
 }
