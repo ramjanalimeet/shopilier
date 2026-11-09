@@ -50,6 +50,7 @@ export const DELETE = async (request: Request, { params }: { params: Promise<{ i
     ]);
     // Photos live in a table that only exists once someone has uploaded one
     try { await db.prepare("DELETE FROM media WHERE user_id = ?").bind(id).run(); } catch { /* no media table yet */ }
+    try { await db.prepare("DELETE FROM verified_emails WHERE user_id = ?").bind(id).run(); } catch { /* no table yet */ }
     try { await deleteUserImages(env, id); } catch (err) { console.error(err); }
     return json({ ok: true });
   })(request);
