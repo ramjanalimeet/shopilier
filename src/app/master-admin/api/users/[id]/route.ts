@@ -1,5 +1,6 @@
 import { adminApi } from "@/lib/admin-api";
 import { clean, json, readJson } from "@/lib/http";
+import { deleteUserImages } from "@/lib/media";
 import { EMAIL, isPlan, templateOf } from "@/lib/plans";
 
 type Row = { id: string; name: string; email: string; business: string; plan: string; billing: string; template: string };
@@ -49,6 +50,7 @@ export const DELETE = async (request: Request, { params }: { params: Promise<{ i
     ]);
     // Photos live in a table that only exists once someone has uploaded one
     try { await db.prepare("DELETE FROM media WHERE user_id = ?").bind(id).run(); } catch { /* no media table yet */ }
+    try { await deleteUserImages(env, id); } catch (err) { console.error(err); }
     return json({ ok: true });
   })(request);
 };

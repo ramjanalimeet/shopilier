@@ -13,6 +13,11 @@
   "d1_databases": [
     { "binding": "DB", "database_name": "shopiliar-db", "database_id": "45d1c9c1-3aa1-4ac7-900d-322fc8a738ca" }
   ],
+  // Photos uploaded in the website editor and the template builder (src/lib/media.ts); create the bucket first:
+  // Cloudflare dashboard → R2 → Create bucket "shopilier-media" (or `npx wrangler r2 bucket create shopilier-media`)
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "shopilier-media" }
+  ],
   // Sign-in / sign-up attempts per visitor IP
   "ratelimits": [
     { "name": "AUTH_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }

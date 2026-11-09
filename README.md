@@ -200,3 +200,14 @@ A store's first save checks its suggested sub-domain: if another store has it (o
 picks a free one close to it (`name-2`, `name-3`, …) and the dashboard switches to it. Later changes must be free
 (`/api/subdomain` checks first). After pulling this change, run `npm run db:remote` once to add the
 `stores_subdomain` index.
+
+## Photos (R2)
+Photos uploaded in the website editor and the template builder are stored in the R2 bucket `shopilier-media`
+(binding `MEDIA`), under `media/<user id>/<id>` and `template/<id>`. D1 keeps one row per photo (owner, type,
+size) with an empty `data` column, which keeps the 300-photo limit per account working. Photos uploaded before R2
+still have their bytes in D1 and keep loading from there. `/media/<id>` serves both. Deleting a user in the master
+dashboard also deletes their photos from R2.
+
+Before the first deploy with this binding: Cloudflare dashboard → R2 → enable R2 (asks for a payment method; the
+free allowance is 10 GB stored, 1 million uploads and 10 million reads a month) → Create bucket `shopilier-media`.
+A deploy fails while the bucket doesn't exist.
