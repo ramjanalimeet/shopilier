@@ -1,6 +1,6 @@
 import { UserRow, withSession } from "@/lib/auth";
 import { decodeText, unb64 } from "@/lib/crypto";
-import { GOOGLE_STATE_COOKIE, googleRedirectUri, nextPath } from "@/lib/google";
+import { claimWithGoogle, GOOGLE_STATE_COOKIE, googleRedirectUri, nextPath } from "@/lib/google";
 import { api, clean, getCookie, redirect } from "@/lib/http";
 import { billingOf, CATEGORY, DEFAULT_PLAN, isPlan, templateOf } from "@/lib/plans";
 import { getSettings } from "@/lib/platform";
@@ -58,6 +58,9 @@ export const GET = api(async (request, env, url) => {
     user = await env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first<UserRow>();
     if (!user) return fail("google");
   }
+
+  // A password account whose email was never proved: Google just proved it, so the inbox's owner takes it over
+  await claimWithGoogle(env, user);
 
   recordSignin(env, request, user, isNew ? "google-signup" : "google", url.origin);
   const res = redirect(url, nextPath(pick.next));

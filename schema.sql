@@ -134,3 +134,10 @@ CREATE TABLE IF NOT EXISTS email_log (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS email_log_created ON email_log(created_at);
+
+-- Emails proved by Google sign-in (src/lib/google.ts). Created on first use too.
+CREATE TABLE IF NOT EXISTS verified_emails (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  verified_at TEXT NOT NULL
+);
